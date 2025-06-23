@@ -1,0 +1,45 @@
+repository:
+  private: true
+  has_issues: false
+  has_wiki: false
+  has_projects: false
+  has_pages: false
+  fork: false
+  default_branch: master
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
+  delete_branch_on_merge: true
+
+labels:
+    - name: 'skip release'
+      color: d93f0b
+      description: Won't create new release.
+
+    - name: 'patch'
+      color: 0e8a16
+      description: Create a Patch release(default).
+
+    - name: 'minor'
+      color: fbca04
+      description: Create a Minor Release.
+
+    - name: 'major'
+      color: 1d76db
+      description: Create a Major Release.
+
+
+branches:
+  - name: master
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 1
+        dismiss_stale_reviews: true
+        require_code_owner_reviews: false
+        dismissal_restrictions: {}
+      required_status_checks:
+        strict: true
+        contexts: []
+      enforce_admins: null
+      restrictions: null
+

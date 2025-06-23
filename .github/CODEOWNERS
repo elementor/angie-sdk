@@ -1,0 +1,3 @@
+.github             @elementor/cloud-platform-devops
+helm/*/templates/*  @elementor/cloud-platform-devops
+helm/*/Chart.yaml   @elementor/cloud-platform-devops
