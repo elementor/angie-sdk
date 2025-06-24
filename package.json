@@ -1,0 +1,52 @@
+{
+  "name": "@elementor/angie-sdk",
+  "version": "1.0.1",
+  "description": "TypeScript SDK for Angie AI assistant",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "npm run build:types && npm run build:bundle",
+    "build:types": "tsc",
+    "build:bundle": "webpack --mode=production",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "angie",
+    "elementor",
+    "ai",
+    "sdk"
+  ],
+  "author": "Elementor",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.19.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.2",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elementor/angie-sdk.git"
+  }
+}

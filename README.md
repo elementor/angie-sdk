@@ -1,8 +1,339 @@
-# Elementor Empty Template
+# @elementor/angie-sdk
 
-This Boilerplate is simple starting point for creating repository from scratch within elementor organization.
+Based on [MCP](https://github.com/modelcontextprotocol/typescript-sdk) version: 1.13.0
 
-The repo includes InitRepo action that will be triggered automatically after repo created from this template and will configure:
-  - repository protected branch settings
-  - pull requests labels
-  - Create first initial release 
+**An SDK for extending Angie AI Assistant capabilities.**
+
+This SDK enables you to create custom MCP servers that Angie can discover and use to run your plugin features.
+
+---
+
+## Table of Contents
+
+- [Background](#background)
+- [How It Works](#how-it-works)
+- [Supported MCP Features](#supported-mcp-features)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [MCP Server Example](#mcp-server-example)
+- [Registering Tools](#registering-tools)
+- [Handling Tool Calls](#handling-tool-calls)
+- [Best Practices](#best-practices)
+- [Remote SSE and HTTP Streamable MCP servers](#remote-sse-and-http-streamable-mcp-servers)
+- [Error Handling](#error-handling)
+- [Changelog](#changelog)
+- [Demo Plugin](#demo-plugin)
+- [Debugging & Testing](#debugging--testing)
+- [FAQ](#faq)
+
+---
+
+## Background
+
+Angie is a WordPress AI Assistant that can perform almost any task on a WordPress website.
+
+Angie is fully extensible, so plugin developers can easily integrate their own features, allowing Angie to use and control them.
+
+Angie is built on an MCP-based architecture, enabling you to create custom MCP servers that expose your plugin's capabilities for Angie to access.
+
+To learn about MCP:
+- [MCP Specification](https://modelcontextprotocol.io/)
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [MCP Documentation](https://modelcontextprotocol.io/docs)
+
+The SDK was designed specifically to address these issues:
+
+1. **Run MCP in the Browser**
+   The SDK allows you to run an MCP server as a JavaScript module in the browser, so there is no need for creating a PHP-based MCP server or creating an external SSE or HTTPStreamable-based MCP Server.
+   
+   All logic runs client-side while you can use WP REST or even adminAjax to communicate with your plugin backend.
+
+2. **Register MCP with Angie Without an External Server**
+   You can register your MCP directly with Angie using the SDK, even if you don't have an external MCP Gateway. Angie discovers your server through the SDK.
+
+3. **Communicate with MCP on the Current Screen**
+   The SDK enables Angie to communicate with your plugin's MCP directly on the current page, so Angie will be able to _see_ and _act_ on the current user's screen.
+
+---
+
+## How It Works
+Angie SDK allows you to use the official TypeScript MCP SDK to write your MCP Server.
+Then with Angie SDK you can register it and let Angie run your MCP server like other MCP Hosts.
+
+The SDK covers three main abilities:
+* Import and use the current supported official MCP SDK
+* Register your MCP Server
+* Run your MCP server in the browser
+
+
+```
+┌──────────────────────────────┐
+│       Angie SDK Flow         │
+├──────────────────────────────┤
+│                              │
+│  Your WordPress Plugin       │
+│            │                 │
+│            │ enqueue script  │
+│            ▼                 │
+│  Your MCP Server (JS)        │
+│            │                 │
+│            │ register server │
+│            ▼                 │
+│  Angie SDK                   │
+│            │                 │
+│            ◄─► Browser       │
+│            │   Transport     │
+│            ▼                 │
+│  Angie (iframe)              │
+│                              │
+└──────────────────────────────┘
+```
+
+## Supported MCP Features
+* Resources
+* Notifications
+* Tools
+* Sampling
+
+---
+
+## Installation
+
+```bash
+npm install @elementor/angie-sdk
+```
+
+---
+
+## Quick Start
+
+### 1. Create Your MCP Server
+
+Create a TypeScript or a Javascript file (e.g., `demo-mcp-server.ts`):
+
+```typescript
+import {
+  AngieMcpSdk,
+  CallToolRequest,
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  McpServer,
+} from '@elementor/angie-sdk';
+
+// Define the MCP server
+function createSeoMcpServer() {
+  const server = new McpServer(
+    { name: 'my-seo-server', version: '1.0.0' },
+    { capabilities: { tools: {} } }
+  );
+
+  // Add your tools, resources, etc.
+  server.tool( ... );
+
+  return server;
+}
+
+// Register the server with Angie
+const server = createSeoMcpServer();
+const sdk = new AngieMcpSdk();
+await sdk.registerServer({
+  name: 'my-seo-server',
+  version: '1.0.0',
+  description: 'SEO tools for Angie',
+  server,
+});
+```
+
+---
+
+## MCP Server Example
+
+A typical project structure:
+
+```
+your-plugin/
+├── plugin.php               # Main WordPress plugin file
+├── dist/
+│   └── demo-mcp-server.js    # Bundled MCP server JS
+├── src/
+│   └── demo-mcp-server.ts    # MCP server source
+└── ...
+```
+
+- **PHP**: Implements REST API endpoints for your tool - if needed.
+- **JS/TS**: Registers tools and handles requests using the SDK.
+
+---
+
+## Registering Tools
+
+Each tool must be registered with:
+- **name**: Unique string identifier
+- **description**: What the tool does and when to use it
+- **inputSchema**: JSON schema describing required/optional parameters
+
+Example:
+
+```typescript
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: 'analyze-page-seo',
+      description: 'Analyzes the SEO of a page.',
+      inputSchema: {
+        type: 'object',
+        properties: { url: { type: 'string', description: 'Page URL' } },
+        required: ['url'],
+      },
+    },
+  ],
+}));
+```
+
+---
+
+## Handling Tool Calls
+
+Implement a handler for `CallToolRequestSchema`:
+
+```typescript
+server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest) => {
+  const { name, arguments: args } = request.params;
+  switch (name) {
+    case 'analyze-page-seo':
+      // Call your backend or perform logic
+      const { root, nonce } = window.wpApiSettings;
+      const response = await fetch(`${root}my-plugin/v1/analyze-seo`, {
+        method: 'POST',
+        headers: {
+          'X-WP-Nonce': nonce,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(args),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      return {
+        content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+      };
+    // Add more cases as needed
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+});
+```
+
+---
+
+## Best Practices
+
+- **Tool Naming**: Use clear, outcome-focused names (e.g., "analyze-page-seo").
+- **Descriptions**: Clearly describe what the tool does, when to use it, and what it returns.
+- **Input Schemas**: Define precise input schemas for each tool, prefer using Zod.
+- **Error Handling**: Return user-friendly errors in natural language and log details for debugging.
+- **Security**: Use nonces for REST API calls and permission checks in your backend.
+- **Versioning**: Angie SDK exports the current supported MCP SDK, prefer to use the integrated MCP SDK to ensure supported MCP version features.
+
+---
+
+## Security
+
+**⚠️ Security Responsibility**: When you create MCP tools that interact with your WordPress backend, you become responsible for the security of those operations. Angie acts as a channel for user actions, so it's your responsibility to implement proper security measures.
+
+### Required Security Measures
+
+1. **Permission Checks**: Always verify user permissions on your backend endpoints
+2. **Input Validation**: Sanitize and validate all input data
+3. **Capability Checks**: Use WordPress capability checks for specific operations
+
+### Example Secure Endpoint
+
+```php
+add_action('rest_api_init', function () {
+    register_rest_route('my-plugin/v1', '/analyze-seo', [
+        'methods' => 'POST',
+        'callback' => 'my_analyze_seo_callback',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        },
+        'args' => array(
+          'url' => array(
+            'validate_callback' => function($param, $request, $key) {
+              return filter_var($param, FILTER_VALIDATE_URL);
+            },
+            'required' => true,
+          ),
+        ),
+    ]);
+});
+```
+## Remote SSE and HTTP Streamable MCP servers
+
+For remote servers, let your Angie users add them via Angie MCP Gateway settings.
+
+### Supported Remote Server Types
+- **SSE (Server-Sent Events)**: For real-time streaming responses
+- **HTTP Streamable**: For HTTP-based streaming communication
+
+### Configuration
+Remote MCP servers can be configured through Angie's settings interface, allowing users to connect to external MCP services without requiring code changes.
+
+---
+
+## Error Handling
+
+- Throw errors in handlers to return error responses to the client.
+- Use custom error messages for user-facing errors.
+- Log errors internally as needed.
+
+**Example:**
+```typescript
+server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  try {
+    // Your tool implementation
+    const result = await performToolAction(req.params);
+    return {
+      content: [{ type: 'text', text: result }],
+    };
+  } catch (err) {
+    console.error('Tool error:', err);
+    throw new Error('User-friendly error message');
+  }
+});
+```
+
+---
+
+## Changelog
+- **v1.0.0**: Initial release
+
+---
+
+## Demo Plugin
+
+**For more examples, see the demo plugin and MCP server in the example folder**
+
+If you have questions or need help, open an issue or contact the Elementor team! 
+
+## Debugging & Testing
+
+- Use browser console logs to verify server registration and tool calls.
+- Test REST endpoints directly (e.g., with Postman) before wiring up the MCP server.
+- Check Angie's UI for tool discovery and invocation.
+
+### Common Debugging Steps
+1. Check browser console for registration errors
+2. Verify tool names match between registration and handler
+3. Test REST API endpoints independently
+4. Ensure proper nonce and permission setup
+
+---
+
+## License
+
+MIT

@@ -1,0 +1,26 @@
+{
+  "name": "angie-demo",
+  "version": "1.0.3",
+  "description": "This standalone WordPress plugin demonstrates how to create external MCP (Model Context Protocol) tools for the Angie AI assistant, specifically focusing on SEO analysis capabilities.",
+  "main": "demo-mcp-server.js",
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "vite dev",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "wp-env start",
+    "patch": "npm version patch && git add package.json package-lock.json && git commit -m \"Bump version to $(npm pkg get version | tr -d '\\\"')\" && git push"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "vite": "^6.3.5",
+    "@wordpress/env": "^10.25.0"
+  },
+  "dependencies": {
+    "@elementor/angie-sdk": "1.0.0",
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "fireworks-js": "^2.10.8",
+    "zod": "^3.25.67"
+  }
+}

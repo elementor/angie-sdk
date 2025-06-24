@@ -1,0 +1,38 @@
+# Source files
+src/
+example/
+
+# Configuration files
+tsconfig.json
+webpack.config.js
+.eslintrc.js
+jest.config.js
+
+# Development dependencies
+node_modules/
+package-lock.json
+
+# Build artifacts (keep dist)
+# dist/
+
+# Documentation and meta files
+.github/
+.gitignore
+*.md
+!README.md
+
+# Environment and temp files
+.env
+.env.*
+*.log
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db 
