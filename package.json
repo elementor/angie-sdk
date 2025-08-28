@@ -1,6 +1,6 @@
 {
   "name": "@elementor/angie-sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TypeScript SDK for Angie AI assistant",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
