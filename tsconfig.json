@@ -15,7 +15,7 @@
   },
   "include": [
     "src/**/*"
-  ],
+, "jest.config.cjs"  ],
   "exclude": [
     "node_modules",
     "dist",

@@ -1,6 +1,6 @@
 # @elementor/angie-sdk
 
-Based on [MCP](https://github.com/modelcontextprotocol/typescript-sdk) version: 1.13.0
+Based on [MCP](https://github.com/modelcontextprotocol/typescript-sdk) version: 1.17.4
 
 **An SDK for extending Angie AI Assistant capabilities.**
 
