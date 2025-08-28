@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, jest } from '@jest/globals';
+import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
 import { ClientManager } from './client-manager';
 import { type ServerRegistration, type ClientCreationResponse, AngieMCPTransport } from './types';
 
@@ -7,6 +7,9 @@ describe('ClientManager', () => {
   let mockRegistration: ServerRegistration & { instanceId?: string };
 
   beforeEach(() => {
+    // Use fake timers for precise time control
+    jest.useFakeTimers();
+    
     // Clear all mocks before each test
     jest.clearAllMocks();
     
@@ -24,6 +27,11 @@ describe('ClientManager', () => {
       status: 'pending',
       instanceId: 'test-instance-123',
     };
+  });
+
+  afterEach(() => {
+    // Restore real timers after each test
+    jest.useRealTimers();
   });
 
   // Helper functions
@@ -45,15 +53,12 @@ describe('ClientManager', () => {
     return { mockPort, mockChannel };
   };
 
-  const simulateClientCreationResponse = async (mockPort: any, response: any, delay = 0): Promise<void> => {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        if (mockPort.onmessage) {
-          mockPort.onmessage({ data: response } as MessageEvent);
-        }
-        resolve();
-      }, delay);
-    });
+  const simulateClientCreationResponse = (mockPort: any, response: any, delay = 0): void => {
+    setTimeout(() => {
+      if (mockPort.onmessage) {
+        mockPort.onmessage({ data: response } as MessageEvent);
+      }
+    }, delay);
   };
 
   const expectPostMessageCall = (expectedPayload: any) => {
@@ -76,11 +81,14 @@ describe('ClientManager', () => {
       // Act
       const promise = clientManager.requestClientCreation(mockRegistration);
       
-      // Simulate response
-      await simulateClientCreationResponse(mockPort, {
+      // Simulate response - schedule the response, then advance timers
+      simulateClientCreationResponse(mockPort, {
         success: true,
         clientId: 'client_123',
       });
+
+      // Advance timers to trigger the response
+      jest.runAllTimers();
 
       const response = await promise;
 
@@ -105,10 +113,14 @@ describe('ClientManager', () => {
       // Act
       const promise = clientManager.requestClientCreation(mockRegistration);
       
-      await simulateClientCreationResponse(mockPort, {
+      // Simulate error response - schedule the response, then advance timers
+      simulateClientCreationResponse(mockPort, {
         success: false,
         error: 'Client creation failed',
       });
+
+      // Advance timers to trigger the response
+      jest.runAllTimers();
 
       const response = await promise;
 
@@ -119,15 +131,21 @@ describe('ClientManager', () => {
       });
     });
 
-    it('should timeout after 10 seconds if no response received', async () => {
+    it('should timeout after 15 seconds if no response received', async () => {
       // Arrange
       const { mockPort } = setupMockMessageChannel();
 
-      // Act & Assert
-      await expect(clientManager.requestClientCreation(mockRegistration))
+      // Act
+      const promise = clientManager.requestClientCreation(mockRegistration);
+      
+      // Fast-forward time to trigger timeout (15 seconds = 15000ms)
+      jest.advanceTimersByTime(15_000);
+
+      // Assert
+      await expect(promise)
         .rejects
-        .toThrow('Client creation request timed out after 10000ms');
-    }, 15000); // Extend test timeout to 15 seconds
+        .toThrow('Client creation request timed out after 15000ms');
+    });
 
     it('should handle multiple concurrent client creation requests', async () => {
       // Arrange
@@ -167,12 +185,13 @@ describe('ClientManager', () => {
       const promise2 = clientManager.requestClientCreation(registration2);
       const promise3 = clientManager.requestClientCreation(registration3);
 
-      // Simulate responses with small delays
-      await Promise.all([
-        simulateClientCreationResponse(mockPort1, { success: true, clientId: 'client_1' }, 10),
-        simulateClientCreationResponse(mockPort2, { success: true, clientId: 'client_2' }, 5),
-        simulateClientCreationResponse(mockPort3, { success: false, error: 'Failed' }, 15),
-      ]);
+      // Simulate responses with different delays
+      simulateClientCreationResponse(mockPort1, { success: true, clientId: 'client_1' }, 10);
+      simulateClientCreationResponse(mockPort2, { success: true, clientId: 'client_2' }, 5);
+      simulateClientCreationResponse(mockPort3, { success: false, error: 'Failed' }, 15);
+
+      // Advance time to trigger all responses (advance to the maximum delay)
+      jest.advanceTimersByTime(15);
 
       const [response1, response2, response3] = await Promise.all([promise1, promise2, promise3]);
 

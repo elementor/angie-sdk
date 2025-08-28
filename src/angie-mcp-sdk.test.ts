@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
 import { AngieMcpSdk } from './angie-mcp-sdk';
 import type { AngieServerConfig, ServerRegistration, AngieDetectionResult, ClientCreationResponse } from './types';
+import { AngieServerType } from './types';
 
 // Mock dependencies
 jest.mock('./angie-detector');
@@ -79,6 +80,7 @@ describe('AngieMcpSdk', () => {
       version: '1.0.0',
       description: 'Test server',
       server: {} as any, // Mock server instance
+      type: AngieServerType.LOCAL,
     };
 
     it('should register server successfully when Angie is ready', async () => {

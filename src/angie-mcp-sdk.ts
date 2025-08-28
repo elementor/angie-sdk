@@ -121,6 +121,11 @@ export class AngieMcpSdk {
       throw new Error('Server description is required');
     }
 
+    if (('type' in config && config.type === 'local' && !(config as any).server) ||
+        (!('type' in config) && !(config as any).server)) {
+      throw new Error('Server instance is required');
+    }
+
     console.log(`AngieMcpSdk: Registering server "${config.name}" (Instance: ${this.instanceId})`);
 
     const registration = this.registrationQueue.add(config);
