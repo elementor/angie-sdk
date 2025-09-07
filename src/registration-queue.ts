@@ -32,6 +32,9 @@ export class RegistrationQueue {
       registration.status = status;
       if (error) {
         registration.error = error;
+      } else if (status === 'pending' || status === 'registered') {
+        // Clear error when status is updated to pending or registered without an error
+        delete registration.error;
       }
       console.log(`RegistrationQueue: Updated server ${id} status to ${status}`);
     }
@@ -67,6 +70,27 @@ export class RegistrationQueue {
   public clear(): void {
     this.queue = [];
     console.log('RegistrationQueue: Cleared all registrations');
+  }
+
+  public resetAllToPending(): boolean {
+    if (this.isProcessing) {
+      console.log('RegistrationQueue: Cannot reset to pending - processing in progress');
+      return false;
+    }
+
+    const registeredCount = this.queue.filter(reg => reg.status === 'registered').length;
+    const failedCount = this.queue.filter(reg => reg.status === 'failed').length;
+    
+    this.queue.forEach(registration => {
+      if (registration.status !== 'pending') {
+        registration.status = 'pending';
+        // Clear any error messages when resetting to pending
+        delete registration.error;
+      }
+    });
+
+    console.log(`RegistrationQueue: Reset ${registeredCount + failedCount} registrations to pending`);
+    return true;
   }
 
   public remove(id: string): boolean {

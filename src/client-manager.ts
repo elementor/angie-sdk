@@ -1,18 +1,25 @@
-import { ServerRegistration, ClientCreationRequest, ClientCreationResponse, MessageEventType, AngieMCPTransport } from './types';
+import { ServerRegistration, ClientCreationRequest, ClientCreationResponse, MessageEventType, AngieMCPTransport, AngieLocalServerTransport } from './types';
 
-const TIMEOUT_MS = 10_000;
+const TIMEOUT_MS = 15_000;
 
 export class ClientManager {
-  public async requestClientCreation(registration: ServerRegistration): Promise<ClientCreationResponse> {
+  public async requestClientCreation(registration: ServerRegistration & { instanceId?: string }): Promise<ClientCreationResponse> {
     const { config } = registration;
     const request: ClientCreationRequest = {
       serverId: registration.id,
       serverName: config.name,
       serverVersion: config.version,
       description: config.description,
-      transport: AngieMCPTransport.POST_MESSAGE,
-      capabilities: config.capabilities
+      transport: config.transport || AngieLocalServerTransport.POST_MESSAGE,
+      capabilities: config.capabilities,
+      instanceId: registration.instanceId
     };
+
+    if ('type' in config && config.type === 'remote') {
+      request.remote = {
+        url: config.url,
+      };
+    }
 
     return new Promise((resolve, reject) => {
       const channel = new MessageChannel();
