@@ -11,9 +11,7 @@
     "build:bundle": "webpack --mode=production",
     "build:watch": "npm run build:types && webpack --mode=production --watch",
     "dev": "tsc --watch",
-    "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "test": "jest"
   },
   "keywords": [
     "mcp",
