@@ -27,4 +27,7 @@ Object.defineProperty(global, 'crypto', {
 // Mock console methods to reduce noise in tests
 global.console.log = jest.fn();
 global.console.warn = jest.fn();
-global.console.error = jest.fn(); 
+global.console.error = jest.fn();
+
+// Mock CSS imports globally
+jest.mock('../src/sidebar.css', () => '.angie-sidebar { width: 300px; }', { virtual: true }); 

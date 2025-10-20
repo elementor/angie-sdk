@@ -1,4 +1,4 @@
-import { ServerRegistration, ClientCreationRequest, ClientCreationResponse, MessageEventType, AngieMCPTransport, AngieLocalServerTransport } from './types';
+import { ServerRegistration, ClientCreationRequest, ClientCreationResponse, MessageEventType, AngieLocalServerTransport } from './types';
 
 const TIMEOUT_MS = 15_000;
 
