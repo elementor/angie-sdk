@@ -8,6 +8,16 @@ jest.mock('./angie-detector');
 jest.mock('./registration-queue');
 jest.mock('./client-manager');
 jest.mock('./browser-context-transport');
+jest.mock('./sidebar', () => ({
+  initAngieSidebar: jest.fn(),
+}));
+jest.mock('./iframe', () => ({
+  openIframe: jest.fn(),
+  MessageEventType: {
+    SDK_REQUEST_INIT_SERVER: 'sdk-request-init-server',
+    SDK_ANGIE_REFRESH_PING: 'sdk-angie-refresh-ping',
+  },
+}));
 
 describe('AngieMcpSdk', () => {
   let sdk: AngieMcpSdk;
@@ -15,6 +25,8 @@ describe('AngieMcpSdk', () => {
   let mockRegistrationQueue: any;
   let mockClientManager: any;
   let mockBrowserContextTransport: any;
+  let mockInitAngieSidebar: any;
+  let mockOpenIframe: any;
   let addEventListenerSpy: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
@@ -42,6 +54,11 @@ describe('AngieMcpSdk', () => {
     };
 
     mockBrowserContextTransport = jest.fn().mockImplementation(() => ({}));
+
+    // Mock sidebar and iframe functions
+    mockInitAngieSidebar = require('./sidebar').initAngieSidebar as jest.MockedFunction<any>;
+    mockOpenIframe = require('./iframe').openIframe as jest.MockedFunction<any>;
+    mockOpenIframe.mockResolvedValue(undefined);
 
     // Mock the constructors
     (require('./angie-detector') as any).AngieDetector.mockImplementation(() => mockAngieDetector);
@@ -360,6 +377,43 @@ describe('AngieMcpSdk', () => {
 
       // Assert
       expect(mockBrowserContextTransport).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('loadSidebar', () => {
+    it('should call initAngieSidebar and openIframe with default options', async () => {
+      // Act
+      await sdk.loadSidebar();
+
+      // Assert
+      expect(mockInitAngieSidebar).toHaveBeenCalledTimes(1);
+      expect(mockOpenIframe).toHaveBeenCalledTimes(1);
+      expect(mockOpenIframe).toHaveBeenCalledWith({
+        origin: 'https://angie.elementor.com',
+        uiTheme: 'light',
+        isRTL: false,
+      });
+    });
+
+    it('should call initAngieSidebar and openIframe with custom options', async () => {
+      // Arrange
+      const customOptions = {
+        origin: 'https://custom-origin.example.com',
+        uiTheme: 'dark',
+        isRTL: true,
+      };
+
+      // Act
+      await sdk.loadSidebar(customOptions);
+
+      // Assert
+      expect(mockInitAngieSidebar).toHaveBeenCalledTimes(1);
+      expect(mockOpenIframe).toHaveBeenCalledTimes(1);
+      expect(mockOpenIframe).toHaveBeenCalledWith({
+        origin: 'https://custom-origin.example.com',
+        uiTheme: 'dark',
+        isRTL: true,
+      });
     });
   });
 }); 

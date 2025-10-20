@@ -1,0 +1,133 @@
+/* Angie Sidebar - CSS Variables */
+:root {
+    --angie-sidebar-z-index: 1200; /* below MUI popups, elementor popups and media library modal */
+    --angie-sidebar-width: 330px;
+    --angie-sidebar-transition: margin 0.3s ease-in-out, transform 0.3s ease-in-out;
+    /* Direction-aware transform values for sidebar positioning */
+    --angie-sidebar-hide-transform: translateX(-100%); /* LTR: hide to the left */
+    --angie-sidebar-show-transform: translateX(0);
+}
+
+/* RTL-specific transform values */
+[dir="rtl"] {
+    --angie-sidebar-hide-transform: translateX(100%); /* RTL: hide to the right */
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --angie-sidebar-transition: none;
+    }
+}
+
+/* Apply transitions only when user is actively toggling */
+body.angie-sidebar-transitioning {
+    transition: var(--angie-sidebar-transition) !important;
+}
+
+body.angie-sidebar-transitioning #angie-sidebar-container {
+    transition: var(--angie-sidebar-transition) !important;
+}
+
+/* LTR Layout (default) - Push content to the right */
+@media (min-width: 768px) {
+    body.angie-sidebar-active {
+        padding-inline-start: var(--angie-sidebar-width) !important;
+    }
+
+    body.angie-sidebar-active #angie-body-top-padding {
+        width: 100%;
+        height: 8px;
+    }
+
+    /* Push WordPress Admin Bar - LTR */
+    body.angie-sidebar-active #wpadminbar {
+        inset-inline-start: var(--angie-sidebar-width) !important;
+        inset-inline-end: 8px !important;
+        width: calc(100% - 8px - var(--angie-sidebar-width)) !important;
+        margin-top: 8px;
+    }
+
+    /* Sidebar container - LTR */
+    #angie-sidebar-container {
+        position: fixed;
+        top: 0;
+        inset-inline-start: 0;
+        width: var(--angie-sidebar-width);
+        height: 100vh;
+        z-index: var(--angie-sidebar-z-index) !important; /* below elementor popups and media library modal */
+        background: #FCFCFC;
+        transform: var(--angie-sidebar-hide-transform);
+        outline: none;
+        overflow: hidden;
+        /* No default transition - only when transitioning */
+    }
+
+    /* Resize handle */
+    #angie-sidebar-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        inset-inline-end: 0;
+        width: 4px;
+        height: 100%;
+        cursor: ew-resize;
+        background: transparent;
+        z-index: 1000001;
+    }
+
+    /* Pink border during resize */
+    #angie-sidebar-container.angie-resizing {
+        border-inline-end-color: #ff69b4 !important;
+        border-inline-end-width: 2px !important;
+    }
+
+    /* Disable iframe pointer events during resize */
+    #angie-sidebar-container.angie-resizing iframe#angie-iframe {
+        pointer-events: none !important;
+    }
+}
+
+/* Active states */
+body.angie-sidebar-active #angie-sidebar-container {
+    transform: var(--angie-sidebar-show-transform);
+}
+
+/* Studio mode - sidebar takes full width */
+@media (min-width: 768px) {
+    html.angie-studio-active body.angie-sidebar-active #angie-sidebar-container {
+        width: 100%;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    #angie-sidebar-container {
+        border-color: #000;
+        box-shadow: none;
+    }
+}
+
+/* Screen reader only class */
+.angie-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Plugin conflict resolution */
+body.angie-sidebar-active {
+    /* Reset common conflicting styles */
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+#angie-sidebar-toggle {
+    z-index: 99999 !important;
+}

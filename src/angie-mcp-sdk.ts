@@ -1,8 +1,16 @@
-import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration } from './types';
+import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
 import { AngieDetector } from './angie-detector';
 import { RegistrationQueue } from './registration-queue';
 import { ClientManager } from './client-manager';
 import { BrowserContextTransport } from './browser-context-transport';
+import { openIframe } from './iframe';
+import { initAngieSidebar } from './sidebar';
+
+export type AngieMcpSdkOptions = {
+  origin?: string;
+  uiTheme?: string;
+  isRTL?: boolean;
+};
 
 export class AngieMcpSdk {
   private angieDetector: AngieDetector;
@@ -24,6 +32,17 @@ export class AngieMcpSdk {
     this.setupServerInitHandler();
     this.setupReRegistrationHandler();
     console.log(`AngieMcpSdk: SDK initialization complete (Instance: ${this.instanceId})`);
+  }
+
+  public async loadSidebar( options?: AngieMcpSdkOptions ): Promise<void> {
+    initAngieSidebar();
+    await openIframe({
+      origin: options?.origin || 'https://angie.elementor.com',
+      uiTheme: options?.uiTheme || 'light',
+      isRTL: options?.isRTL || false,
+      ...options,
+    });
+    this.setupPromptHashDetection();
   }
 
   // listen to MessageEventType.SDK_ANGIE_READY_PING
@@ -104,6 +123,14 @@ export class AngieMcpSdk {
     return this.registerServer(config);
   }
 
+  private isLocalServerConfig(config: AngieServerConfig): config is AngieLocalServerConfig {
+    return config.type === AngieServerType.LOCAL || (!config.type && 'server' in config);
+  }
+
+  private isRemoteServerConfig(config: AngieServerConfig): config is AngieRemoteServerConfig {
+    return config.type === AngieServerType.REMOTE && 'url' in config;
+  }
+
   public async registerServer(config: AngieServerConfig): Promise<void> {
     if (!config.type) {
       console.warn(`AngieMcpSdk: for a local server, please use registerLocalServer instead of registerServer`);
@@ -121,9 +148,9 @@ export class AngieMcpSdk {
       throw new Error('Server description is required');
     }
 
-    if (('type' in config && config.type === 'local' && !(config as any).server) ||
-        (!('type' in config) && !(config as any).server)) {
-      throw new Error('Server instance is required');
+    // Check if it's a local server config and validate server instance
+    if (this.isLocalServerConfig(config) && !config.server) {
+      throw new Error('Server instance is required for local servers');
     }
 
     console.log(`AngieMcpSdk: Registering server "${config.name}" (Instance: ${this.instanceId})`);
@@ -173,6 +200,57 @@ export class AngieMcpSdk {
     }
   }
 
+  /**
+   * Triggers Angie with a specified prompt and optional context
+   * @param request - The trigger request containing prompt and optional context
+   * @returns Promise resolving to Angie's response
+   */
+  public async triggerAngie(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
+    if (!this.isAngieReady()) {
+      throw new Error('Angie is not ready. Please wait for Angie to be available before triggering.');
+    }
+
+    const requestId = this.generateRequestId();
+    const timeout = request.options?.timeout || 30000;
+
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error('Angie trigger request timed out'));
+      }, timeout);
+
+      const responseHandler = (event: MessageEvent) => {
+        if (event.data?.type === MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE && 
+            event.data?.payload?.requestId === requestId) {
+          clearTimeout(timeoutId);
+          window.removeEventListener('message', responseHandler);
+          resolve(event.data.payload as AngieTriggerResponse);
+        }
+      };
+
+      window.addEventListener('message', responseHandler);
+
+      // Send the trigger request
+      const message = {
+        type: MessageEventType.SDK_TRIGGER_ANGIE,
+        payload: {
+          requestId,
+          prompt: request.prompt,
+          options: request.options,
+          context: {
+            pageUrl: window.location.href,
+            pageTitle: document.title,
+            ...request.context
+          }
+        },
+        timestamp: Date.now()
+      };
+
+      console.log(`AngieMcpSdk: Triggering Angie with prompt (Request ID: ${requestId}, Instance: ${this.instanceId})`);
+      window.postMessage(message, window.location.origin);
+    });
+  }
+
+  
   public destroy(): void {
     this.registrationQueue.clear();
     console.log(`AngieMcpSdk: SDK destroyed (Instance: ${this.instanceId})`);
@@ -236,5 +314,51 @@ export class AngieMcpSdk {
     } catch (error) {
       console.error(`AngieMcpSdk: Error initializing server for clientId ${clientId} (Instance: ${this.instanceId}):`, error);
     }
+  }
+
+  private generateRequestId(): string {
+    return `${this.instanceId}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+  }
+
+  private async handlePromptHash(): Promise<void> {
+    const hash = window.location.hash;
+
+    if (!hash.startsWith('#angie-prompt=')) {
+      return;
+    }
+
+    try {
+      const promptEncoded = hash.replace('#angie-prompt=', '');
+      const prompt = decodeURIComponent(promptEncoded);
+
+      if (!prompt) {
+        console.warn('AngieMcpSdk: Empty prompt detected in hash');
+        return;
+      }
+
+      console.log('AngieMcpSdk: Detected prompt in hash:', prompt);
+
+      await this.waitForReady();
+
+      const response = await this.triggerAngie({
+        prompt,
+        context: {
+          source: 'hash-parameter',
+          pageUrl: window.location.href,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      console.log('AngieMcpSdk: Triggered successfully from hash:', response);
+
+      window.location.hash = '';
+    } catch (error) {
+      console.error('AngieMcpSdk: Failed to trigger from hash:', error);
+    }
+  }
+
+  private setupPromptHashDetection(): void {
+    this.handlePromptHash();
+    window.addEventListener('hashchange', () => this.handlePromptHash());
   }
 }

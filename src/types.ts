@@ -57,9 +57,9 @@ export interface AngieDetectionResult {
   capabilities?: string[];
 }
 
-export interface AngieMessage {
+export interface AngieMessage<T = unknown> {
   type: string;
-  payload: any;
+  payload: T;
   origin?: string;
   timestamp: number;
 }
@@ -84,9 +84,42 @@ export interface ClientCreationResponse {
   error?: string;
 }
 
+export interface AngieTriggerRequest {
+  prompt?: string;
+  context:{
+    source?: string;
+  }& Record<string, any>;
+  options?: {
+    timeout?: number;
+  };
+}
+
+export interface AngieTriggerResponse {
+  success: boolean;
+  response?: string;
+  error?: string;
+  requestId: string;
+}
+
+
 export enum MessageEventType {
   SDK_ANGIE_READY_PING = 'sdk-angie-ready-ping',
   SDK_ANGIE_REFRESH_PING = 'sdk-angie-refresh-ping',
   SDK_REQUEST_CLIENT_CREATION = 'sdk-request-client-creation',
   SDK_REQUEST_INIT_SERVER = 'sdk-request-init-server',
+  SDK_TRIGGER_ANGIE = 'sdk-trigger-angie',
+  SDK_TRIGGER_ANGIE_RESPONSE = 'sdk-trigger-angie-response',
+}
+
+
+export enum HostLocalStorageEventType {
+	SET = 'ANGIE_SET_LOCALSTORAGE',
+	GET = 'ANGIE_GET_LOCALSTORAGE',
+}
+
+export enum HostEventType {
+	RESET_HASH = 'reset-hash',
+	HOST_READY = 'host/ready',
+	ANGIE_LOADED = 'angie/loaded',
+	ANGIE_READY = 'angie/ready',
 }

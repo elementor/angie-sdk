@@ -19,6 +19,7 @@ const config = {
   },
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    '\\.(css)\\?raw$': '<rootDir>/src/__mocks__/cssRawMock.js',
   },
 };
 

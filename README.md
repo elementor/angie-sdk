@@ -15,6 +15,7 @@ This SDK enables you to create custom MCP servers that Angie can discover and us
 - [Supported MCP Features](#supported-mcp-features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Triggering Angie with Prompts](#triggering-angie-with-prompts)
 - [MCP Server Example](#mcp-server-example)
 - [Registering Tools](#registering-tools)
 - [Handling Tool Calls](#handling-tool-calls)
@@ -143,6 +144,57 @@ await sdk.registerServer({
   server,
 });
 ```
+
+---
+
+## Triggering Angie with Prompts
+
+The SDK can also trigger Angie with custom prompts - useful for help buttons or deep linking.
+
+```typescript
+import { AngieMcpSdk } from '@elementor/angie-sdk';
+
+// Register your MCP server and trigger Angie
+const server = createSeoMcpServer();
+const sdk = new AngieMcpSdk();
+await sdk.registerServer({
+  name: 'my-seo-server',
+  version: '1.0.0',
+  description: 'SEO tools for Angie',
+  server,
+});
+
+// Trigger Angie with a prompt
+await sdk.triggerAngie({
+  prompt: 'Help me optimize this page for SEO',
+  context: { pageType: 'product', source: 'my-plugin' },
+  options: {
+    timeout: 30000, // Optional: 30 seconds timeout (default: 30000)
+    
+  }
+});
+
+// Or simplified version
+await sdk.triggerAngie({
+  prompt: 'Help me create a contact page'
+});
+```
+
+**Options:**
+- `timeout`: How long to wait for Angie response (milliseconds)  
+- `priority`: Request priority level
+- `context`: Additional data to help Angie understand the request
+
+### Hash Parameter Method
+
+```javascript
+// Trigger via URL hash - perfect for deep linking
+window.location.hash = 'angie-prompt=' + encodeURIComponent('Help me create a contact page');
+
+// Or visit URLs like: https://yoursite.com/wp-admin/edit.php#angie-prompt=Help%20me%20optimize%20SEO
+```
+
+**Note:** Always call `await sdk.waitForReady()` before triggering Angie.
 
 ---
 
@@ -331,6 +383,22 @@ If you have questions or need help, open an issue or contact the Elementor team!
 2. Verify tool names match between registration and handler
 3. Test REST API endpoints independently
 4. Ensure proper nonce and permission setup
+
+### Dev Mode for Enhanced Debugging
+
+Angie includes a Dev Mode feature that displays tool execution progress and details directly in the chat interface, making it easier to debug your MCP server integrations and understand how Angie interacts with your tools.
+
+**To enable Dev Mode:**
+1. Open Angie in WordPress
+2. Click on the User Profile icon
+3. Navigate to Tools
+4. Toggle "Dev Mode" on
+
+**What Dev Mode shows:**
+When enabled, Angie will display in the chat:
+- Tool execution history for each user request
+- Tool call status (pending, in progress, completed, failed)
+- Tool input and output
 
 ---
 

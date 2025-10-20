@@ -13,6 +13,10 @@ export default {
         use: 'ts-loader',
         exclude: /node_modules/,
       },
+      {
+        test: /\.css$/i,
+        use: 'raw-loader',
+      },
     ],
   },
   resolve: {
