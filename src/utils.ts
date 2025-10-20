@@ -39,3 +39,20 @@ export const waitForDocumentReady = () => {
 		}
 	} );
 };
+
+export const isSafeUrl = ( url: string, trustedOrigins: string[] = [] ) => {
+	const origins = trustedOrigins.length === 0 && typeof window !== 'undefined' 
+		? [ window.location.origin ]
+		: trustedOrigins;
+
+	if ( ! url.startsWith( 'http' ) ) {
+		return false;
+	}
+
+	try {
+		const urlObject = new URL( url );
+		return origins.includes( urlObject.origin );
+	} catch {
+		return false;
+	}
+};

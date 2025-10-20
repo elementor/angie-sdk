@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
-import { toggleAngieSidebar, isMobile, sendSuccessMessage, sendErrorMessage, waitForDocumentReady } from './utils';
+import { toggleAngieSidebar, isMobile, sendSuccessMessage, sendErrorMessage, waitForDocumentReady, isSafeUrl } from './utils';
 
 describe('utils', () => {
   let mockIframe: HTMLIFrameElement;
@@ -88,6 +88,26 @@ describe('utils', () => {
       });
 
       await expect(waitForDocumentReady()).resolves.toBeNull();
+    });
+  });
+
+  describe('isSafeUrl', () => {
+    const mockOrigin = 'https://example.com';
+  
+    it('allows same-origin HTTP URLs', () => {
+      expect(isSafeUrl(`${mockOrigin}/page`, [mockOrigin])).toBe(true);
+    });
+  
+    it('blocks cross-origin URLs', () => {
+      expect(isSafeUrl('https://evil.com', [mockOrigin])).toBe(false);
+    });
+  
+    it('blocks javascript: protocol', () => {
+      expect(isSafeUrl('javascript:alert(1)', [mockOrigin])).toBe(false);
+    });
+  
+    it('blocks data: protocol', () => {
+      expect(isSafeUrl('data:text/html,<script>alert(1)</script>', [mockOrigin])).toBe(false);
     });
   });
 });

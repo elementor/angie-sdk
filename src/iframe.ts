@@ -1,6 +1,6 @@
 import { openSaaSPage } from './openSaaSPage';
 import { loadWidth } from './sidebar';
-import { isMobile, sendSuccessMessage, toggleAngieSidebar } from './utils';
+import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
 import { ANGIE_SDK_VERSION } from './version';
 import { listenToSDK } from './sdk';
 import { addLocalStorageListener } from './localStorage';
@@ -161,6 +161,13 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	listenToOAuthFromIframe();
 
 	window.addEventListener( 'message', async ( event ) => {
+
+		const trustedOrigins = [ window.location.origin, props.origin || 'https://angie.elementor.com' ];
+
+		if ( ! trustedOrigins.includes( event.origin ) ) {
+			return;
+		}
+
 		if ( event?.data?.type === MessageEventType.ANGIE_CHAT_TOGGLE ) {
 			appState.open = event.data.open;
 
@@ -182,8 +189,12 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 				document.documentElement.classList.add( 'angie-studio-active' );
 			}
 		} else if ( event?.data?.type === MessageEventType.ANGIE_NAVIGATE_TO_URL ) {
-			const { url } = event.data;
-			window.location.assign( url );
+			const { url = '' } = event.data;
+			if ( isSafeUrl( url ) ) {
+				window.location.assign( url );
+			} else {
+				throw new Error( 'Angie: Invalid URL - navigation blocked for security reasons' );
+			}
 		} else if ( event?.data?.type === MessageEventType.ANGIE_PAGE_RELOAD ) {
 			console.log( 'Angie requested page reload - database operations completed' );
 			window.location.reload();
