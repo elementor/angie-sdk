@@ -1,6 +1,6 @@
 # @elementor/angie-sdk
 
-Based on [MCP](https://github.com/modelcontextprotocol/typescript-sdk) version: 1.17.4
+Based on [MCP](https://github.com/modelcontextprotocol/typescript-sdk) version: 1.20.1
 
 **An SDK for extending Angie AI Assistant capabilities.**
 
@@ -15,8 +15,10 @@ This SDK enables you to create custom MCP servers that Angie can discover and us
 - [Supported MCP Features](#supported-mcp-features)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
+- [Async Registration](#async-registration)
 - [Triggering Angie with Prompts](#triggering-angie-with-prompts)
 - [MCP Server Example](#mcp-server-example)
+- [Adding Instructions to MCP Servers](#adding-instructions-to-mcp-servers)
 - [Registering Tools](#registering-tools)
 - [Handling Tool Calls](#handling-tool-calls)
 - [Best Practices](#best-practices)
@@ -91,10 +93,17 @@ The SDK covers three main abilities:
 ```
 
 ## Supported MCP Features
-* Resources
-* Notifications
-* Tools
-* Sampling
+
+**Supported:**
+- Tools, Resources, Notifications, Sampling (via backend)
+
+**Not Supported Yet:**
+- Prompts (shown in inspector only), OAuth 2.0 external auth, Elicitation
+
+**Not Available:**
+- Roots, STDIO transport (browser environment limitations)
+
+📖 **For detailed feature documentation and best practices, see [MCP SDK Supported Features](./docs/angie-sdk-supported-features.md)**
 
 ---
 
@@ -124,8 +133,11 @@ import {
 // Define the MCP server
 function createSeoMcpServer() {
   const server = new McpServer(
-    { name: 'my-seo-server', version: '1.0.0' },
-    { capabilities: { tools: {} } }
+    { name: 'my-seo-server', title: 'SEO', version: '1.0.0' },
+    { 
+      capabilities: { tools: {} },
+      instructions: `Guidelines for when to use this server and its capabilities.`
+    }
   );
 
   // Add your tools, resources, etc.
@@ -137,13 +149,25 @@ function createSeoMcpServer() {
 // Register the server with Angie
 const server = createSeoMcpServer();
 const sdk = new AngieMcpSdk();
-await sdk.registerServer({
+
+await sdk.waitForReady();
+
+sdk.registerServer({
   name: 'my-seo-server',
   version: '1.0.0',
   description: 'SEO tools for Angie',
   server,
 });
 ```
+
+### Async Registration
+
+The `registerServer()` method is asynchronous and returns a Promise.
+In most cases, you don't need to `await` it since registration happens in the background.
+
+**Use `await sdk.registerServer(...)` when:**
+- You need to ensure registration is complete before proceeding
+- You need to catch and handle registration errors explicitly
 
 ---
 
@@ -157,7 +181,10 @@ import { AngieMcpSdk } from '@elementor/angie-sdk';
 // Register your MCP server and trigger Angie
 const server = createSeoMcpServer();
 const sdk = new AngieMcpSdk();
-await sdk.registerServer({
+
+await sdk.waitForReady();
+
+sdk.registerServer({
   name: 'my-seo-server',
   version: '1.0.0',
   description: 'SEO tools for Angie',
@@ -214,6 +241,50 @@ your-plugin/
 
 - **PHP**: Implements REST API endpoints for your tool - if needed.
 - **JS/TS**: Registers tools and handles requests using the SDK.
+
+---
+
+## Adding Instructions to MCP Servers
+
+Instructions are guidelines that describe when to use your MCP server and what its capabilities are. They help Angie understand what your server can and cannot do, ensuring appropriate tool selection and proper user expectations.
+
+### Why Add Instructions?
+
+- Guide Angie on when your server is the right choice for a task
+- Clarify what capabilities are available
+- Set clear boundaries on what cannot be done
+- Improve tool selection accuracy
+
+### How to Add Instructions
+
+Provide instructions in the second parameter during server initialization:
+
+```typescript
+const server = new McpServer(
+  { name: 'content-writer', title: 'Content Writer', version: '1.0.0' },
+  {
+    instructions: `Guidelines for using the Text Content Management server.
+
+### Capabilities:
+- **Generate new content**: Creates blog posts, page content, headlines, product descriptions
+- **Edit existing content**: Refines or adjusts text based on specific instructions
+- **Content variations**: Creates multiple versions for A/B testing or different audiences
+
+### Limitations:
+- **SEO optimization**: Cannot analyze or optimize for specific keywords or search rankings
+- **Fact checking**: Cannot verify accuracy against real-world data
+- **Plagiarism checking**: Cannot verify content originality`
+  }
+);
+```
+
+### Best Practices
+
+1. **Describe Capabilities Clearly**: Explain what each capability does and when to use it, not just feature names
+2. **Define Use Cases**: Help Angie understand when your server is the right choice for a task
+3. **Set Clear Boundaries**: Explicitly state what your server cannot do to prevent inappropriate tool calls
+4. **Keep Updated**: Refresh instructions when you add or remove tools
+5. **Use Action-Oriented Language**: Focus on what users can accomplish with your server
 
 ---
 
