@@ -31,29 +31,6 @@ describe('BrowserContextTransport', () => {
   });
 
   describe('constructor', () => {
-    it('should create transport with provided MessagePort', () => {
-      // Arrange - Remove global crypto mock for this test
-      delete (global as any).crypto;
-
-      // Act
-      transport = new BrowserContextTransport(mockPort);
-
-      // Assert
-      expect(transport.sessionId).toBeDefined();
-      expect(transport.sessionId).toMatch(/^[a-z0-9]+-[a-z0-9]+$/);
-    });
-
-    it('should create transport with custom session ID', () => {
-      // Arrange
-      const customSessionId = 'custom-session-123';
-
-      // Act
-      transport = new BrowserContextTransport(mockPort, customSessionId);
-
-      // Assert
-      expect(transport.sessionId).toBe(customSessionId);
-    });
-
     it('should throw error when MessagePort is not provided', () => {
       // Act & Assert
       expect(() => {
@@ -247,43 +224,6 @@ describe('BrowserContextTransport', () => {
           message: expect.stringContaining('MessagePort error'),
         })
       );
-    });
-  });
-
-  describe('session ID generation', () => {
-    it('should generate unique session IDs', () => {
-      // Arrange - Remove global crypto mock for this test
-      delete (global as any).crypto;
-
-      // Act
-      const transport1 = new BrowserContextTransport(mockPort);
-      const transport2 = new BrowserContextTransport(mockPort);
-
-      // Assert
-      expect(transport1.sessionId).not.toBe(transport2.sessionId);
-    });
-
-    it('should use crypto.randomUUID when available', () => {
-      // Arrange
-      const mockUUID = 'mock-uuid-123';
-      (global.crypto as any).randomUUID.mockReturnValue(mockUUID);
-
-      // Act
-      transport = new BrowserContextTransport(mockPort);
-
-      // Assert
-      expect(transport.sessionId).toBe(mockUUID);
-    });
-
-    it('should fallback to timestamp-based ID when crypto.randomUUID is not available', () => {
-      // Arrange
-      delete (global as any).crypto;
-
-      // Act
-      transport = new BrowserContextTransport(mockPort);
-
-      // Assert
-      expect(transport.sessionId).toMatch(/^[a-z0-9]+-[a-z0-9]+$/);
     });
   });
 

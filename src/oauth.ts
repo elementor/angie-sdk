@@ -1,4 +1,5 @@
 import { appState } from "./config";
+import { createChildLogger } from "./logger";
 import { sendErrorMessage, sendSuccessMessage } from "./utils";
 
 declare global {
@@ -17,6 +18,8 @@ export const OAUTH_MESSAGE_TYPES = {
 	ANGIE_REDIRECT_TO_AUTH_ORIGIN_LOGOUT: 'ANGIE_REDIRECT_TO_AUTH_ORIGIN_LOGOUT',
 } as const;
 
+const oauthLogger = createChildLogger( 'oauth' );
+
 function checkOAuthParameterCleanup( oldUrl: string, newUrl: string ): boolean {
 	const newUrlObject = new URL( newUrl );
 	const oldUrlObject = new URL( oldUrl );
@@ -28,11 +31,11 @@ function checkOAuthParameterCleanup( oldUrl: string, newUrl: string ): boolean {
 }
 
 function openSidebarAfterAuthentication(): void {
-	console.log( 'OAuth parameters cleaned, opening sidebar' );
+	oauthLogger.log( 'OAuth parameters cleaned, opening sidebar' );
 	try {
 		localStorage.setItem( 'angie_sidebar_state', 'open' );
 	} catch ( e ) {
-		console.warn( 'localStorage not available' );
+		oauthLogger.warn( 'localStorage not available' );
 	}
 	setTimeout( () => {
 		window.toggleAngieSidebar( true );
@@ -41,7 +44,7 @@ function openSidebarAfterAuthentication(): void {
 
 function handleUrlUpdate( newUrl: string, port: MessagePort ): void {
 	if ( ! history?.replaceState ) {
-		console.warn( 'history.replaceState not supported in this browser' );
+		oauthLogger.warn( 'history.replaceState not supported in this browser' );
 		sendErrorMessage( port, { message: 'URL update not supported in this browser' } );
 		return;
 	}
@@ -58,7 +61,7 @@ function handleUrlUpdate( newUrl: string, port: MessagePort ): void {
 			message: 'URL updated successfully',
 		} );
 	} catch ( error ) {
-		console.warn( 'Failed to update URL via history.replaceState:', error );
+		oauthLogger.warn( 'Failed to update URL via history.replaceState:', error );
 		sendErrorMessage( port, { message: 'URL update failed: ' + ( error instanceof Error ? error.message : 'Unknown error' ) } );
 	}
 }
@@ -66,7 +69,7 @@ function handleUrlUpdate( newUrl: string, port: MessagePort ): void {
 function redirectToWpAdminWithOAuth(): void {
 	const currentUrl = new URL( window.location.href );
 	currentUrl.searchParams.set( 'start-oauth', '1' );
-	console.log( 'OAuth: Redirecting to wp-admin with OAuth:', currentUrl.toString() );
+	oauthLogger.log( 'Redirecting to wp-admin with OAuth:', currentUrl.toString() );
 	window.location.href = currentUrl.toString();
 }
 
@@ -111,19 +114,19 @@ export const listenToOAuthFromIframe = (): void => {
 				break;
 
 			case OAUTH_MESSAGE_TYPES.OAUTH_GET_TOP_URL:
-				console.log( 'OAuth: Iframe requested top window URL via MessageChannel' );
+				oauthLogger.log( 'Iframe requested top window URL via MessageChannel' );
 				sendSuccessMessage( event.ports[ 0 ], {
 					topUrl: window.location.href,
 				} );
 				break;
 
 			case OAUTH_MESSAGE_TYPES.OAUTH_REDIRECT_TOP_WINDOW:
-				console.log( 'OAuth: Iframe requested top window redirect to:', event.data.payload.url );
+				oauthLogger.log( 'Iframe requested top window redirect to:', event.data.payload.url );
 				window.location.href = event.data.payload.url;
 				break;
 
 			case OAUTH_MESSAGE_TYPES.OAUTH_UPDATE_URL:
-				console.log( 'OAuth: Iframe requested URL update to:', event.data.payload.url );
+				oauthLogger.log( 'Iframe requested URL update to:', event.data.payload.url );
 				handleUrlUpdate( event.data.payload.url, event.ports[ 0 ] );
 				break;
 
@@ -135,7 +138,7 @@ export const listenToOAuthFromIframe = (): void => {
 				try {
 					redirectToWpAdminWithOAuth();
 				} catch ( error ) {
-					console.error( 'OAuth: Auth origin logout fallback failed:', error );
+					oauthLogger.error( 'Auth origin logout fallback failed:', error );
 					window.location.reload();
 				}
 				break;

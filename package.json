@@ -1,6 +1,6 @@
 {
   "name": "@elementor/angie-sdk",
-  "version": "1.0.4",
+  "version": "1.0.3",
   "description": "TypeScript SDK for Angie AI assistant",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "build": "npm run build:types && npm run build:bundle",
     "build:types": "tsc",
     "build:bundle": "webpack --mode=production",
-    "build:watch": "npm run build:types && webpack --mode=production --watch",
+    "build:watch": "npm run build:types && webpack --mode=development --watch",
     "dev": "tsc --watch",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
@@ -26,10 +26,10 @@
   "author": "Elementor",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.17.4",
-    "zod": "4.1.3"
+    "@elementor/angie-logger": "^0.3.1"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.20.1",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.19.0",
     "@typescript-eslint/eslint-plugin": "^6.19.1",

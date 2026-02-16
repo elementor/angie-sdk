@@ -1,10 +1,12 @@
-import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
+import { Logger } from '@elementor/angie-logger';
 import { AngieDetector } from './angie-detector';
-import { RegistrationQueue } from './registration-queue';
-import { ClientManager } from './client-manager';
 import { BrowserContextTransport } from './browser-context-transport';
+import { ClientManager } from './client-manager';
 import { openIframe } from './iframe';
+import { createChildLogger } from './logger';
+import { RegistrationQueue } from './registration-queue';
 import { initAngieSidebar } from './sidebar';
+import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
 
 export type AngieMcpSdkOptions = {
   origin?: string;
@@ -18,20 +20,22 @@ export class AngieMcpSdk {
   private clientManager: ClientManager;
   private isInitialized = false;
   private instanceId: string;
+  private logger: Logger;
 
   constructor() {
     // Generate unique instance ID to track multiple instances
     this.instanceId = Math.random().toString(36).substring(2, 8);
-    console.log(`AngieMcpSdk: Constructor called - initializing SDK (Instance: ${this.instanceId})`);
+    this.logger = createChildLogger({ instanceId: this.instanceId });
+    this.logger.log(`Constructor called - initializing SDK`);
     this.angieDetector = new AngieDetector();
     this.registrationQueue = new RegistrationQueue();
     this.clientManager = new ClientManager();
-    
-    console.log(`AngieMcpSdk: Setting up event handlers (Instance: ${this.instanceId})`);
+
+    this.logger.log(`Setting up event handlers`);
     this.setupAngieReadyHandler();
     this.setupServerInitHandler();
     this.setupReRegistrationHandler();
-    console.log(`AngieMcpSdk: SDK initialization complete (Instance: ${this.instanceId})`);
+    this.logger.log(`SDK initialization complete`);
   }
 
   public async loadSidebar( options?: AngieMcpSdkOptions ): Promise<void> {
@@ -50,17 +54,17 @@ export class AngieMcpSdk {
   private setupReRegistrationHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_ANGIE_REFRESH_PING) {
-        console.log(`AngieMcpSdk: Angie refresh ping received (Instance: ${this.instanceId})`);
-        
+        this.logger.log(`Angie refresh ping received`);
+
         // Use the safe reset method that checks for concurrent processing
         const resetSuccessful = this.registrationQueue.resetAllToPending();
-        
+
         if (resetSuccessful) {
           const pendingCount = this.registrationQueue.getPending().length;
-          console.log(`AngieMcpSdk: Successfully reset ${pendingCount} registrations, processing queue (Instance: ${this.instanceId})`);
+          this.logger.log(`Successfully reset ${pendingCount} registrations, processing queue`);
           this.handleAngieReady();
         } else {
-          console.log(`AngieMcpSdk: Skipping queue reset - processing already in progress (Instance: ${this.instanceId})`);
+          this.logger.log(`Skipping queue reset - processing already in progress`);
         }
       }
     });
@@ -71,43 +75,43 @@ export class AngieMcpSdk {
       if (result.isReady) {
         this.handleAngieReady();
       } else {
-        console.warn('AngieMcpSdk: Angie not detected - servers will remain queued');
+        this.logger.warn('Angie not detected - servers will remain queued');
       }
     }).catch((error) => {
-      console.error('AngieMcpSdk: Error waiting for Angie:', error);
+      this.logger.error('Error waiting for Angie:', error);
     });
   }
 
   private async handleAngieReady(): Promise<void> {
-    console.log(`AngieMcpSdk: Angie is ready, processing queued registrations (Instance: ${this.instanceId})`);
-    
+    this.logger.log(`Angie is ready, processing queued registrations`);
+
     try {
       await this.registrationQueue.processQueue(async (registration) => {
-        console.log(`AngieMcpSdk: processQueue callback called for "${registration.config.name}" (Instance: ${this.instanceId})`);
+        this.logger.log(`processQueue callback called for "${registration.config.name}"`);
         await this.processRegistration(registration);
       });
-      
+
       this.isInitialized = true;
-      console.log(`AngieMcpSdk: Initialization complete (Instance: ${this.instanceId})`);
+      this.logger.log(`Initialization complete`);
     } catch (error) {
-      console.error(`AngieMcpSdk: Error processing registration queue (Instance: ${this.instanceId}):`, error);
+      this.logger.error(`Error processing registration queue:`, error);
     }
   }
 
   private async processRegistration(registration: ServerRegistration): Promise<void> {
-    console.log(`AngieMcpSdk: Processing registration for server "${registration.config.name}" (ID: ${registration.id}) (Instance: ${this.instanceId})`);
-    
+    this.logger.log(`Processing registration for server "${registration.config.name}" (ID: ${registration.id})`);
+
     try {
-      console.log(`AngieMcpSdk: Calling clientManager.requestClientCreation for "${registration.config.name}" (Instance: ${this.instanceId})`);
+      this.logger.log(`Calling clientManager.requestClientCreation for "${registration.config.name}"`);
       // Include instance ID in the registration so server init can be routed back to the correct instance
       const registrationWithInstance = {
         ...registration,
         instanceId: this.instanceId
       };
       await this.clientManager.requestClientCreation(registrationWithInstance);
-      console.log(`AngieMcpSdk: Successfully registered server "${registration.config.name}" (Instance: ${this.instanceId})`);
+      this.logger.log(`Successfully registered server "${registration.config.name}"`);
     } catch (error) {
-      console.error(`AngieMcpSdk: Failed to register server "${registration.config.name}" (Instance: ${this.instanceId}):`, error);
+      this.logger.error(`Failed to register server "${registration.config.name}":`, error);
       throw error;
     }
   }
@@ -133,13 +137,13 @@ export class AngieMcpSdk {
 
   public async registerServer(config: AngieServerConfig): Promise<void> {
     if (!config.type) {
-      console.warn(`AngieMcpSdk: for a local server, please use registerLocalServer instead of registerServer`);
+      this.logger.warn(`for a local server, please use registerLocalServer instead of registerServer`);
       this.registerLocalServer(config as AngieLocalServerConfig);
       return;
     }
 
-    console.log(`AngieMcpSdk: registerServer called for "${config.name}" (Instance: ${this.instanceId})`);
-    
+    this.logger.log(`registerServer called for "${config.name}"`);
+
     if (!config.name) {
       throw new Error('Server name is required');
     }
@@ -153,23 +157,23 @@ export class AngieMcpSdk {
       throw new Error('Server instance is required for local servers');
     }
 
-    console.log(`AngieMcpSdk: Registering server "${config.name}" (Instance: ${this.instanceId})`);
+    this.logger.log(`Registering server "${config.name}"`);
 
     const registration = this.registrationQueue.add(config);
-    console.log(`AngieMcpSdk: Added registration to queue: ${registration.id} (Instance: ${this.instanceId})`);
+    this.logger.log(`Added registration to queue: ${registration.id}`);
 
     if (this.angieDetector.isReady()) {
       try {
         await this.processRegistration(registration);
         this.registrationQueue.updateStatus(registration.id, 'registered');
-        console.log(`AngieMcpSdk: Server "${config.name}" registered successfully (Instance: ${this.instanceId})`);
+        this.logger.log(`Server "${config.name}" registered successfully`);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         this.registrationQueue.updateStatus(registration.id, 'failed', errorMessage);
         throw error;
       }
     } else {
-      console.log(`AngieMcpSdk: Server "${config.name}" queued until Angie is ready (Instance: ${this.instanceId})`);
+      this.logger.log(`Server "${config.name}" queued until Angie is ready`);
     }
   }
 
@@ -194,7 +198,7 @@ export class AngieMcpSdk {
     if (!result.isReady) {
       throw new Error('Angie is not available');
     }
-    
+
     while (!this.isInitialized) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -219,7 +223,7 @@ export class AngieMcpSdk {
       }, timeout);
 
       const responseHandler = (event: MessageEvent) => {
-        if (event.data?.type === MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE && 
+        if (event.data?.type === MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE &&
             event.data?.payload?.requestId === requestId) {
           clearTimeout(timeoutId);
           window.removeEventListener('message', responseHandler);
@@ -245,21 +249,21 @@ export class AngieMcpSdk {
         timestamp: Date.now()
       };
 
-      console.log(`AngieMcpSdk: Triggering Angie with prompt (Request ID: ${requestId}, Instance: ${this.instanceId})`);
+      this.logger.log(`Triggering Angie with prompt (Request ID: ${requestId})`);
       window.postMessage(message, window.location.origin);
     });
   }
 
-  
+
   public destroy(): void {
     this.registrationQueue.clear();
-    console.log(`AngieMcpSdk: SDK destroyed (Instance: ${this.instanceId})`);
+    this.logger.log(`SDK destroyed`);
   }
 
   private setupServerInitHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_REQUEST_INIT_SERVER) {
-        console.log(`AngieMcpSdk: Server init request received (Instance: ${this.instanceId})`);
+        this.logger.log(`Server init request received`);
         this.handleServerInitRequest(event);
       }
     });
@@ -267,41 +271,41 @@ export class AngieMcpSdk {
 
   private handleServerInitRequest(event: MessageEvent): void {
     const { clientId, serverId, instanceId } = event.data.payload || {};
-    
+
     if (!clientId || !serverId) {
-      console.error(`AngieMcpSdk: Invalid server init request - missing clientId or serverId (Instance: ${this.instanceId})`);
+      this.logger.error(`Invalid server init request - missing clientId or serverId`);
       return;
     }
 
-    console.log(`AngieMcpSdk: Server init request received - Request instanceId: ${instanceId}, This instanceId: ${this.instanceId} (Instance: ${this.instanceId})`);
+    this.logger.log(`Server init request received - Request instanceId: ${instanceId}, This instanceId: ${this.instanceId}`);
 
     // Check if this request is for this instance
     if (instanceId && instanceId !== this.instanceId) {
-      console.log(`AngieMcpSdk: Ignoring server init request for different instance. Request instanceId: ${instanceId}, this instanceId: ${this.instanceId}`);
+      this.logger.log(`Ignoring server init request for different instance. Request instanceId: ${instanceId}, this instanceId: ${this.instanceId}`);
       return;
     }
 
-    console.log(`AngieMcpSdk: Handling server init request for clientId: ${clientId}, serverId: ${serverId} (Instance: ${this.instanceId})`);
+    this.logger.log(`Handling server init request for clientId: ${clientId}, serverId: ${serverId}`);
 
     try {
       // Find the registration by serverId
       const registration = this.registrationQueue.getAll().find(reg => reg.id === serverId);
-      
+
       if (!registration) {
-        console.error(`AngieMcpSdk: No registration found for serverId: ${serverId} (Instance: ${this.instanceId})`);
+        this.logger.error(`No registration found for serverId: ${serverId}`);
         return;
       }
 
       // For remote servers, Angie host connects directly. No local server connect is needed.
       if ('type' in registration.config && registration.config.type === 'remote') {
-        console.log(`AngieMcpSdk: Remote server registration detected; skipping local connect (Instance: ${this.instanceId})`);
+        this.logger.log(`Remote server registration detected; skipping local connect`);
         return;
       }
 
       // Get the port from the message event
       const port = event.ports[0];
       if (!port) {
-        console.error(`AngieMcpSdk: No port provided in server init request (Instance: ${this.instanceId})`);
+        this.logger.error(`No port provided in server init request`);
         return;
       }
 
@@ -309,10 +313,10 @@ export class AngieMcpSdk {
       const server = (registration.config as AngieLocalServerConfig).server;
       const serverTransport = new BrowserContextTransport(port);
       server.connect(serverTransport);
-      
-      console.log(`AngieMcpSdk: Server "${registration.config.name}" initialized successfully (Instance: ${this.instanceId})`);
+
+      this.logger.log(`Server "${registration.config.name}" initialized successfully`);
     } catch (error) {
-      console.error(`AngieMcpSdk: Error initializing server for clientId ${clientId} (Instance: ${this.instanceId}):`, error);
+      this.logger.error(`Error initializing server for clientId ${clientId}:`, error);
     }
   }
 
@@ -332,11 +336,11 @@ export class AngieMcpSdk {
       const prompt = decodeURIComponent(promptEncoded);
 
       if (!prompt) {
-        console.warn('AngieMcpSdk: Empty prompt detected in hash');
+        this.logger.warn('Empty prompt detected in hash');
         return;
       }
 
-      console.log('AngieMcpSdk: Detected prompt in hash:', prompt);
+      this.logger.log('Detected prompt in hash:', prompt);
 
       await this.waitForReady();
 
@@ -349,11 +353,11 @@ export class AngieMcpSdk {
         },
       });
 
-      console.log('AngieMcpSdk: Triggered successfully from hash:', response);
+      this.logger.log('Triggered successfully from hash:', response);
 
       window.location.hash = '';
     } catch (error) {
-      console.error('AngieMcpSdk: Failed to trigger from hash:', error);
+      this.logger.error('Failed to trigger from hash:', error);
     }
   }
 

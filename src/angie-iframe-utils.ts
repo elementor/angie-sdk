@@ -1,3 +1,6 @@
+import { createChildLogger } from './logger';
+
+const iframeUtilsLogger = createChildLogger( 'iframe-utils' );
 let angieIframeRef: HTMLIFrameElement | null = null;
 
 export const setAngieIframeRef = ( iframe: HTMLIFrameElement | null ): void => {
@@ -26,7 +29,7 @@ export const getAngieIframeOrigin = (): string | null => {
 	try {
 		return new URL( iframe.src ).origin;
 	} catch ( error ) {
-		console.error( 'Error parsing iframe URL:', error );
+		iframeUtilsLogger.error( 'Error parsing iframe URL:', error );
 		return null;
 	}
 };
@@ -35,7 +38,7 @@ export const postMessageToAngieIframe = (
 	message: Record<string, unknown>,
 	targetOrigin?: string
 ): boolean => {
-	console.log( 'postMessageToAngieIframe', message, targetOrigin );
+	iframeUtilsLogger.log( 'postMessageToAngieIframe', message, targetOrigin );
 	const iframe = getAngieIframe();
 	if ( ! iframe?.contentWindow ) {
 		return false;
@@ -43,7 +46,7 @@ export const postMessageToAngieIframe = (
 
 	const origin = targetOrigin || getAngieIframeOrigin();
 	if ( ! origin ) {
-		console.error( 'Could not determine target origin for Angie iframe' );
+		iframeUtilsLogger.error( 'Could not determine target origin for Angie iframe' );
 		return false;
 	}
 

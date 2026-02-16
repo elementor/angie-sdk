@@ -1,36 +1,13 @@
-import { openSaaSPage } from './openSaaSPage';
+import { addLocalStorageListener } from './localStorage';
+import { appState } from './config';
+import { createChildLogger } from './logger';
+import { listenToOAuthFromIframe } from './oauth';
+import { listenToSDK } from './sdk';
 import { loadWidth } from './sidebar';
+import { HostEventType, MessageEventType } from './types';
 import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
 import { ANGIE_SDK_VERSION } from './version';
-import { listenToSDK } from './sdk';
-import { addLocalStorageListener } from './localStorage';
-import { HostEventType } from './types';
-import { appState } from './config';
-import { listenToOAuthFromIframe } from './oauth';
-
-declare global {
-	interface Window {
-		angieConfig?: {
-			version: string;
-		};
-	}
-}
-
-export enum MessageEventType {
-	SDK_ANGIE_ALL_SERVERS_REGISTERED = 'sdk-angie-all-servers-registered',
-	SDK_ANGIE_READY_PING = 'sdk-angie-ready-ping',
-	SDK_REQUEST_CLIENT_CREATION = 'sdk-request-client-creation',
-	SDK_TRIGGER_ANGIE = 'sdk-trigger-angie',
-	SDK_TRIGGER_ANGIE_RESPONSE = 'sdk-trigger-angie-response',
-	
-	ANGIE_SIDEBAR_RESIZED = 'angie-sidebar-resized',
-	ANGIE_SIDEBAR_TOGGLED = 'angie-sidebar-toggled',
-	ANGIE_CHAT_TOGGLE = 'angie-chat-toggle',
-	ANGIE_STUDIO_TOGGLE = 'angie-studio-toggle',
-	ANGIE_NAVIGATE_TO_URL = 'angie/navigate-to-url',
-	ANGIE_PAGE_RELOAD = 'angie/page-reload',
-	
-}
+import { openSaaSPage } from './openSaaSPage';
 
 type OpenIframeProps = {
 	origin?: string;
@@ -38,9 +15,34 @@ type OpenIframeProps = {
 	isRTL: boolean;
 }
 
+const iframeLogger = createChildLogger( 'iframe' );
+
+/**
+ * Helper function to disable navigation prevention in Angie iframe
+ * Sends a message to the iframe to allow navigation/reload to proceed
+ */
+export const disableNavigationPrevention = async (): Promise<void> => {
+	if ( ! appState.iframe?.contentWindow || ! appState.iframeUrlObject ) {
+		iframeLogger.warn( 'Cannot disable navigation prevention: iframe or origin not available' );
+		return;
+	}
+
+	try {
+		iframeLogger.log( 'Disabling navigation prevention in Angie iframe' );
+		appState.iframe.contentWindow.postMessage(
+			{ type: MessageEventType.ANGIE_DISABLE_NAVIGATION_PREVENTION },
+			appState.iframeUrlObject.origin
+		);
+		await new Promise( resolve => setTimeout( resolve, 100 ) );
+	} catch ( error ) {
+		iframeLogger.error( 'Failed to disable navigation prevention:', error );
+		throw error;
+	}
+};
+
 export const openIframe = async ( props: OpenIframeProps ) => {
 	if ( isMobile() ) {
-		console.log( 'Angie: Mobile detected, skipping iframe injection' );
+		iframeLogger.log( 'Mobile detected, skipping iframe injection' );
 		return;
 	}
 
@@ -50,7 +52,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	if ( ! sidebarContainer ) {
 		// Use MutationObserver for more efficient DOM watching
 		const sidebarWaitStart = performance.now();
-		console.log( '⏱️ Waiting for sidebar container...' );
+		iframeLogger.log( '⏱️ Waiting for sidebar container...' );
 
 		await new Promise<void>( ( resolve ) => {
 			// First try with shorter polling interval for immediate cases
@@ -97,10 +99,10 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 			}, 2000 );
 		} );
 
-		console.log( `⏱️ Sidebar container detection took: ${ ( performance.now() - sidebarWaitStart ).toFixed( 2 ) }ms` );
+		iframeLogger.log( `⏱️ Sidebar container detection took: ${ ( performance.now() - sidebarWaitStart ).toFixed( 2 ) }ms` );
 
 		if ( ! sidebarContainer ) {
-			console.error( 'Angie: Sidebar container not found' );
+			iframeLogger.error( 'Sidebar container not found' );
 			return;
 		}
 	}
@@ -108,7 +110,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	// Determine insertion method and styling based on sidebar availability
 	const insertCallback = ( iframeElement: HTMLIFrameElement ) => {
 		// Sidebar mode - inject into sidebar container
-		console.log( 'Injecting Angie iframe into sidebar container' );
+		iframeLogger.log( 'Injecting Angie iframe into sidebar container' );
 
 		// Set iframe attributes for accessibility
 		iframeElement.setAttribute( 'title', 'Angie AI Assistant' );
@@ -189,15 +191,40 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 				document.documentElement.classList.add( 'angie-studio-active' );
 			}
 		} else if ( event?.data?.type === MessageEventType.ANGIE_NAVIGATE_TO_URL ) {
-			const { url = '' } = event.data;
+			const { url = '', confirmed = false } = event.data.payload || {};
+			
+			if ( ! confirmed ) {
+				iframeLogger.log( 'Navigation requires user confirmation' );
+				// Future: Send confirmation request back to iframe
+				return;
+			}
+			
 			if ( isSafeUrl( url ) ) {
+				// Disable navigation prevention in Angie iframe
+				await disableNavigationPrevention();
 				window.location.assign( url );
 			} else {
-				throw new Error( 'Angie: Invalid URL - navigation blocked for security reasons' );
+				iframeLogger.error( 'Navigation blocked: Invalid or unsafe URL', { url } );
+				return;
 			}
 		} else if ( event?.data?.type === MessageEventType.ANGIE_PAGE_RELOAD ) {
-			console.log( 'Angie requested page reload - database operations completed' );
-			window.location.reload();
+			const { confirmed = false } = event.data.payload || {};
+			
+			if ( ! confirmed ) {
+				iframeLogger.log( 'Page reload requires user confirmation' );
+				// Future: Send confirmation request back to iframe
+				return;
+			}
+			
+			iframeLogger.log( 'Page reload confirmed - disabling navigation prevention and reloading' );
+			
+			// Disable navigation prevention in Angie iframe
+			await disableNavigationPrevention();
+			
+			// Reload the page
+			setTimeout( () => {
+				window.location.reload();
+			}, 50 );
 		} else if ( event?.data?.type === HostEventType.RESET_HASH ) {
 			window.location.hash = '';
 

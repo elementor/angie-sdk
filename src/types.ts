@@ -23,6 +23,7 @@ export enum AngieServerType {
 
 export type AngieBaseServerConfig = {
   name: string;
+  title?: string;
   version: string;
   description: string;
   capabilities?: ServerCapabilities;
@@ -67,6 +68,7 @@ export interface AngieMessage<T = unknown> {
 export interface ClientCreationRequest {
   serverId: string;
   serverName: string;
+  serverTitle?: string;
   description: string;
   serverVersion: string;
   transport?: AngieLocalServerTransport | AngieRemoteServerTransport;
@@ -105,10 +107,20 @@ export interface AngieTriggerResponse {
 export enum MessageEventType {
   SDK_ANGIE_READY_PING = 'sdk-angie-ready-ping',
   SDK_ANGIE_REFRESH_PING = 'sdk-angie-refresh-ping',
+  SDK_ANGIE_ALL_SERVERS_REGISTERED = 'sdk-angie-all-servers-registered',
   SDK_REQUEST_CLIENT_CREATION = 'sdk-request-client-creation',
   SDK_REQUEST_INIT_SERVER = 'sdk-request-init-server',
   SDK_TRIGGER_ANGIE = 'sdk-trigger-angie',
   SDK_TRIGGER_ANGIE_RESPONSE = 'sdk-trigger-angie-response',
+  
+  ANGIE_SIDEBAR_RESIZED = 'angie-sidebar-resized',
+  ANGIE_SIDEBAR_TOGGLED = 'angie-sidebar-toggled',
+  ANGIE_CHAT_TOGGLE = 'angie-chat-toggle',
+  ANGIE_STUDIO_TOGGLE = 'angie-studio-toggle',
+  ANGIE_NAVIGATE_TO_URL = 'angie/navigate-to-url',
+  ANGIE_PAGE_RELOAD = 'angie/page-reload',
+  ANGIE_DISABLE_NAVIGATION_PREVENTION = 'angie/disable-navigation-prevention',
+  ANGIE_NAVIGATE_AFTER_RESPONSE = 'angie/navigate-after-response',
 }
 
 

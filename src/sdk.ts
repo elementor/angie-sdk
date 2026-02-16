@@ -1,7 +1,8 @@
+import { AppState } from './config';
+import { MessageEventType } from './types';
+import { createChildLogger } from './logger';
 import { sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
-import { MessageEventType } from './iframe';
-import { AppState } from './config';
 
 export enum AngieMCPTransport {
 	POST_MESSAGE = 'postMessage',
@@ -16,6 +17,8 @@ export interface ClientCreationRequest {
 	capabilities?: ServerCapabilities;
 }
 
+const sdkLogger = createChildLogger( 'sdk' );
+
 export const listenToSDK = ( appState: AppState ) => {
 	// Access global timing instance for SDK performance tracking
 	window.addEventListener( 'message', async ( event ) => {
@@ -25,21 +28,22 @@ export const listenToSDK = ( appState: AppState ) => {
 			return;
 		}
 
-		switch ( event?.data?.type ) {
-			case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
-				break;
+	switch ( event?.data?.type ) {
+		case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
+			break;
 
-			case MessageEventType.SDK_ANGIE_READY_PING:
-				const port = event.ports[ 0 ];
-				console.log( 'Angie is ready', event );
+		case MessageEventType.SDK_ANGIE_READY_PING: {
+			const port = event.ports[ 0 ];
+			sdkLogger.log( 'Angie is ready', event );
 
-				sendSuccessMessage( port, {
-					message: 'Angie is ready',
-				} );
+			sendSuccessMessage( port, {
+				message: 'Angie is ready',
+			} );
 
-				break;
-			case MessageEventType.SDK_REQUEST_CLIENT_CREATION:
-				const payload = event.data.payload as ClientCreationRequest;
+			break;
+		}
+		case MessageEventType.SDK_REQUEST_CLIENT_CREATION: {
+			const payload = event.data.payload as ClientCreationRequest;
 
 				try {
 					const responsePort = event.ports[ 0 ];
@@ -67,51 +71,53 @@ export const listenToSDK = ( appState: AppState ) => {
 					} else {
 						throw new Error( 'Iframe not found' );
 					}
-				} catch ( error ) {
-					console.error( `AngieMcpSdk:Failed to create client for SDK server "${ payload.serverName }":`, error );
-				}
-				break;
-
-			case MessageEventType.SDK_TRIGGER_ANGIE:
-				console.log( 'SDK Trigger Angie received', event.data );
-
-				try {
-					const { requestId, prompt, context } = event.data.payload;
-
-					if ( appState.iframe ) {
-						appState.iframe.contentWindow?.postMessage( {
-							type: MessageEventType.SDK_TRIGGER_ANGIE,
-							payload: {
-								requestId,
-								prompt,
-								context,
-							},
-						}, appState.iframeUrlObject?.origin || '' );
-					} else {
-						throw new Error( 'Iframe not found' );
-					}
-
-					window.postMessage( {
-						type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
-						payload: {
-							success: true,
-							requestId,
-							response: 'Angie triggered successfully',
-						},
-					}, window.location.origin );
-				} catch ( error ) {
-					console.error( 'Failed to trigger Angie:', error );
-
-					window.postMessage( {
-						type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
-						payload: {
-							success: false,
-							requestId: event.data.payload?.requestId,
-							error: error instanceof Error ? error.message : 'Unknown error',
-						},
-					}, window.location.origin );
-				}
-				break;
+			} catch ( error ) {
+				sdkLogger.error( `Failed to create client for SDK server "${ payload.serverName }":`, error );
+			}
+			break;
 		}
+
+		case MessageEventType.SDK_TRIGGER_ANGIE: {
+			sdkLogger.log( 'SDK Trigger Angie received', event.data );
+
+			try {
+				const { requestId, prompt, context } = event.data.payload;
+
+				if ( appState.iframe ) {
+					appState.iframe.contentWindow?.postMessage( {
+						type: MessageEventType.SDK_TRIGGER_ANGIE,
+						payload: {
+							requestId,
+							prompt,
+							context,
+						},
+					}, appState.iframeUrlObject?.origin || '' );
+				} else {
+					throw new Error( 'Iframe not found' );
+				}
+
+				window.postMessage( {
+					type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+					payload: {
+						success: true,
+						requestId,
+						response: 'Angie triggered successfully',
+					},
+				}, window.location.origin );
+			} catch ( error ) {
+				sdkLogger.error( 'Failed to trigger Angie:', error );
+
+				window.postMessage( {
+					type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+					payload: {
+						success: false,
+						requestId: event.data.payload?.requestId,
+						error: error instanceof Error ? error.message : 'Unknown error',
+					},
+				}, window.location.origin );
+			}
+			break;
+		}
+	}
 	} );
 };

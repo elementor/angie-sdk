@@ -1,4 +1,7 @@
 import { getAngieIframe, postMessageToAngieIframe } from './angie-iframe-utils';
+import { createChildLogger } from './logger';
+
+const navigationLogger = createChildLogger( 'navigation' );
 
 export const navigateAngieIframe = (
 	path: string,
@@ -18,12 +21,12 @@ export const navigateAngieIframe = (
 		} );
 
 		if ( ! success ) {
-			console.error( 'Failed to post navigation message to Angie iframe' );
+			navigationLogger.error( 'Failed to post navigation message to Angie iframe' );
 		}
 
 		return success;
 	}
 
-	console.error( 'Angie iframe not found' );
+	navigationLogger.error( 'Angie iframe not found' );
 	return false;
 };

@@ -1,4 +1,7 @@
+import { createChildLogger } from './logger';
 import { AngieDetectionResult, MessageEventType } from './types';
+
+const detectorLogger = createChildLogger('angie-detector');
 
 export class AngieDetector {
   private isAngieReady = false;
@@ -69,7 +72,7 @@ export class AngieDetector {
     if (this.readyResolve) {
       this.readyResolve(result);
     }
-    console.warn('AngieMcpSdk: AngieDetector: Detection timeout - Angie may not be available');
+    detectorLogger.warn('Detection timeout - Angie may not be available');
   }
 
   public isReady(): boolean {
