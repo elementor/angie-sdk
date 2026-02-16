@@ -8,8 +8,6 @@ When a tool is selected, Angie uses its preferred model for both planning and ex
 
 ## Annotation Schema
 
-**File**: `packages/elementor-ai-common/src/angie-annotations.ts`
-
 ```typescript
 export const ANGIE_MODEL_PREFERENCES = 'angie/modelPreferences' as const;
 
@@ -24,7 +22,7 @@ export interface AngieModelPreferences {
 ## Usage Example
 
 ```typescript
-import { ANGIE_MODEL_PREFERENCES } from '~elementor-ai-common/angie-annotations';
+const ANGIE_MODEL_PREFERENCES = 'angie/modelPreferences';
 
 server.tool(
   'generate-custom-css',
@@ -49,13 +47,9 @@ server.tool(
 
 Angie resolves the model to use in this order:
 
-1. **User preference (Internal users only)** - `executionModel` if provided and different from default (`gpt-4o`)
+1. **User preference** - User-selected model if provided and different from the default
 2. **Tool annotation** - `angie/modelPreferences.hints[0]` if user preference is default or not provided
 3. **System defaults** - Falls back to default model if neither is available
-
-## Implementation Details
-
-The backend (`elementor-ai-api/src/angie/angie.service.ts`) extracts model preferences from tool annotations:
 
 ## Best Practices
 
@@ -70,4 +64,3 @@ The backend (`elementor-ai-api/src/angie/angie.service.ts`) extracts model prefe
 - First hint is the most preferred, subsequent hints are fallbacks
 - Fully typed with TypeScript - no `any` types used
 - Backward compatible with existing model selection behavior
-

@@ -1,6 +1,6 @@
 {
   "name": "@elementor/angie-sdk",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "TypeScript SDK for Angie AI assistant",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -51,6 +51,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/elementor/angie-sdk.git"
+    "url": "git+https://github.com/elementor/angie-sdk.git"
+  },
+  "homepage": "https://github.com/elementor/angie-sdk",
+  "publishConfig": {
+    "access": "public"
   }
 }
