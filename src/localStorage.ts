@@ -8,19 +8,18 @@ export const addLocalStorageListener = () => {
 		}
 
 		switch ( event.data.type ) {
-			case HostLocalStorageEventType.SET:
+			case HostLocalStorageEventType.SET: {
 				window.localStorage.setItem( event.data.key, event.data.value );
 				break;
-			case HostLocalStorageEventType.GET:
-
+			}
+			case HostLocalStorageEventType.GET: {
 				const port = event.ports[ 0 ];
-
 				const value = window.localStorage.getItem( event.data.key );
-
 				port.postMessage( {
 					value,
 				} );
 				break;
+			}
 		}
 	} );
 };

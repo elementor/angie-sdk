@@ -1,8 +1,10 @@
+import { createChildLogger } from "./logger";
 import { postMessageToAngieIframe } from "./angie-iframe-utils";
 import { MessageEventType } from "./iframe";
 import { waitForDocumentReady } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
 
+const sidebarLogger = createChildLogger( 'sidebar' );
 let cssInjected = false;
 
 function injectCSS(): void {
@@ -56,7 +58,7 @@ export function loadWidth(): number {
 			}
 		}
 	} catch ( e ) {
-		console.warn( 'localStorage not available' );
+		sidebarLogger.warn( 'localStorage not available' );
 	}
 	return DEFAULT_WIDTH;
 }
@@ -82,7 +84,7 @@ export function saveState( state: string ): void {
 	try {
 		localStorage.setItem( 'angie_sidebar_state', state );
 	} catch ( e ) {
-		console.warn( 'localStorage not available' );
+		sidebarLogger.warn( 'localStorage not available' );
 	}
 }
 
@@ -90,7 +92,7 @@ export function saveWidth( width: number ): void {
 	try {
 		localStorage.setItem( 'angie_sidebar_width', width.toString() );
 	} catch ( e ) {
-		console.warn( 'localStorage not available' );
+		sidebarLogger.warn( 'localStorage not available' );
 	}
 }
 
@@ -111,7 +113,7 @@ export function forceSidebarClosedDuringOAuth(): void {
 	try {
 		localStorage.setItem( 'angie_sidebar_state', ANGIE_SIDEBAR_STATE_CLOSED );
 	} catch ( e ) {
-		console.warn( 'localStorage not available' );
+		sidebarLogger.warn( 'localStorage not available' );
 	}
 }
 
@@ -212,7 +214,7 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 		const sidebar = document.getElementById( 'angie-sidebar-container' );
 
 		if ( ! sidebar ) {
-			console.warn( 'Angie Sidebar: Required elements not found!' );
+			sidebarLogger.warn( 'Required elements not found!' );
 			return;
 		}
 

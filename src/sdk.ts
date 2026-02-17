@@ -1,7 +1,10 @@
+import { createChildLogger } from './logger';
 import { sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
 import { MessageEventType } from './iframe';
 import { AppState } from './config';
+
+const sdkLogger = createChildLogger( 'sdk' );
 
 export enum AngieMCPTransport {
 	POST_MESSAGE = 'postMessage',
@@ -29,16 +32,17 @@ export const listenToSDK = ( appState: AppState ) => {
 			case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
 				break;
 
-			case MessageEventType.SDK_ANGIE_READY_PING:
+			case MessageEventType.SDK_ANGIE_READY_PING: {
 				const port = event.ports[ 0 ];
-				console.log( 'Angie is ready', event );
+				sdkLogger.log( 'Angie is ready', event );
 
 				sendSuccessMessage( port, {
 					message: 'Angie is ready',
 				} );
 
 				break;
-			case MessageEventType.SDK_REQUEST_CLIENT_CREATION:
+			}
+			case MessageEventType.SDK_REQUEST_CLIENT_CREATION: {
 				const payload = event.data.payload as ClientCreationRequest;
 
 				try {
@@ -68,12 +72,13 @@ export const listenToSDK = ( appState: AppState ) => {
 						throw new Error( 'Iframe not found' );
 					}
 				} catch ( error ) {
-					console.error( `AngieMcpSdk:Failed to create client for SDK server "${ payload.serverName }":`, error );
+					sdkLogger.error( `Failed to create client for SDK server "${ payload.serverName }":`, error );
 				}
 				break;
+			}
+			case MessageEventType.SDK_TRIGGER_ANGIE: {
 
-			case MessageEventType.SDK_TRIGGER_ANGIE:
-				console.log( 'SDK Trigger Angie received', event.data );
+				sdkLogger.log( 'SDK Trigger Angie received', event.data );
 
 				try {
 					const { requestId, prompt, context } = event.data.payload;
@@ -100,7 +105,7 @@ export const listenToSDK = ( appState: AppState ) => {
 						},
 					}, window.location.origin );
 				} catch ( error ) {
-					console.error( 'Failed to trigger Angie:', error );
+					sdkLogger.error( 'Failed to trigger Angie:', error );
 
 					window.postMessage( {
 						type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
@@ -112,6 +117,7 @@ export const listenToSDK = ( appState: AppState ) => {
 					}, window.location.origin );
 				}
 				break;
+			}
 		}
 	} );
 };
