@@ -1,3 +1,4 @@
+import { createChildLogger } from './logger';
 import { openSaaSPage } from './openSaaSPage';
 import { loadWidth } from './sidebar';
 import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
@@ -38,9 +39,11 @@ type OpenIframeProps = {
 	isRTL: boolean;
 }
 
+const iframeLogger = createChildLogger( 'iframe' );
+
 export const openIframe = async ( props: OpenIframeProps ) => {
 	if ( isMobile() ) {
-		console.log( 'Angie: Mobile detected, skipping iframe injection' );
+		iframeLogger.log( 'Mobile detected, skipping iframe injection' );
 		return;
 	}
 
@@ -50,7 +53,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	if ( ! sidebarContainer ) {
 		// Use MutationObserver for more efficient DOM watching
 		const sidebarWaitStart = performance.now();
-		console.log( '⏱️ Waiting for sidebar container...' );
+		iframeLogger.log( '⏱️ Waiting for sidebar container...' );
 
 		await new Promise<void>( ( resolve ) => {
 			// First try with shorter polling interval for immediate cases
@@ -97,10 +100,10 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 			}, 2000 );
 		} );
 
-		console.log( `⏱️ Sidebar container detection took: ${ ( performance.now() - sidebarWaitStart ).toFixed( 2 ) }ms` );
+		iframeLogger.log( `⏱️ Sidebar container detection took: ${ ( performance.now() - sidebarWaitStart ).toFixed( 2 ) }ms` );
 
 		if ( ! sidebarContainer ) {
-			console.error( 'Angie: Sidebar container not found' );
+			iframeLogger.error( 'Sidebar container not found' );
 			return;
 		}
 	}
@@ -108,7 +111,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	// Determine insertion method and styling based on sidebar availability
 	const insertCallback = ( iframeElement: HTMLIFrameElement ) => {
 		// Sidebar mode - inject into sidebar container
-		console.log( 'Injecting Angie iframe into sidebar container' );
+		iframeLogger.log( 'Injecting Angie iframe into sidebar container' );
 
 		// Set iframe attributes for accessibility
 		iframeElement.setAttribute( 'title', 'Angie AI Assistant' );
@@ -196,7 +199,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 				throw new Error( 'Angie: Invalid URL - navigation blocked for security reasons' );
 			}
 		} else if ( event?.data?.type === MessageEventType.ANGIE_PAGE_RELOAD ) {
-			console.log( 'Angie requested page reload - database operations completed' );
+			iframeLogger.log( 'Angie requested page reload - database operations completed' );
 			window.location.reload();
 		} else if ( event?.data?.type === HostEventType.RESET_HASH ) {
 			window.location.hash = '';

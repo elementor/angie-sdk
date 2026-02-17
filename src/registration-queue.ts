@@ -1,4 +1,7 @@
+import { createChildLogger } from './logger';
 import { ServerRegistration, AngieServerConfig } from './types';
+
+const queueLogger = createChildLogger( 'registration-queue' );
 
 export class RegistrationQueue {
   private queue: ServerRegistration[] = [];
@@ -13,7 +16,7 @@ export class RegistrationQueue {
     };
 
     this.queue.push(registration);
-    console.log(`RegistrationQueue: Added server "${config.name}" to queue`);
+    queueLogger.log(`Added server "${config.name}" to queue`);
     
     return registration;
   }
@@ -36,20 +39,20 @@ export class RegistrationQueue {
         // Clear error when status is updated to pending or registered without an error
         delete registration.error;
       }
-      console.log(`RegistrationQueue: Updated server ${id} status to ${status}`);
+      queueLogger.log(`Updated server ${id} status to ${status}`);
     }
   }
 
   public async processQueue(processor: (registration: ServerRegistration) => Promise<void>): Promise<void> {
     if (this.isProcessing) {
-      console.log('RegistrationQueue: Already processing queue');
+      queueLogger.log('Already processing queue');
       return;
     }
 
     this.isProcessing = true;
     const pendingRegistrations = this.getPending();
 
-    console.log(`RegistrationQueue: Processing ${pendingRegistrations.length} pending registrations`);
+    queueLogger.log(`Processing ${pendingRegistrations.length} pending registrations`);
 
     try {
       for (const registration of pendingRegistrations) {
@@ -59,7 +62,7 @@ export class RegistrationQueue {
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           this.updateStatus(registration.id, 'failed', errorMessage);
-          console.error(`RegistrationQueue: Failed to process registration ${registration.id}:`, errorMessage);
+          queueLogger.error(`Failed to process registration ${registration.id}:`, errorMessage);
         }
       }
     } finally {
@@ -69,12 +72,12 @@ export class RegistrationQueue {
 
   public clear(): void {
     this.queue = [];
-    console.log('RegistrationQueue: Cleared all registrations');
+    queueLogger.log('Cleared all registrations');
   }
 
   public resetAllToPending(): boolean {
     if (this.isProcessing) {
-      console.log('RegistrationQueue: Cannot reset to pending - processing in progress');
+      queueLogger.log('Cannot reset to pending - processing in progress');
       return false;
     }
 
@@ -89,7 +92,7 @@ export class RegistrationQueue {
       }
     });
 
-    console.log(`RegistrationQueue: Reset ${registeredCount + failedCount} registrations to pending`);
+    queueLogger.log(`Reset ${registeredCount + failedCount} registrations to pending`);
     return true;
   }
 
@@ -97,7 +100,7 @@ export class RegistrationQueue {
     const index = this.queue.findIndex(reg => reg.id === id);
     if (index !== -1) {
       this.queue.splice(index, 1);
-      console.log(`RegistrationQueue: Removed registration ${id}`);
+      queueLogger.log(`Removed registration ${id}`);
       return true;
     }
     return false;
