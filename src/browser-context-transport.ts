@@ -6,7 +6,7 @@ import { JSONRPCMessage, JSONRPCMessageSchema } from '@modelcontextprotocol/sdk/
  * between different browser contexts (iframes, workers, tabs, windows, etc.).
  */
 export class BrowserContextTransport implements Transport {
-	sessionId: string;
+	sessionId?: string;
 	onmessage?: ( message: JSONRPCMessage ) => void;
 	onerror?: ( error: Error ) => void;
 	onclose?: () => void;
@@ -17,18 +17,15 @@ export class BrowserContextTransport implements Transport {
 	/**
 	 * Creates a new BrowserContextTransport using an existing MessagePort.
 	 *
-	 * @param { MessagePort } port      The MessagePort to use for communication.
-	 * @param { string }      sessionId Optional session ID. If not provided, one will be generated.
+	 * @param { MessagePort } port The MessagePort to use for communication.
 	 */
-	constructor( port: MessagePort, sessionId?: string ) {
+	constructor( port: MessagePort ) {
 		if ( ! port ) {
 			throw new Error( 'MessagePort is required' );
 		}
 
 		this._port = port;
-		this.sessionId = sessionId || this.generateId();
 
-		// Set up event listeners
 		this._port.onmessage = ( event ) => {
 			try {
 				const message = JSONRPCMessageSchema.parse( event.data );
@@ -43,23 +40,6 @@ export class BrowserContextTransport implements Transport {
 			const messageError = new Error( `MessagePort error: ${ JSON.stringify( event ) }` );
 			this.onerror?.( messageError );
 		};
-	}
-
-	/**
-	 * Internal method to generate a session ID.
-	 * This is separated so it can be used by static methods.
-	 */
-	private static generateSessionId(): string {
-		// Use the standard crypto API for UUID generation if available
-		if ( typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ) {
-			return crypto.randomUUID();
-		}
-
-		// Fallback for environments where crypto.randomUUID is not available
-		// Current timestamp as prefix (in base 36 for shorter string)
-		const timePrefix = Date.now().toString( 36 );
-		const randomSuffix = Math.random().toString( 36 ).substring( 2, 10 );
-		return `${ timePrefix }-${ randomSuffix }`;
 	}
 
 	/**
@@ -118,13 +98,5 @@ export class BrowserContextTransport implements Transport {
 		this._closed = true;
 		this._port.close();
 		this.onclose?.();
-	}
-
-	/**
-	 * Generates a simple unique identifier using timestamp and random values.
-	 * This is not a true UUID but is sufficient for session identification.
-	 */
-	private generateId(): string {
-		return BrowserContextTransport.generateSessionId();
 	}
 }

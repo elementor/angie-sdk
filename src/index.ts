@@ -10,6 +10,7 @@ export {
 	initializeResize,
 	loadState,
 	loadWidth,
+	saveState,
 	saveWidth,
 	type AngieSidebarState,
 } from './sidebar';
@@ -17,3 +18,4 @@ export { waitForDocumentReady, toggleAngieSidebar } from './utils';
 export { navigateAngieIframe } from './navigation-utils';
 export { getAngieIframe } from './angie-iframe-utils';
 export * from './types';
+export { BrowserContextTransport } from './browser-context-transport';
