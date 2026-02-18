@@ -8,6 +8,7 @@ export class ClientManager {
     const request: ClientCreationRequest = {
       serverId: registration.id,
       serverName: config.name,
+      serverTitle: config.title,
       serverVersion: config.version,
       description: config.description,
       transport: config.transport || AngieLocalServerTransport.POST_MESSAGE,

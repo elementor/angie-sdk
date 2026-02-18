@@ -1,7 +1,7 @@
 import { createChildLogger } from './logger';
 import { sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
-import { MessageEventType } from './iframe';
+import { MessageEventType } from './types';
 import { AppState } from './config';
 
 const sdkLogger = createChildLogger( 'sdk' );

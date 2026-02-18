@@ -17,5 +17,6 @@ export {
 export { waitForDocumentReady, toggleAngieSidebar } from './utils';
 export { navigateAngieIframe } from './navigation-utils';
 export { getAngieIframe } from './angie-iframe-utils';
+export { disableNavigationPrevention } from './iframe';
 export * from './types';
 export { BrowserContextTransport } from './browser-context-transport';

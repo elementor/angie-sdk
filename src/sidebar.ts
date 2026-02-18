@@ -1,6 +1,6 @@
-import { createChildLogger } from "./logger";
 import { postMessageToAngieIframe } from "./angie-iframe-utils";
-import { MessageEventType } from "./iframe";
+import { createChildLogger } from "./logger";
+import { MessageEventType } from "./types";
 import { waitForDocumentReady } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
 
