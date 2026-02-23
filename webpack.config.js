@@ -1,11 +1,10 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import webpack from 'webpack';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default {
+const baseConfig = {
   entry: './src/index.ts',
   module: {
     rules: [
@@ -23,6 +22,17 @@ export default {
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
   },
+  externals: [
+    /^@modelcontextprotocol\/sdk\/.*/
+  ],
+  mode: 'production',
+  optimization: {
+    minimize: true,
+  },
+};
+
+const esmConfig = {
+  ...baseConfig,
   output: {
     filename: 'index.js',
     path: path.resolve(__dirname, 'dist'),
@@ -37,11 +47,18 @@ export default {
   experiments: {
     outputModule: true,
   },
-  externals: [
-    /^@modelcontextprotocol\/sdk\/.*/
-  ],
-  mode: 'production',
-  optimization: {
-    minimize: true,
+};
+
+const cjsConfig = {
+  ...baseConfig,
+  output: {
+    filename: 'index.cjs',
+    path: path.resolve(__dirname, 'dist'),
+    library: {
+      type: 'commonjs2',
+    },
+    clean: false,
   },
 };
+
+export default [esmConfig, cjsConfig];
