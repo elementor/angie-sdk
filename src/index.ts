@@ -20,3 +20,4 @@ export { getAngieIframe } from './angie-iframe-utils';
 export { disableNavigationPrevention } from './iframe';
 export * from './types';
 export { BrowserContextTransport } from './browser-context-transport';
+export { setReferrerRedirect, getReferrerRedirect, clearReferrerRedirect } from './referrer-redirect';

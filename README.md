@@ -103,7 +103,9 @@ The SDK covers three main abilities:
 **Not Available:**
 - Roots, STDIO transport (browser environment limitations)
 
-📖 **For detailed feature documentation and best practices, see [MCP SDK Supported Features](./docs/angie-sdk-supported-features.md)**
+📖 **Documentation:**
+- [MCP SDK Supported Features](./docs/angie-sdk-supported-features.md)
+- [Tool Model Preferences](./docs/model-preferences.md) - Configure preferred AI models for your tools
 
 ---
 
