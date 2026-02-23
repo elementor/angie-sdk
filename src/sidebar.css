@@ -29,26 +29,12 @@ body.angie-sidebar-transitioning #angie-sidebar-container {
     transition: var(--angie-sidebar-transition) !important;
 }
 
-/* LTR Layout (default) - Push content to the right */
+/* Layout (default) - Push content */
 @media (min-width: 768px) {
     body.angie-sidebar-active {
         padding-inline-start: var(--angie-sidebar-width) !important;
     }
 
-    body.angie-sidebar-active #angie-body-top-padding {
-        width: 100%;
-        height: 8px;
-    }
-
-    /* Push WordPress Admin Bar - LTR */
-    body.angie-sidebar-active #wpadminbar {
-        inset-inline-start: var(--angie-sidebar-width) !important;
-        inset-inline-end: 8px !important;
-        width: calc(100% - 8px - var(--angie-sidebar-width)) !important;
-        margin-top: 8px;
-    }
-
-    /* Sidebar container - LTR */
     #angie-sidebar-container {
         position: fixed;
         top: 0;
