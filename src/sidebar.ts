@@ -1,5 +1,6 @@
 import { postMessageToAngieIframe } from "./angie-iframe-utils";
 import { createChildLogger } from "./logger";
+import { isOidcFlowInUrl } from "./oidc-auth-inline";
 import { MessageEventType } from "./types";
 import { waitForDocumentReady } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
@@ -100,14 +101,6 @@ export function applyWidth( width: number ): void {
 	document.documentElement.style.setProperty( '--angie-sidebar-width', `${ width }px` );
 }
 
-export function isInOAuthFlow(): boolean {
-	const urlParams = new URLSearchParams( window.location.search );
-	return urlParams.has( 'start-oauth' ) ||
-			urlParams.has( 'oauth_code' ) ||
-			urlParams.has( 'oauth_state' ) ||
-			urlParams.has( 'oauth_error' );
-}
-
 export function forceSidebarClosedDuringOAuth(): void {
 	applyState( ANGIE_SIDEBAR_STATE_CLOSED );
 	try {
@@ -118,7 +111,7 @@ export function forceSidebarClosedDuringOAuth(): void {
 }
 
 export function loadState(): void {
-	if ( isInOAuthFlow() ) {
+	if ( isOidcFlowInUrl() ) {
 		forceSidebarClosedDuringOAuth();
 		return;
 	}

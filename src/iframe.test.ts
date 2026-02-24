@@ -11,6 +11,12 @@ jest.mock( './logger', () => ( {
 	} ) ),
 } ) );
 
+jest.mock( './oidc-auth-inline', () => ( {
+	isOidcFlowInUrl: jest.fn( () => false ),
+	setupOidcAuthParentListener: jest.fn(),
+	forwardOidcLoginFlowToWindow: jest.fn(),
+} ) );
+
 describe( 'disableNavigationPrevention', () => {
 	let mockContentWindow: { postMessage: jest.Mock };
 	let mockIframe: HTMLIFrameElement;

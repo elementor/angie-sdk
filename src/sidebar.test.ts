@@ -25,6 +25,10 @@ jest.mock('./utils', () => ({
   waitForDocumentReady: jest.fn().mockImplementation(() => Promise.resolve()),
 }));
 
+jest.mock('./oidc-auth-inline', () => ({
+  isOidcFlowInUrl: jest.fn(() => false),
+}));
+
 describe('sidebar', () => {
   let mockLocalStorage: { [key: string]: string };
 
