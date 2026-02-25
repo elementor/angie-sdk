@@ -4,6 +4,11 @@ const REFERRER_REDIRECT_KEY = 'angie_return_url';
 
 const referrerLogger = createChildLogger( 'referrer-redirect' );
 
+export type ReferrerRedirectData = {
+	url: string;
+	prompt?: string;
+};
+
 function isValidRedirectUrl( url: string ): boolean {
 	try {
 		const parsed = new URL( url, window.location.origin );
@@ -13,14 +18,20 @@ function isValidRedirectUrl( url: string ): boolean {
 	}
 }
 
-export function setReferrerRedirect( url: string ): boolean {
+export function setReferrerRedirect( url: string, prompt?: string ): boolean {
 	if ( ! isValidRedirectUrl( url ) ) {
 		referrerLogger.warn( 'Invalid redirect URL rejected:', url );
 		return false;
 	}
 
 	try {
-		localStorage.setItem( REFERRER_REDIRECT_KEY, url );
+		const data: ReferrerRedirectData = { url };
+
+		if ( prompt ) {
+			data.prompt = prompt;
+		}
+
+		localStorage.setItem( REFERRER_REDIRECT_KEY, JSON.stringify( data ) );
 		return true;
 	} catch ( e ) {
 		referrerLogger.warn( 'localStorage not available' );
@@ -28,16 +39,32 @@ export function setReferrerRedirect( url: string ): boolean {
 	}
 }
 
-export function getReferrerRedirect(): string | null {
+export function getReferrerRedirect(): ReferrerRedirectData | null {
 	try {
-		const url = localStorage.getItem( REFERRER_REDIRECT_KEY );
-		if ( url && isValidRedirectUrl( url ) ) {
-			return url;
+		const raw = localStorage.getItem( REFERRER_REDIRECT_KEY );
+		if ( ! raw ) {
+			return null;
 		}
-		if ( url ) {
-			referrerLogger.warn( 'Stored redirect URL is invalid, returning null:', url );
+
+		let data: ReferrerRedirectData;
+		try {
+			data = JSON.parse( raw );
+		} catch {
+			referrerLogger.warn( 'Stored redirect data is not valid JSON, returning null' );
+			return null;
 		}
-		return null;
+
+		if ( ! data.url || typeof data.url !== 'string' ) {
+			referrerLogger.warn( 'Stored redirect data missing url field, returning null' );
+			return null;
+		}
+
+		if ( ! isValidRedirectUrl( data.url ) ) {
+			referrerLogger.warn( 'Stored redirect URL is invalid, returning null:', data.url );
+			return null;
+		}
+
+		return data;
 	} catch ( e ) {
 		referrerLogger.warn( 'localStorage not available' );
 		return null;
