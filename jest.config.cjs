@@ -20,6 +20,7 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css)\\?raw$': '<rootDir>/src/__mocks__/cssRawMock.js',
+    '^@elementor/oidc-auth$': '<rootDir>/src/__mocks__/oidc-auth.js',
   },
 };
 

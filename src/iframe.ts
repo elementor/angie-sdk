@@ -1,7 +1,7 @@
 import { addLocalStorageListener } from './localStorage';
 import { appState } from './config';
 import { createChildLogger } from './logger';
-import { listenToOAuthFromIframe } from './oauth';
+import { listenToOAuthFromIframe, setupOidcLoginFlowHandler } from './oauth';
 import { listenToSDK } from './sdk';
 import { loadWidth } from './sidebar';
 import { HostEventType, MessageEventType } from './types';
@@ -157,6 +157,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	listenToSDK( appState );
 
 	listenToOAuthFromIframe();
+	setupOidcLoginFlowHandler();
 
 	window.addEventListener( 'message', async ( event ) => {
 
