@@ -309,12 +309,34 @@ export class AngieMcpSdk {
 
       // Connect the server using the provided port
       const server = (registration.config as AngieLocalServerConfig).server;
+      this.migrateInstructionsCompat(server);
       const serverTransport = new BrowserContextTransport(port);
       server.connect(serverTransport);
       
       this.logger.log(`Server "${registration.config.name}" initialized successfully`);
     } catch (error) {
       this.logger.error(`Error initializing server for clientId ${clientId}:`, error);
+    }
+  }
+
+  /**
+   * Backward compat: MCP SDK >=1.26 moved `instructions` from the first
+   * constructor arg (Implementation/serverInfo) to the second (ServerOptions).
+   * 3rd-party servers still built with the old pattern would lose their
+   * instructions. Detect and migrate at runtime before connecting.
+   */
+  private migrateInstructionsCompat(server: AngieLocalServerConfig['server']): void {
+    try {
+      const innerServer = 'server' in server && server.server ? server.server : server;
+      const serverInfo = (innerServer as any)._serverInfo;
+      const existingInstructions = (innerServer as any)._instructions;
+
+      if (serverInfo?.instructions && !existingInstructions) {
+        (innerServer as any)._instructions = serverInfo.instructions;
+        this.logger.log(`Migrated instructions from serverInfo to serverOptions (backward compat)`);
+      }
+    } catch {
+      // Best-effort migration – never block the connection
     }
   }
 

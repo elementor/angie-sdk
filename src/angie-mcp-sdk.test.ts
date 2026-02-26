@@ -363,6 +363,96 @@ describe('AngieMcpSdk', () => {
       expect(mockServer.connect).toHaveBeenCalled();
     });
 
+    it('should migrate instructions from serverInfo to _instructions when using old SDK pattern', () => {
+      // Arrange
+      const mockPort = { postMessage: jest.fn() };
+      const mockInnerServer = {
+        _serverInfo: { name: 'test', version: '1.0', instructions: 'Use this server for X' },
+        _instructions: undefined,
+      };
+      const mockServer = {
+        server: mockInnerServer,
+        connect: jest.fn(),
+      };
+      const mockRegistration: ServerRegistration = {
+        id: 'server_123',
+        config: { name: 'test-server', version: '1.0.0', description: 'Test', server: mockServer as any },
+        timestamp: Date.now(),
+        status: 'registered',
+      };
+      mockRegistrationQueue.getAll.mockReturnValue([mockRegistration]);
+
+      // Act
+      const event = {
+        data: { type: 'sdk-request-init-server', payload: { clientId: 'c1', serverId: 'server_123' } },
+        ports: [mockPort],
+      } as unknown as MessageEvent<any>;
+      messageHandler(event);
+
+      // Assert
+      expect(mockInnerServer._instructions).toBe('Use this server for X');
+      expect(mockServer.connect).toHaveBeenCalled();
+    });
+
+    it('should not overwrite instructions when already set in server options (new SDK pattern)', () => {
+      // Arrange
+      const mockPort = { postMessage: jest.fn() };
+      const mockInnerServer = {
+        _serverInfo: { name: 'test', version: '1.0', instructions: 'old instructions' },
+        _instructions: 'new instructions from options',
+      };
+      const mockServer = {
+        server: mockInnerServer,
+        connect: jest.fn(),
+      };
+      const mockRegistration: ServerRegistration = {
+        id: 'server_123',
+        config: { name: 'test-server', version: '1.0.0', description: 'Test', server: mockServer as any },
+        timestamp: Date.now(),
+        status: 'registered',
+      };
+      mockRegistrationQueue.getAll.mockReturnValue([mockRegistration]);
+
+      // Act
+      const event = {
+        data: { type: 'sdk-request-init-server', payload: { clientId: 'c1', serverId: 'server_123' } },
+        ports: [mockPort],
+      } as unknown as MessageEvent<any>;
+      messageHandler(event);
+
+      // Assert
+      expect(mockInnerServer._instructions).toBe('new instructions from options');
+      expect(mockServer.connect).toHaveBeenCalled();
+    });
+
+    it('should handle plain Server instance (no .server property) for instructions migration', () => {
+      // Arrange
+      const mockPort = { postMessage: jest.fn() };
+      const mockServer = {
+        _serverInfo: { name: 'test', version: '1.0', instructions: 'plain server instructions' },
+        _instructions: undefined,
+        connect: jest.fn(),
+      };
+      const mockRegistration: ServerRegistration = {
+        id: 'server_123',
+        config: { name: 'test-server', version: '1.0.0', description: 'Test', server: mockServer as any },
+        timestamp: Date.now(),
+        status: 'registered',
+      };
+      mockRegistrationQueue.getAll.mockReturnValue([mockRegistration]);
+
+      // Act
+      const event = {
+        data: { type: 'sdk-request-init-server', payload: { clientId: 'c1', serverId: 'server_123' } },
+        ports: [mockPort],
+      } as unknown as MessageEvent<any>;
+      messageHandler(event);
+
+      // Assert
+      expect(mockServer._instructions).toBe('plain server instructions');
+      expect(mockServer.connect).toHaveBeenCalled();
+    });
+
     it('should ignore non-server-init messages', () => {
       // Act
       const event = {
