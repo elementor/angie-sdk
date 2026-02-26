@@ -9,6 +9,9 @@ on:
         default: 'beta'
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   publish-beta:
     runs-on: ubuntu-latest
