@@ -5,6 +5,7 @@ import {
 } from "@elementor/oidc-auth";
 import { appState } from "./config";
 import { createChildLogger } from "./logger";
+import { clearReferrerRedirect, getReferrerRedirect } from "./referrer-redirect";
 
 declare global {
 	interface Window {
@@ -14,7 +15,22 @@ declare global {
 
 const logger = createChildLogger( 'oauth' );
 
-function openSidebarAfterAuthentication(): void {
+function buildRedirectUrl( url: string, prompt?: string ): string {
+	if ( ! prompt ) {
+		return url;
+	}
+	return `${ url }#angie-prompt=${ encodeURIComponent( prompt ) }`;
+}
+
+function onAuthenticationComplete(): void {
+	const redirectData = getReferrerRedirect();
+
+	if ( redirectData ) {
+		clearReferrerRedirect();
+		window.location.href = buildRedirectUrl( redirectData.url, redirectData.prompt );
+		return;
+	}
+
 	try {
 		localStorage.setItem( 'angie_sidebar_state', 'open' );
 	} catch ( e ) {
@@ -28,7 +44,7 @@ function openSidebarAfterAuthentication(): void {
 export const listenToOAuthFromIframe = (): void => {
 	setupOidcAuthParentListener( {
 		trustedOrigin: appState.iframeUrlObject?.origin ?? '',
-		onOAuthParamsCleared: openSidebarAfterAuthentication,
+		onOAuthParamsCleared: onAuthenticationComplete,
 	} );
 };
 
@@ -37,8 +53,8 @@ export const setupOidcLoginFlowHandler = (): void => {
 
 	window.addEventListener( 'load', () => {
 		logger.log( 'OIDC: Window load event fired, forwarding OIDC state if present' );
-		forwardOidcLoginFlowToWindow( { targets, onSuccess: openSidebarAfterAuthentication } );
+		forwardOidcLoginFlowToWindow( { targets, onSuccess: onAuthenticationComplete } );
 	} );
 
-	forwardOidcLoginFlowToWindow( { targets, onSuccess: openSidebarAfterAuthentication } );
+	forwardOidcLoginFlowToWindow( { targets, onSuccess: onAuthenticationComplete } );
 };
