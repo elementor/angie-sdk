@@ -36,7 +36,7 @@ describe( 'referrer-redirect', () => {
 	} );
 
 	describe( 'setReferrerRedirect', () => {
-		it( 'should store valid same-origin URL', () => {
+		it( 'should store valid same-origin URL as JSON', () => {
 			// Arrange
 			const validUrl = 'http://localhost/some-page?id=123';
 
@@ -45,7 +45,26 @@ describe( 'referrer-redirect', () => {
 
 			// Assert
 			expect( result ).toBe( true );
-			expect( localStorage.setItem ).toHaveBeenCalledWith( 'angie_return_url', validUrl );
+			expect( localStorage.setItem ).toHaveBeenCalledWith(
+				'angie_return_url',
+				JSON.stringify( { url: validUrl } )
+			);
+		} );
+
+		it( 'should store URL with prompt as JSON', () => {
+			// Arrange
+			const validUrl = 'http://localhost/some-page?id=123';
+			const prompt = 'Help me create a contact page';
+
+			// Act
+			const result = setReferrerRedirect( validUrl, prompt );
+
+			// Assert
+			expect( result ).toBe( true );
+			expect( localStorage.setItem ).toHaveBeenCalledWith(
+				'angie_return_url',
+				JSON.stringify( { url: validUrl, prompt } )
+			);
 		} );
 
 		it( 'should reject external domain URL', () => {
@@ -54,6 +73,18 @@ describe( 'referrer-redirect', () => {
 
 			// Act
 			const result = setReferrerRedirect( externalUrl );
+
+			// Assert
+			expect( result ).toBe( false );
+			expect( localStorage.setItem ).not.toHaveBeenCalled();
+		} );
+
+		it( 'should reject external domain URL even with prompt', () => {
+			// Arrange
+			const externalUrl = 'https://evil.com/phishing';
+
+			// Act
+			const result = setReferrerRedirect( externalUrl, 'some prompt' );
 
 			// Assert
 			expect( result ).toBe( false );
@@ -87,19 +118,47 @@ describe( 'referrer-redirect', () => {
 				expect( result ).toBe( true );
 			}
 		} );
+
+		it( 'should not store prompt when it is an empty string', () => {
+			// Arrange
+			const validUrl = 'http://localhost/some-page';
+
+			// Act
+			const result = setReferrerRedirect( validUrl, '' );
+
+			// Assert
+			expect( result ).toBe( true );
+			expect( localStorage.setItem ).toHaveBeenCalledWith(
+				'angie_return_url',
+				JSON.stringify( { url: validUrl } )
+			);
+		} );
 	} );
 
 	describe( 'getReferrerRedirect', () => {
-		it( 'should return stored valid same-origin URL', () => {
+		it( 'should return stored valid same-origin URL as object', () => {
 			// Arrange
 			const validUrl = 'http://localhost/dashboard?post=123';
-			mockLocalStorage[ 'angie_return_url' ] = validUrl;
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: validUrl } );
 
 			// Act
 			const result = getReferrerRedirect();
 
 			// Assert
-			expect( result ).toBe( validUrl );
+			expect( result ).toEqual( { url: validUrl } );
+		} );
+
+		it( 'should return stored URL with prompt as object', () => {
+			// Arrange
+			const validUrl = 'http://localhost/dashboard?post=123';
+			const prompt = 'Help me with SEO';
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: validUrl, prompt } );
+
+			// Act
+			const result = getReferrerRedirect();
+
+			// Assert
+			expect( result ).toEqual( { url: validUrl, prompt } );
 		} );
 
 		it( 'should return null when no URL is stored', () => {
@@ -112,7 +171,29 @@ describe( 'referrer-redirect', () => {
 
 		it( 'should return null for invalid stored URL (external domain)', () => {
 			// Arrange
-			mockLocalStorage[ 'angie_return_url' ] = 'https://evil.com/page';
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: 'https://evil.com/page' } );
+
+			// Act
+			const result = getReferrerRedirect();
+
+			// Assert
+			expect( result ).toBeNull();
+		} );
+
+		it( 'should return null for malformed JSON', () => {
+			// Arrange
+			mockLocalStorage[ 'angie_return_url' ] = 'not-json';
+
+			// Act
+			const result = getReferrerRedirect();
+
+			// Assert
+			expect( result ).toBeNull();
+		} );
+
+		it( 'should return null for JSON without url field', () => {
+			// Arrange
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { prompt: 'orphan prompt' } );
 
 			// Act
 			const result = getReferrerRedirect();
@@ -125,7 +206,7 @@ describe( 'referrer-redirect', () => {
 	describe( 'clearReferrerRedirect', () => {
 		it( 'should remove stored URL', () => {
 			// Arrange
-			mockLocalStorage[ 'angie_return_url' ] = 'http://localhost/dashboard';
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: 'http://localhost/dashboard' } );
 
 			// Act
 			clearReferrerRedirect();
