@@ -1,0 +1,45 @@
+name: Publish Beta to NPM
+
+on:
+  workflow_dispatch:
+    inputs:
+      preid:
+        description: 'Pre-release identifier (e.g. beta, alpha, rc)'
+        required: false
+        default: 'beta'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-beta:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Set beta version
+        run: |
+          BASE_VERSION=$(node -p "require('./package.json').version")
+          BETA_VERSION="${BASE_VERSION}-${{ github.event.inputs.preid }}.${{ github.run_number }}"
+          npm version "$BETA_VERSION" --no-git-tag-version
+          echo "Publishing version: $BETA_VERSION"
+
+      - name: Publish beta to npm
+        run: npm publish --tag ${{ github.event.inputs.preid }} --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
