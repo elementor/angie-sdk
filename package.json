@@ -21,7 +21,10 @@
     "dev": "tsc --watch",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "publish:local": "npm version prerelease --preid dev --no-git-tag-version && npm run build && npm publish --registry http://localhost:4873/ --userconfig ~/.config/verdaccio/npmrc.local",
+    "publish:local:complete": "npm version patch --no-git-tag-version",
+    "install:local": "npm install --userconfig ~/.config/verdaccio/npmrc.local"
   },
   "keywords": [
     "mcp",
