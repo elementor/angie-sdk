@@ -305,33 +305,12 @@ export class AngieMcpSdk {
 
       const server = (registration.config as AngieLocalServerConfig).server;
       this.migrateInstructionsCompat(server);
-      this.connectServerTransport(server, port, registration.config.name);
+      const serverTransport = new BrowserContextTransport(port);
+      server.connect(serverTransport);
+      this.logger.log(`Server "${registration.config.name}" initialized successfully`);
     } catch (error) {
       this.logger.error(`Error initializing server for clientId ${clientId}:`, error);
     }
-  }
-
-  private isServerConnected(server: AngieLocalServerConfig['server']): boolean {
-    const innerServer = 'server' in server && server.server ? server.server : server;
-    return !!(innerServer as any).transport;
-  }
-
-  private connectServerTransport(server: AngieLocalServerConfig['server'], port: MessagePort, serverName: string): void {
-    const serverTransport = new BrowserContextTransport(port);
-
-    if (this.isServerConnected(server)) {
-      this.logger.log(`Server "${serverName}" already connected, closing previous transport before reconnecting`);
-      server.close().then(() => {
-        server.connect(serverTransport);
-        this.logger.log(`Server "${serverName}" reconnected successfully`);
-      }).catch(error => {
-        this.logger.error(`Failed to reconnect server "${serverName}":`, error);
-      });
-      return;
-    }
-
-    server.connect(serverTransport);
-    this.logger.log(`Server "${serverName}" initialized successfully`);
   }
 
   /**
