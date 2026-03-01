@@ -269,7 +269,7 @@ export class AngieMcpSdk {
 
   private handleServerInitRequest(event: MessageEvent): void {
     const { clientId, serverId, instanceId } = event.data.payload || {};
-    
+
     if (!clientId || !serverId) {
       this.logger.error('Invalid server init request - missing clientId or serverId');
       return;
@@ -277,7 +277,6 @@ export class AngieMcpSdk {
 
     this.logger.log(`Server init request received - Request instanceId: ${instanceId}, This instanceId: ${this.instanceId}`);
 
-    // Check if this request is for this instance
     if (instanceId && instanceId !== this.instanceId) {
       this.logger.log(`Ignoring server init request for different instance. Request instanceId: ${instanceId}, this instanceId: ${this.instanceId}`);
       return;
@@ -286,7 +285,6 @@ export class AngieMcpSdk {
     this.logger.log(`Handling server init request for clientId: ${clientId}, serverId: ${serverId}`);
 
     try {
-      // Find the registration by serverId
       const registration = this.registrationQueue.getAll().find(reg => reg.id === serverId);
       
       if (!registration) {
@@ -294,29 +292,41 @@ export class AngieMcpSdk {
         return;
       }
 
-      // For remote servers, Angie host connects directly. No local server connect is needed.
       if ('type' in registration.config && registration.config.type === 'remote') {
         this.logger.log('Remote server registration detected; skipping local connect');
         return;
       }
 
-      // Get the port from the message event
       const port = event.ports[0];
       if (!port) {
         this.logger.error('No port provided in server init request');
         return;
       }
 
-      // Connect the server using the provided port
       const server = (registration.config as AngieLocalServerConfig).server;
       this.migrateInstructionsCompat(server);
-      const serverTransport = new BrowserContextTransport(port);
-      server.connect(serverTransport);
-      
-      this.logger.log(`Server "${registration.config.name}" initialized successfully`);
+      this.connectServerTransport(server, port, registration.config.name);
     } catch (error) {
       this.logger.error(`Error initializing server for clientId ${clientId}:`, error);
     }
+  }
+
+  private connectServerTransport(server: AngieLocalServerConfig['server'], port: MessagePort, serverName: string): void {
+    const serverTransport = new BrowserContextTransport(port);
+
+    if ((server as any).transport) {
+      this.logger.log(`Server "${serverName}" already connected, closing previous transport before reconnecting`);
+      server.close().then(() => {
+        server.connect(serverTransport);
+        this.logger.log(`Server "${serverName}" reconnected successfully`);
+      }).catch(error => {
+        this.logger.error(`Failed to reconnect server "${serverName}":`, error);
+      });
+      return;
+    }
+
+    server.connect(serverTransport);
+    this.logger.log(`Server "${serverName}" initialized successfully`);
   }
 
   /**
