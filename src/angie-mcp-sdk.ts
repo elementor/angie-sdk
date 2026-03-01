@@ -311,10 +311,15 @@ export class AngieMcpSdk {
     }
   }
 
+  private isServerConnected(server: AngieLocalServerConfig['server']): boolean {
+    const innerServer = 'server' in server && server.server ? server.server : server;
+    return !!(innerServer as any).transport;
+  }
+
   private connectServerTransport(server: AngieLocalServerConfig['server'], port: MessagePort, serverName: string): void {
     const serverTransport = new BrowserContextTransport(port);
 
-    if ((server as any).transport) {
+    if (this.isServerConnected(server)) {
       this.logger.log(`Server "${serverName}" already connected, closing previous transport before reconnecting`);
       server.close().then(() => {
         server.connect(serverTransport);

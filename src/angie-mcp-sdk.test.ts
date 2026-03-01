@@ -483,6 +483,37 @@ describe('AngieMcpSdk', () => {
       expect(mockServer.connect).toHaveBeenCalled();
     });
 
+    it('should close and reconnect McpServer (with inner server.server) when already connected', async () => {
+      // Arrange
+      const mockPort = { postMessage: jest.fn() };
+      const closeFn = jest.fn<() => Promise<void>>().mockResolvedValue();
+      const innerServer = { transport: { close: jest.fn() } };
+      const mockMcpServer = {
+        server: innerServer,
+        connect: jest.fn(),
+        close: closeFn,
+      };
+      const mockRegistration: ServerRegistration = {
+        id: 'server_123',
+        config: { name: 'test-server', version: '1.0.0', description: 'Test', server: mockMcpServer as any },
+        timestamp: Date.now(),
+        status: 'registered',
+      };
+      mockRegistrationQueue.getAll.mockReturnValue([mockRegistration]);
+
+      // Act
+      const event = {
+        data: { type: 'sdk-request-init-server', payload: { clientId: 'c1', serverId: 'server_123' } },
+        ports: [mockPort],
+      } as unknown as MessageEvent<any>;
+      messageHandler(event);
+
+      // Assert - should detect inner server transport and close before reconnecting
+      expect(closeFn).toHaveBeenCalled();
+      await closeFn();
+      expect(mockMcpServer.connect).toHaveBeenCalled();
+    });
+
     it('should connect directly when server has no existing transport', () => {
       // Arrange
       const mockPort = { postMessage: jest.fn() };
