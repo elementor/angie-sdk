@@ -318,6 +318,10 @@ export class AngieMcpSdk {
     }
   }
 
+  /**
+   * Backward compat: MCP SDK moved `instructions` from serverInfo to ServerOptions.
+   * Migrate at runtime for older 3rd-party servers.
+   */
   private migrateInstructionsCompat(server: AngieLocalServerConfig['server']): void {
     try {
       const innerServer = 'server' in server && server.server ? server.server : server;
