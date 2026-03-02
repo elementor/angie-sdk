@@ -1,4 +1,5 @@
 import { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
+import type { MessageExtraInfo } from '@modelcontextprotocol/sdk/types.js';
 import { JSONRPCMessage, JSONRPCMessageSchema } from '@modelcontextprotocol/sdk/types.js';
 
 /**
@@ -7,7 +8,7 @@ import { JSONRPCMessage, JSONRPCMessageSchema } from '@modelcontextprotocol/sdk/
  */
 export class BrowserContextTransport implements Transport {
 	sessionId?: string;
-	onmessage?: ( message: JSONRPCMessage ) => void;
+	onmessage?: <T extends JSONRPCMessage>( message: T, extra?: MessageExtraInfo ) => void;
 	onerror?: ( error: Error ) => void;
 	onclose?: () => void;
 	private _port: MessagePort;
