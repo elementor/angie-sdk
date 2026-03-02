@@ -38,11 +38,11 @@
     "@elementor/oidc-auth": "^0.1.0"
   },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": ">=1.24.0"
+    "@modelcontextprotocol/sdk": ">=1.27.0"
   },
   "devDependencies": {
     "@eslint/js": "^8.0.0",
-    "@modelcontextprotocol/sdk": "1.26.0",
+    "@modelcontextprotocol/sdk": "1.27.0",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.19.0",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
