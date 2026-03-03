@@ -380,6 +380,69 @@ describe('AngieMcpSdk', () => {
     });
   });
 
+  describe('migrateInstructionsCompat (backward compatibility)', () => {
+    it('should migrate instructions from serverInfo to _instructions when _instructions is absent', () => {
+      const mockServer = {
+        _serverInfo: { instructions: 'do the thing' },
+      };
+
+      (sdk as any).migrateInstructionsCompat(mockServer);
+
+      expect(mockServer).toHaveProperty('_instructions', 'do the thing');
+    });
+
+    it('should NOT overwrite _instructions when it already exists', () => {
+      const mockServer = {
+        _serverInfo: { instructions: 'new instructions' },
+        _instructions: 'original instructions',
+      };
+
+      (sdk as any).migrateInstructionsCompat(mockServer);
+
+      expect((mockServer as any)._instructions).toBe('original instructions');
+    });
+
+    it('should do nothing when serverInfo has no instructions', () => {
+      const mockServer: any = {
+        _serverInfo: {},
+      };
+
+      (sdk as any).migrateInstructionsCompat(mockServer);
+
+      expect(mockServer._instructions).toBeUndefined();
+    });
+
+    it('should do nothing when _serverInfo is absent', () => {
+      const mockServer: any = {};
+
+      (sdk as any).migrateInstructionsCompat(mockServer);
+
+      expect(mockServer._instructions).toBeUndefined();
+    });
+
+    it('should operate on the nested server.server when present', () => {
+      const innerServer: any = {
+        _serverInfo: { instructions: 'nested instructions' },
+      };
+      const mockServer = {
+        server: innerServer,
+      };
+
+      (sdk as any).migrateInstructionsCompat(mockServer);
+
+      expect(innerServer._instructions).toBe('nested instructions');
+    });
+
+    it('should not throw when an unexpected error occurs (best-effort)', () => {
+      const brokenServer = Object.create(null);
+      Object.defineProperty(brokenServer, '_serverInfo', {
+        get() { throw new Error('Unexpected access error'); },
+      });
+
+      expect(() => (sdk as any).migrateInstructionsCompat(brokenServer)).not.toThrow();
+    });
+  });
+
   describe('loadSidebar', () => {
     it('should call initAngieSidebar and openIframe with default options', async () => {
       // Act
