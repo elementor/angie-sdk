@@ -16,6 +16,7 @@ jest.mock( './referrer-redirect', () => ( {
 	getReferrerRedirect: mockGetReferrerRedirect,
 	clearReferrerRedirect: mockClearReferrerRedirect,
 	executeReferrerRedirect: mockExecuteReferrerRedirect,
+	buildRedirectUrl: ( url: string, prompt?: string ) => prompt ? `${ url }#angie-prompt=${ encodeURIComponent( prompt ) }` : url,
 } ) );
 
 jest.mock( './config', () => ( {

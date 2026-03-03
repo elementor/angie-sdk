@@ -79,7 +79,7 @@ export function clearReferrerRedirect(): void {
 	}
 }
 
-function buildRedirectUrl( url: string, prompt?: string ): string {
+export function buildRedirectUrl( url: string, prompt?: string ): string {
 	if ( ! prompt ) {
 		return url;
 	}
