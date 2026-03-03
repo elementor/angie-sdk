@@ -5,7 +5,7 @@ import {
 } from "@elementor/oidc-auth";
 import { appState } from "./config";
 import { createChildLogger } from "./logger";
-import { clearReferrerRedirect, getReferrerRedirect } from "./referrer-redirect";
+import { clearReferrerRedirect, executeReferrerRedirect, getReferrerRedirect } from "./referrer-redirect";
 
 declare global {
 	interface Window {
@@ -14,6 +14,20 @@ declare global {
 }
 
 const logger = createChildLogger( 'oauth' );
+
+const isPostConsentFlow = (): boolean => {
+	const urlParams = new URLSearchParams( window.location.search );
+	return urlParams.has( 'start-oauth' );
+};
+
+export const handlePostConsentRedirect = (): void => {
+	if ( ! isPostConsentFlow() ) {
+		return;
+	}
+
+	logger.log( 'Post-consent flow detected, checking for referrer redirect' );
+	executeReferrerRedirect();
+};
 
 function buildRedirectUrl( url: string, prompt?: string ): string {
 	if ( ! prompt ) {
