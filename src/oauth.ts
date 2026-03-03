@@ -5,7 +5,7 @@ import {
 } from "@elementor/oidc-auth";
 import { appState } from "./config";
 import { createChildLogger } from "./logger";
-import { clearReferrerRedirect, getReferrerRedirect } from "./referrer-redirect";
+import { buildRedirectUrl, clearReferrerRedirect, executeReferrerRedirect, getReferrerRedirect } from "./referrer-redirect";
 
 declare global {
 	interface Window {
@@ -15,12 +15,19 @@ declare global {
 
 const logger = createChildLogger( 'oauth' );
 
-function buildRedirectUrl( url: string, prompt?: string ): string {
-	if ( ! prompt ) {
-		return url;
+const isPostConsentFlow = (): boolean => {
+	const urlParams = new URLSearchParams( window.location.search );
+	return urlParams.has( 'start-oauth' );
+};
+
+export const handlePostConsentRedirect = (): void => {
+	if ( ! isPostConsentFlow() ) {
+		return;
 	}
-	return `${ url }#angie-prompt=${ encodeURIComponent( prompt ) }`;
-}
+
+	logger.log( 'Post-consent flow detected, checking for referrer redirect' );
+	executeReferrerRedirect();
+};
 
 function onAuthenticationComplete(): void {
 	const redirectData = getReferrerRedirect();

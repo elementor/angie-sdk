@@ -3,6 +3,7 @@ import {
 	setReferrerRedirect,
 	getReferrerRedirect,
 	clearReferrerRedirect,
+	executeReferrerRedirect,
 } from './referrer-redirect';
 
 describe( 'referrer-redirect', () => {
@@ -218,6 +219,56 @@ describe( 'referrer-redirect', () => {
 		it( 'should not throw when no URL is stored', () => {
 			// Act & Assert
 			expect( () => clearReferrerRedirect() ).not.toThrow();
+		} );
+	} );
+
+	describe( 'executeReferrerRedirect', () => {
+		it( 'should clear redirect data and return true when valid redirect data exists', () => {
+			// Arrange
+			const validUrl = 'http://localhost/dashboard?post=123';
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: validUrl } );
+
+			// Act
+			const result = executeReferrerRedirect();
+
+			// Assert
+			expect( result ).toBe( true );
+			expect( localStorage.removeItem ).toHaveBeenCalledWith( 'angie_return_url' );
+		} );
+
+		it( 'should clear redirect data and return true when prompt exists', () => {
+			// Arrange
+			const validUrl = 'http://localhost/dashboard?post=123';
+			const prompt = 'Help me create a contact page';
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: validUrl, prompt } );
+
+			// Act
+			const result = executeReferrerRedirect();
+
+			// Assert
+			expect( result ).toBe( true );
+			expect( localStorage.removeItem ).toHaveBeenCalledWith( 'angie_return_url' );
+		} );
+
+		it( 'should return false when no redirect data exists', () => {
+			// Act
+			const result = executeReferrerRedirect();
+
+			// Assert
+			expect( result ).toBe( false );
+			expect( localStorage.removeItem ).not.toHaveBeenCalled();
+		} );
+
+		it( 'should return false when stored URL is invalid (external domain)', () => {
+			// Arrange
+			mockLocalStorage[ 'angie_return_url' ] = JSON.stringify( { url: 'https://evil.com/page' } );
+
+			// Act
+			const result = executeReferrerRedirect();
+
+			// Assert
+			expect( result ).toBe( false );
+			expect( localStorage.removeItem ).not.toHaveBeenCalled();
 		} );
 	} );
 } );

@@ -10,10 +10,13 @@ jest.mock( '@elementor/oidc-auth', () => ( {
 
 const mockGetReferrerRedirect = jest.fn();
 const mockClearReferrerRedirect = jest.fn();
+const mockExecuteReferrerRedirect = jest.fn();
 
 jest.mock( './referrer-redirect', () => ( {
 	getReferrerRedirect: mockGetReferrerRedirect,
 	clearReferrerRedirect: mockClearReferrerRedirect,
+	executeReferrerRedirect: mockExecuteReferrerRedirect,
+	buildRedirectUrl: ( url: string, prompt?: string ) => prompt ? `${ url }#angie-prompt=${ encodeURIComponent( prompt ) }` : url,
 } ) );
 
 jest.mock( './config', () => ( {
@@ -143,4 +146,5 @@ describe( 'oauth', () => {
 			expect( mockClearReferrerRedirect ).toHaveBeenCalled();
 		} );
 	} );
+
 } );

@@ -78,3 +78,22 @@ export function clearReferrerRedirect(): void {
 		referrerLogger.warn( 'localStorage not available' );
 	}
 }
+
+export function buildRedirectUrl( url: string, prompt?: string ): string {
+	if ( ! prompt ) {
+		return url;
+	}
+	return `${ url }#angie-prompt=${ encodeURIComponent( prompt ) }`;
+}
+
+export function executeReferrerRedirect(): boolean {
+	const redirectData = getReferrerRedirect();
+
+	if ( ! redirectData ) {
+		return false;
+	}
+
+	clearReferrerRedirect();
+	window.location.href = buildRedirectUrl( redirectData.url, redirectData.prompt );
+	return true;
+}
