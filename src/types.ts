@@ -91,6 +91,7 @@ export interface AngieTriggerRequest {
   context:{
     source?: string;
   }& Record<string, any>;
+  newChat?: boolean;
   options?: {
     timeout?: number;
   };

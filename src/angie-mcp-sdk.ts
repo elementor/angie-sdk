@@ -237,7 +237,7 @@ export class AngieMcpSdk {
         payload: {
           requestId,
           prompt: request.prompt,
-          options: request.options,
+          newChat: request.newChat,
           context: {
             pageUrl: window.location.href,
             pageTitle: document.title,
@@ -349,7 +349,11 @@ export class AngieMcpSdk {
     }
 
     try {
-      const promptEncoded = hash.replace('#angie-prompt=', '');
+      let promptEncoded = hash.replace('#angie-prompt=', '');
+      const newChat = promptEncoded.includes('&angie-new-chat=1') ? true : false;
+      if( newChat ){
+        promptEncoded = promptEncoded.split('&angie-new-chat=1')[0] || '';
+      }
       const prompt = decodeURIComponent(promptEncoded);
 
       if (!prompt) {
@@ -368,6 +372,7 @@ export class AngieMcpSdk {
           pageUrl: window.location.href,
           timestamp: new Date().toISOString(),
         },
+        newChat,
       });
 
       this.logger.log('Triggered successfully from hash:', response);
