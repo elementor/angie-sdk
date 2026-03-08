@@ -28,7 +28,7 @@ interface AngieRequiredResource {
 **Example:**
 
 ```typescript
-import { ANGIE_REQUIRED_RESOURCES } from '@elementor/angie-sdk';
+import { ANGIE_REQUIRED_RESOURCES, ToolAnnotations } from '@elementor/angie-sdk';
 
 server.tool(
   'update-page-styles',
@@ -41,7 +41,7 @@ server.tool(
         whenToUse: 'Always — needed to read current page styles before updating',
       }
     ]
-  },
+  } as ToolAnnotations,
   async (args) => { /* handler */ }
 );
 ```
@@ -72,7 +72,7 @@ Angie resolves the model in this order:
 **Example:**
 
 ```typescript
-import { ANGIE_MODEL_PREFERENCES } from '@elementor/angie-sdk';
+import { ANGIE_MODEL_PREFERENCES, ToolAnnotations } from '@elementor/angie-sdk';
 
 server.tool(
   'generate-custom-css',
@@ -86,7 +86,7 @@ server.tool(
       ],
       intelligencePriority: 0.9    // Optional: for future use
     }
-  },
+  } as ToolAnnotations,
   async (args) => { /* handler */ }
 );
 ```
@@ -108,7 +108,7 @@ interface AngieExtendedTimeout {
 **Example:**
 
 ```typescript
-import { ANGIE_EXTENDED_TIMEOUT } from '@elementor/angie-sdk';
+import { ANGIE_EXTENDED_TIMEOUT, ToolAnnotations } from '@elementor/angie-sdk';
 
 server.tool(
   'bulk-update-elements',
@@ -118,7 +118,7 @@ server.tool(
     [ANGIE_EXTENDED_TIMEOUT]: {
       timeoutMs: 60000 // 60 seconds
     }
-  },
+  } as ToolAnnotations,
   async (args) => { /* handler */ }
 );
 ```
@@ -132,7 +132,7 @@ Mark a tool as read-only. Angie uses this hint to understand that the tool does 
 **Example:**
 
 ```typescript
-import { MCP_READONLY } from '@elementor/angie-sdk';
+import { MCP_READONLY, ToolAnnotations } from '@elementor/angie-sdk';
 
 server.tool(
   'get-page-structure',
@@ -140,7 +140,7 @@ server.tool(
   { /* input schema */ },
   {
     [MCP_READONLY]: true
-  },
+  } as ToolAnnotations,
   async (args) => { /* handler */ }
 );
 ```
@@ -157,6 +157,7 @@ import {
   ANGIE_MODEL_PREFERENCES,
   ANGIE_EXTENDED_TIMEOUT,
   MCP_READONLY,
+  ToolAnnotations,
 } from '@elementor/angie-sdk';
 
 server.tool(
@@ -176,7 +177,7 @@ server.tool(
       hints: [{ name: 'claude-sonnet' }],
       intelligencePriority: 0.9
     }
-  },
+  } as ToolAnnotations,
   async (args) => { /* handler */ }
 );
 ```

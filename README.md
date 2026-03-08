@@ -328,6 +328,7 @@ import {
   ANGIE_MODEL_PREFERENCES,
   ANGIE_EXTENDED_TIMEOUT,
   MCP_READONLY,
+  ToolAnnotations,
 } from '@elementor/angie-sdk';
 
 server.tool(
@@ -343,7 +344,7 @@ server.tool(
     [ANGIE_MODEL_PREFERENCES]: {
       hints: [{ name: 'claude-sonnet' }]
     }
-  },
+  } as ToolAnnotations,
   async (args) => { /* handler */ }
 );
 ```

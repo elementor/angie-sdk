@@ -1,6 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
+export { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 
 // Backward compatibility
 export enum AngieMCPTransport {
