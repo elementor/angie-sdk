@@ -20,6 +20,7 @@ This SDK enables you to create custom MCP servers that Angie can discover and us
 - [MCP Server Example](#mcp-server-example)
 - [Adding Instructions to MCP Servers](#adding-instructions-to-mcp-servers)
 - [Registering Tools](#registering-tools)
+- [Tool Annotations](#tool-annotations)
 - [Handling Tool Calls](#handling-tool-calls)
 - [Best Practices](#best-practices)
 - [Remote SSE and HTTP Streamable MCP servers](#remote-sse-and-http-streamable-mcp-servers)
@@ -105,7 +106,7 @@ The SDK covers three main abilities:
 
 📖 **Documentation:**
 - [MCP SDK Supported Features](./docs/angie-sdk-supported-features.md)
-- [Tool Model Preferences](./docs/model-preferences.md) - Configure preferred AI models for your tools
+- [Tool Annotations](./docs/tool-annotations.md) - Annotate tools with resource dependencies, model preferences, and more
 
 ---
 
@@ -314,6 +315,40 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   ],
 }));
 ```
+
+---
+
+## Tool Annotations
+
+Angie extends MCP tool annotations with Angie-specific metadata. Import the annotation constants directly from `@elementor/angie-sdk`:
+
+```typescript
+import {
+  ANGIE_REQUIRED_RESOURCES,
+  ANGIE_MODEL_PREFERENCES,
+  ANGIE_EXTENDED_TIMEOUT,
+  MCP_READONLY,
+} from '@elementor/angie-sdk';
+
+server.tool(
+  'analyze-page-layout',
+  'Analyzes the current page layout and returns suggestions',
+  { /* input schema */ },
+  {
+    [MCP_READONLY]: true,
+    [ANGIE_EXTENDED_TIMEOUT]: { timeoutMs: 30000 },
+    [ANGIE_REQUIRED_RESOURCES]: [
+      { uri: 'elementor://page/layout', whenToUse: 'Always — needed to read the page structure' }
+    ],
+    [ANGIE_MODEL_PREFERENCES]: {
+      hints: [{ name: 'claude-sonnet' }]
+    }
+  },
+  async (args) => { /* handler */ }
+);
+```
+
+📖 See [Tool Annotations](./docs/tool-annotations.md) for full reference.
 
 ---
 
