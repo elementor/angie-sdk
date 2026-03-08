@@ -41,15 +41,17 @@ These annotations are **Angie-specific** and extend standard MCP tool annotation
 Declare which resources a tool needs before execution. Angie will fetch these resources automatically before calling the tool.
 
 ```typescript
+import { ANGIE_REQUIRED_RESOURCES, ToolAnnotations } from '@elementor/angie-sdk';
+
 server.tool('update-element', 'Update an Elementor element', {
   elementId: z.string(),
   changes: z.object({ /* ... */ }),
 }, {
-  'angie/requiredResources': [
-    { uri: 'elementor://page-context', description: 'Current page structure' },
-    { uri: 'elementor://selected-element', description: 'Currently selected element' }
+  [ANGIE_REQUIRED_RESOURCES]: [
+    { uri: 'elementor://page-context', whenToUse: 'Current page structure' },
+    { uri: 'elementor://selected-element', whenToUse: 'Currently selected element' }
   ]
-}, handler);
+} as ToolAnnotations, handler);
 ```
 
 **How it works:**
