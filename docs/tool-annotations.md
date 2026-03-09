@@ -225,4 +225,3 @@ server.registerTool(
   async (args) => { /* handler */ }
 );
 ```
-
