@@ -58,11 +58,16 @@ function createSeoMcpServer() {
 		}
 	);
 
-	server.tool(
+	server.registerTool(
 		'analyze-page-seo',
-		'Analyzes the SEO of the current page including meta tags, headings, and content structure',
 		{
-			url: z.string().describe( 'The URL of the page to analyze' ),
+			description: 'Analyzes the SEO of the current page including meta tags, headings, and content structure',
+			inputSchema: {
+				url: z.string().describe( 'The URL of the page to analyze' ),
+			},
+			annotations: {
+				readOnlyHint: true,
+			},
 		},
 		async ( { url }: { url: string } ) => {
 			const response = await makeApiRequest( 'angie-demo/v1/analyze-page-seo', { url } );
@@ -72,14 +77,17 @@ function createSeoMcpServer() {
 					text: JSON.stringify( response, null, 2 ),
 				} ],
 			};
-		} );
+		}
+	);
 
-	server.tool(
+	server.registerTool(
 		'manage-post-types',
-		'Manages post types with Angie',
 		{
-			postType: z.string().describe( 'The post type to register' ),
-			action: z.enum( [ 'register', 'unregister' ] ).describe( 'The action to perform' ),
+			description: 'Manages post types with Angie',
+			inputSchema: {
+				postType: z.string().describe( 'The post type to register' ),
+				action: z.enum( [ 'register', 'unregister' ] ).describe( 'The action to perform' ),
+			},
 		},
 		async ( { postType, action }: { postType: string, action: string } ) => {
 			const response = await makeApiRequest( 'angie-demo/v1/post-types', { postType, action } );
@@ -89,12 +97,18 @@ function createSeoMcpServer() {
 					text: JSON.stringify( response, null, 2 ),
 				} ],
 			};
-		} );
+		}
+	);
 
-	server.tool(
+	server.registerTool(
 		'security-check',
-		'Checks the security of current WordPress installation',
-		{},
+		{
+			description: 'Checks the security of current WordPress installation',
+			inputSchema: {},
+			annotations: {
+				readOnlyHint: true,
+			},
+		},
 		async () => {
 			const response = await makeApiRequest( 'angie-demo/v1/security-check', {} );
 			return {
@@ -103,14 +117,17 @@ function createSeoMcpServer() {
 					text: JSON.stringify( response, null, 2 ),
 				} ],
 			};
-		} );
+		}
+	);
 
-	server.tool( 'run-fireworks',
-		'Creates a celebratory fireworks display effect on the current screen. Use this when you want to add visual excitement or celebrate a successful action. The tool will create a full-screen canvas overlay with animated fireworks that automatically stop after 5 seconds.',
-		{},
+	server.registerTool(
+		'run-fireworks',
+		{
+			description: 'Creates a celebratory fireworks display effect on the current screen. Use this when you want to add visual excitement or celebrate a successful action. The tool will create a full-screen canvas overlay with animated fireworks that automatically stop after 5 seconds.',
+			inputSchema: {},
+		},
 		async () => {
 			try {
-				// Create canvas element if it doesn't exist
 				let canvas = document.getElementById( 'fireworks-canvas' ) as HTMLCanvasElement;
 				if ( ! canvas ) {
 					canvas = document.createElement( 'canvas' );
@@ -125,20 +142,15 @@ function createSeoMcpServer() {
 					document.body.appendChild( canvas );
 				}
 
-				// Set canvas size to match window
 				canvas.width = window.innerWidth;
 				canvas.height = window.innerHeight;
 
-				// Create fireworks instance
 				const fireworks = new Fireworks( canvas );
 
-				// Start fireworks
 				fireworks.start();
 
-				// Stop fireworks after 5 seconds
 				setTimeout( () => {
 					fireworks.stop();
-					// Remove canvas after animation
 					setTimeout( () => {
 						if ( canvas && canvas.parentNode ) {
 							canvas.parentNode.removeChild( canvas );
@@ -161,7 +173,8 @@ function createSeoMcpServer() {
 					} ],
 				};
 			}
-		} );
+		}
+	);
 
 	return server;
 }
