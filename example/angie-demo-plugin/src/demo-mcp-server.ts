@@ -128,6 +128,7 @@ function createSeoMcpServer() {
 		},
 		async () => {
 			try {
+				// Create canvas element if it doesn't exist
 				let canvas = document.getElementById( 'fireworks-canvas' ) as HTMLCanvasElement;
 				if ( ! canvas ) {
 					canvas = document.createElement( 'canvas' );
@@ -142,15 +143,20 @@ function createSeoMcpServer() {
 					document.body.appendChild( canvas );
 				}
 
+				// Set canvas size to match window
 				canvas.width = window.innerWidth;
 				canvas.height = window.innerHeight;
 
+				// Create fireworks instance
 				const fireworks = new Fireworks( canvas );
 
+				// Start fireworks
 				fireworks.start();
 
+				// Stop fireworks after 5 seconds
 				setTimeout( () => {
 					fireworks.stop();
+					// Remove canvas after animation
 					setTimeout( () => {
 						if ( canvas && canvas.parentNode ) {
 							canvas.parentNode.removeChild( canvas );

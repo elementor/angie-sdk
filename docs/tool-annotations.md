@@ -1,15 +1,50 @@
 # Angie Tool Annotations
 
-Angie exposes a set of annotation constants and interfaces that MCP tool authors can use to attach Angie-specific metadata to their tools. These are exported directly from `@elementor/angie-sdk`.
+Angie exposes a set of annotation constants and interfaces that MCP tool authors can use to attach metadata to their tools. These are exported directly from `@elementor/angie-sdk`.
 
-## Available Annotations
+## Annotations vs `_meta`
+
+The MCP protocol distinguishes between two types of tool metadata:
+
+| Location | Purpose | Interface |
+|---|---|---|
+| `annotations` | **Standard MCP annotations** — recognized by the MCP protocol | `AngieToolAnnotations` |
+| `_meta` | **Custom Angie metadata** — vendor-specific extensions | `AngieToolMeta` |
+
+### Standard Annotations (`annotations`)
+
+| Field | Type | Purpose |
+|---|---|---|
+| `title` | `string` | Human-readable title for the tool |
+| `readOnlyHint` | `boolean` | Mark a tool as read-only |
+| `destructiveHint` | `boolean` | Mark a tool as potentially destructive |
+
+### Custom Angie Metadata (`_meta`)
 
 | Constant | Value | Purpose |
 |---|---|---|
 | `ANGIE_REQUIRED_RESOURCES` | `'angie/requiredResources'` | Declare resources the tool needs |
 | `ANGIE_MODEL_PREFERENCES` | `'angie/modelPreferences'` | Request a specific AI model |
 | `ANGIE_EXTENDED_TIMEOUT` | `'angie/extendedTimeout'` | Request a longer execution timeout |
-| `MCP_READONLY` | `'readOnlyHint'` | Mark a tool as read-only |
+
+---
+
+## Tool Registration API
+
+Use `server.registerTool()` to register tools with the MCP server:
+
+```typescript
+server.registerTool(
+  'tool-name',
+  {
+    description: 'Tool description',
+    inputSchema: { /* zod schema */ },
+    annotations: { /* standard MCP annotations */ },
+    _meta: { /* custom Angie metadata */ },
+  },
+  async (args) => { /* handler */ }
+);
+```
 
 ---
 
@@ -28,20 +63,22 @@ interface AngieRequiredResource {
 **Example:**
 
 ```typescript
-import { ANGIE_REQUIRED_RESOURCES, ToolAnnotations } from '@elementor/angie-sdk';
+import { ANGIE_REQUIRED_RESOURCES, AngieToolMeta } from '@elementor/angie-sdk';
 
-server.tool(
+server.registerTool(
   'update-page-styles',
-  'Updates the CSS styles for the current page',
-  { /* input schema */ },
   {
-    [ANGIE_REQUIRED_RESOURCES]: [
-      {
-        uri: 'elementor://page/styles',
-        whenToUse: 'Always — needed to read current page styles before updating',
-      }
-    ]
-  } as ToolAnnotations,
+    description: 'Updates the CSS styles for the current page',
+    inputSchema: { /* ... */ },
+    _meta: {
+      [ANGIE_REQUIRED_RESOURCES]: [
+        {
+          uri: 'elementor://page/styles',
+          whenToUse: 'Always — needed to read current page styles before updating',
+        }
+      ]
+    } as AngieToolMeta,
+  },
   async (args) => { /* handler */ }
 );
 ```
@@ -72,21 +109,23 @@ Angie resolves the model in this order:
 **Example:**
 
 ```typescript
-import { ANGIE_MODEL_PREFERENCES, ToolAnnotations } from '@elementor/angie-sdk';
+import { ANGIE_MODEL_PREFERENCES, AngieToolMeta } from '@elementor/angie-sdk';
 
-server.tool(
+server.registerTool(
   'generate-custom-css',
-  'Generates CSS code based on design requirements',
-  { /* input schema */ },
   {
-    [ANGIE_MODEL_PREFERENCES]: {
-      hints: [
-        { name: 'claude-sonnet' }, // First choice
-        { name: 'gpt-4.1' }        // Fallback
-      ],
-      intelligencePriority: 0.9    // Optional: for future use
-    }
-  } as ToolAnnotations,
+    description: 'Generates CSS code based on design requirements',
+    inputSchema: { /* ... */ },
+    _meta: {
+      [ANGIE_MODEL_PREFERENCES]: {
+        hints: [
+          { name: 'claude-sonnet' }, // First choice
+          { name: 'gpt-4.1' }        // Fallback
+        ],
+        intelligencePriority: 0.9    // Optional: for future use
+      }
+    } as AngieToolMeta,
+  },
   async (args) => { /* handler */ }
 );
 ```
@@ -108,39 +147,41 @@ interface AngieExtendedTimeout {
 **Example:**
 
 ```typescript
-import { ANGIE_EXTENDED_TIMEOUT, ToolAnnotations } from '@elementor/angie-sdk';
+import { ANGIE_EXTENDED_TIMEOUT, AngieToolMeta } from '@elementor/angie-sdk';
 
-server.tool(
+server.registerTool(
   'bulk-update-elements',
-  'Updates all elements on the page in one operation',
-  { /* input schema */ },
   {
-    [ANGIE_EXTENDED_TIMEOUT]: {
-      timeoutMs: 60000 // 60 seconds
-    }
-  } as ToolAnnotations,
+    description: 'Updates all elements on the page in one operation',
+    inputSchema: { /* ... */ },
+    _meta: {
+      [ANGIE_EXTENDED_TIMEOUT]: {
+        timeoutMs: 60000 // 60 seconds
+      }
+    } as AngieToolMeta,
+  },
   async (args) => { /* handler */ }
 );
 ```
 
 ---
 
-## `MCP_READONLY`
+## `readOnlyHint` (Standard MCP Annotation)
 
 Mark a tool as read-only. Angie uses this hint to understand that the tool does not mutate any state, which can affect planning and user confirmation flows.
 
 **Example:**
 
 ```typescript
-import { MCP_READONLY, ToolAnnotations } from '@elementor/angie-sdk';
-
-server.tool(
+server.registerTool(
   'get-page-structure',
-  'Returns the structure of the current page',
-  { /* input schema */ },
   {
-    [MCP_READONLY]: true
-  } as ToolAnnotations,
+    description: 'Returns the structure of the current page',
+    inputSchema: { /* ... */ },
+    annotations: {
+      readOnlyHint: true
+    },
+  },
   async (args) => { /* handler */ }
 );
 ```
@@ -149,35 +190,71 @@ server.tool(
 
 ## Using Multiple Annotations Together
 
-All annotations can be combined on a single tool:
+Standard annotations and custom Angie metadata can be combined on a single tool:
 
 ```typescript
 import {
   ANGIE_REQUIRED_RESOURCES,
   ANGIE_MODEL_PREFERENCES,
   ANGIE_EXTENDED_TIMEOUT,
-  MCP_READONLY,
-  ToolAnnotations,
+  AngieToolMeta,
 } from '@elementor/angie-sdk';
 
-server.tool(
+server.registerTool(
   'analyze-page-layout',
-  'Analyzes the current page layout and returns suggestions',
-  { /* input schema */ },
   {
-    [MCP_READONLY]: true,
-    [ANGIE_EXTENDED_TIMEOUT]: { timeoutMs: 30000 },
-    [ANGIE_REQUIRED_RESOURCES]: [
-      {
-        uri: 'elementor://page/layout',
-        whenToUse: 'Always — needed to read the page structure',
+    description: 'Analyzes the current page layout and returns suggestions',
+    inputSchema: { /* ... */ },
+    annotations: {
+      readOnlyHint: true,
+    },
+    _meta: {
+      [ANGIE_EXTENDED_TIMEOUT]: { timeoutMs: 30000 },
+      [ANGIE_REQUIRED_RESOURCES]: [
+        {
+          uri: 'elementor://page/layout',
+          whenToUse: 'Always — needed to read the page structure',
+        }
+      ],
+      [ANGIE_MODEL_PREFERENCES]: {
+        hints: [{ name: 'claude-sonnet' }],
+        intelligencePriority: 0.9
       }
-    ],
-    [ANGIE_MODEL_PREFERENCES]: {
-      hints: [{ name: 'claude-sonnet' }],
-      intelligencePriority: 0.9
-    }
-  } as ToolAnnotations,
+    } as AngieToolMeta,
+  },
+  async (args) => { /* handler */ }
+);
+```
+
+---
+
+## Migration from `server.tool()` to `server.registerTool()`
+
+The `server.tool()` API is deprecated. Migrate to `server.registerTool()`:
+
+**Before (deprecated):**
+
+```typescript
+server.tool(
+  'my-tool',
+  'Tool description',
+  { /* input schema */ },
+  { /* annotations */ },
+  async (args) => { /* handler */ }
+);
+```
+
+**After:**
+
+```typescript
+server.registerTool(
+  'my-tool',
+  {
+    description: 'Tool description',
+    inputSchema: { /* ... */ },
+    annotations: { /* standard MCP annotations */ },
+    _meta: { /* custom Angie metadata */ },
+  },
   async (args) => { /* handler */ }
 );
 ```
