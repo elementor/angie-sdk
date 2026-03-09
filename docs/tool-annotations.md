@@ -226,35 +226,3 @@ server.registerTool(
 );
 ```
 
----
-
-## Migration from `server.tool()` to `server.registerTool()`
-
-The `server.tool()` API is deprecated. Migrate to `server.registerTool()`:
-
-**Before (deprecated):**
-
-```typescript
-server.tool(
-  'my-tool',
-  'Tool description',
-  { /* input schema */ },
-  { /* annotations */ },
-  async (args) => { /* handler */ }
-);
-```
-
-**After:**
-
-```typescript
-server.registerTool(
-  'my-tool',
-  {
-    description: 'Tool description',
-    inputSchema: { /* ... */ },
-    annotations: { /* standard MCP annotations */ },
-    _meta: { /* custom Angie metadata */ },
-  },
-  async (args) => { /* handler */ }
-);
-```
