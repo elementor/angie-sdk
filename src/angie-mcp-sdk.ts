@@ -1,17 +1,46 @@
 import type { Logger } from '@elementor/angie-logger';
+import { postMessageToAngieIframe } from './angie-iframe-utils';
 import { AngieDetector } from './angie-detector';
 import { BrowserContextTransport } from './browser-context-transport';
 import { ClientManager } from './client-manager';
+import { appState, DEFAULT_CONTAINER_ID } from './config';
 import { createChildLogger } from './logger';
 import { openIframe } from './iframe';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
 import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
 
+export { DEFAULT_CONTAINER_ID } from './config';
+
+type FeatureToggle = { enabled: boolean };
+
+type PromptSuggestion = { label: string; value: string };
+
+export type WidgetConfig = {
+  title?: string;
+  subtitle?: string;
+  suggestions?: { items: PromptSuggestion[] };
+  promptLibrary?: FeatureToggle;
+  fileUpload?: FeatureToggle;
+  feedback?: FeatureToggle;
+  featuredMcpServer?: string;
+};
+
 export type AngieMcpSdkOptions = {
   origin?: string;
   uiTheme?: string;
   isRTL?: boolean;
+  containerId?: string;
+  skipDefaultCss?: boolean;
+  widgetConfig?: WidgetConfig;
+};
+
+const DEFAULT_OPTIONS: Required<Omit<AngieMcpSdkOptions, 'widgetConfig'>> = {
+  origin: 'https://angie.elementor.com',
+  uiTheme: 'light',
+  isRTL: false,
+  containerId: DEFAULT_CONTAINER_ID,
+  skipDefaultCss: false,
 };
 
 export class AngieMcpSdk {
@@ -37,13 +66,16 @@ export class AngieMcpSdk {
   }
 
   public async loadSidebar( options?: AngieMcpSdkOptions ): Promise<void> {
-    initAngieSidebar();
-    await openIframe({
-      origin: options?.origin || 'https://angie.elementor.com',
-      uiTheme: options?.uiTheme || 'light',
-      isRTL: options?.isRTL || false,
-      ...options,
-    });
+    const { widgetConfig, ...rest } = options || {};
+    const config = { ...DEFAULT_OPTIONS, ...rest };
+    appState.containerId = config.containerId;
+    initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
+    await openIframe( config );
+
+    if ( widgetConfig ) {
+      postMessageToAngieIframe( { type: 'sdk-widget-config', payload: widgetConfig } );
+    }
+
     this.setupPromptHashDetection();
   }
 

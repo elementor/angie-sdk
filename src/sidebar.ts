@@ -1,4 +1,5 @@
 import { postMessageToAngieIframe } from "./angie-iframe-utils";
+import { appState } from "./config";
 import { MessageEventType } from "./types";
 import { createChildLogger } from "./logger";
 import { isOidcFlowInUrl } from "@elementor/oidc-auth";
@@ -126,7 +127,7 @@ export function applyState( state: AngieSidebarState ): void {
 }
 
 export function initializeResize(): void {
-	const sidebar = document.getElementById( 'angie-sidebar-container' );
+	const sidebar = document.getElementById( appState.containerId );
 	if ( ! sidebar ) {
 		return;
 	}
@@ -204,7 +205,7 @@ export function initializeResize(): void {
 export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void ): ( force?: boolean, skipTransition?: boolean ) => void {
 	return function( force?: boolean, skipTransition?: boolean ): void {
 		const body = document.body;
-		const sidebar = document.getElementById( 'angie-sidebar-container' );
+		const sidebar = document.getElementById( appState.containerId );
 
 		if ( ! sidebar ) {
 			sidebarLogger.warn( 'Required elements not found!' );
@@ -259,11 +260,18 @@ export function setupMessageListener(): void {
 	} );
 }
 
-export function initAngieSidebar( onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void ): void {
-	injectCSS();
+type InitAngieSidebarOptions = {
+	onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void;
+	skipDefaultCss?: boolean;
+};
+
+export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
+	if ( ! options?.skipDefaultCss ) {
+		injectCSS();
+	}
 
 	if ( typeof window !== 'undefined' ) {
-		window.toggleAngieSidebar = createToggleSidebarFunction( onToggle );
+		window.toggleAngieSidebar = createToggleSidebarFunction( options?.onToggle );
 		setupMessageListener();
 	}
 }

@@ -137,7 +137,7 @@ describe('sidebar', () => {
 
     it('should call custom onToggle callback when provided', () => {
       const mockOnToggle = jest.fn();
-      initAngieSidebar(mockOnToggle);
+      initAngieSidebar({ onToggle: mockOnToggle });
       
       const toggleFunction = (global.window as any).toggleAngieSidebar;
       expect(toggleFunction).toBeDefined();
