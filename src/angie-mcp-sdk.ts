@@ -16,6 +16,11 @@ type FeatureToggle = { enabled: boolean };
 
 type PromptSuggestion = { label: string; value: string };
 
+type ModeSwitcherConfig = {
+  enabled?: boolean;
+  default?: 'agent' | 'plan' | 'ask';
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -24,6 +29,9 @@ export type WidgetConfig = {
   fileUpload?: FeatureToggle;
   feedback?: FeatureToggle;
   featuredMcpServer?: string;
+  modeSwitcher?: ModeSwitcherConfig;
+  testMode?: FeatureToggle;
+  closeButton?: 'collapse' | 'close';
 };
 
 export type AngieMcpSdkOptions = {
@@ -33,6 +41,7 @@ export type AngieMcpSdkOptions = {
   containerId?: string;
   skipDefaultCss?: boolean;
   widgetConfig?: WidgetConfig;
+  path?: string;
 };
 
 const DEFAULT_OPTIONS: Required<Omit<AngieMcpSdkOptions, 'widgetConfig'>> = {
@@ -41,6 +50,7 @@ const DEFAULT_OPTIONS: Required<Omit<AngieMcpSdkOptions, 'widgetConfig'>> = {
   isRTL: false,
   containerId: DEFAULT_CONTAINER_ID,
   skipDefaultCss: false,
+  path: 'angie/wp-admin',
 };
 
 export class AngieMcpSdk {

@@ -465,6 +465,7 @@ describe('AngieMcpSdk', () => {
         isRTL: false,
         containerId: 'angie-sidebar-container',
         skipDefaultCss: false,
+        path: 'angie/wp-admin',
       });
     });
 
@@ -493,6 +494,7 @@ describe('AngieMcpSdk', () => {
         isRTL: true,
         containerId: 'my-custom-container',
         skipDefaultCss: true,
+        path: 'angie/wp-admin',
       });
     });
 

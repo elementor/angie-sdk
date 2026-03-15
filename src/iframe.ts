@@ -13,6 +13,7 @@ type OpenIframeProps = {
 	origin?: string;
 	uiTheme: string;
 	isRTL: boolean;
+	path?: string;
 }
 
 const iframeLogger = createChildLogger( 'iframe' );
@@ -141,7 +142,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 
 	const { iframe, iframeUrlObject } = await openSaaSPage( {
 		origin: props.origin || 'https://angie.elementor.com',
-		path: `angie/wp-admin`,
+		path: props.path || 'angie/wp-admin',
 		insertCallback,
 		css: iframeCss,
 		uiTheme: props.uiTheme,
