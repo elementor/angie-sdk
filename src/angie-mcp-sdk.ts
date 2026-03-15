@@ -16,10 +16,11 @@ type FeatureToggle = { enabled: boolean };
 
 type PromptSuggestion = { label: string; value: string };
 
-type ModeSwitcherConfig = {
+export type ModeSwitcherConfig = {
   enabled?: boolean;
   default?: 'agent' | 'plan' | 'ask';
 };
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;

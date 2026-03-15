@@ -520,6 +520,24 @@ describe('AngieMcpSdk', () => {
       });
     });
 
+    it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
+      // Arrange
+      const widgetConfig = {
+        title: 'Custom Title',
+        modeSwitcher: { enabled: true, default: 'plan' as const },
+        closeButton: 'collapse' as const,
+      };
+
+      // Act
+      await sdk.loadSidebar({ widgetConfig });
+
+      // Assert
+      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
+        type: 'sdk-widget-config',
+        payload: widgetConfig,
+      });
+    });
+
     it('should not send widget config when not provided', async () => {
       // Act
       await sdk.loadSidebar();
