@@ -30,7 +30,6 @@ export type WidgetConfig = {
   feedback?: FeatureToggle;
   featuredMcpServer?: string;
   modeSwitcher?: ModeSwitcherConfig;
-  testMode?: FeatureToggle;
   closeButton?: 'collapse' | 'close';
 };
 
