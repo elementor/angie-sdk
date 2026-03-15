@@ -42,7 +42,7 @@ export interface AngieToolUiMeta {
  *   _meta: {
  *     [ANGIE_REQUIRED_RESOURCES]: [{ uri: 'resource://...', whenToUse: '...' }],
  *     [ANGIE_MODEL_PREFERENCES]: { intelligencePriority: 0.8 },
- *     ui: { displayMode: McpAppDisplayMode.Inline },
+ *     ui: { resourceUri: 'ui://...', displayMode: McpAppDisplayMode.Inline },
  *   }
  * }, handler);
  */
