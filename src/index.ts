@@ -1,4 +1,4 @@
-export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type WidgetConfig } from './angie-mcp-sdk';
+export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type WidgetConfig } from './angie-mcp-sdk';
 export { AngieDetector } from './angie-detector';
 export { RegistrationQueue } from './registration-queue';
 export { ClientManager } from './client-manager';

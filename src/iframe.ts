@@ -13,9 +13,26 @@ type OpenIframeProps = {
 	origin?: string;
 	uiTheme: string;
 	isRTL: boolean;
+	path?: string;
 }
 
 const iframeLogger = createChildLogger( 'iframe' );
+
+const DEFAULT_PATH = 'angie/wp-admin';
+
+export const isValidPath = ( path: string ): boolean => {
+	if ( path.includes( '://' ) || path.startsWith( '//' ) ) {
+		return false;
+	}
+
+	try {
+		const base = 'https://test.com';
+		const url = new URL( path, base );
+		return url.origin === base;
+	} catch {
+		return false;
+	}
+};
 
 export const disableNavigationPrevention = async (): Promise<void> => {
 	if ( ! appState.iframe?.contentWindow || ! appState.iframeUrlObject ) {
@@ -141,7 +158,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 
 	const { iframe, iframeUrlObject } = await openSaaSPage( {
 		origin: props.origin || 'https://angie.elementor.com',
-		path: `angie/wp-admin`,
+		path: props.path && isValidPath( props.path ) ? props.path : DEFAULT_PATH,
 		insertCallback,
 		css: iframeCss,
 		uiTheme: props.uiTheme,

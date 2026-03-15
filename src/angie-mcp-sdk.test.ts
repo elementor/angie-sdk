@@ -465,6 +465,7 @@ describe('AngieMcpSdk', () => {
         isRTL: false,
         containerId: 'angie-sidebar-container',
         skipDefaultCss: false,
+        path: 'angie/wp-admin',
       });
     });
 
@@ -493,6 +494,7 @@ describe('AngieMcpSdk', () => {
         isRTL: true,
         containerId: 'my-custom-container',
         skipDefaultCss: true,
+        path: 'angie/wp-admin',
       });
     });
 
@@ -506,6 +508,24 @@ describe('AngieMcpSdk', () => {
         feedback: { enabled: false },
         featuredMcpServer: 'wp-search',
         suggestions: { items: [{ label: 'Search', value: 'search for' }] },
+      };
+
+      // Act
+      await sdk.loadSidebar({ widgetConfig });
+
+      // Assert
+      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
+        type: 'sdk-widget-config',
+        payload: widgetConfig,
+      });
+    });
+
+    it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
+      // Arrange
+      const widgetConfig = {
+        title: 'Custom Title',
+        modeSwitcher: { enabled: true, default: 'plan' as const },
+        closeButton: 'collapse' as const,
       };
 
       // Act

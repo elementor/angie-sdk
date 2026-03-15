@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
-import { disableNavigationPrevention } from './iframe';
+import { disableNavigationPrevention, isValidPath } from './iframe';
 import { appState } from './config';
 import { MessageEventType } from './types';
 
@@ -80,5 +80,25 @@ describe( 'disableNavigationPrevention', () => {
 
 		// Act & Assert
 		await expect( disableNavigationPrevention() ).rejects.toThrow( 'postMessage failed' );
+	} );
+} );
+
+describe( 'isValidPath', () => {
+	it.each( [
+		'angie/wp-admin',
+		'custom/path',
+		'/angie/wp-admin',
+		'angie',
+	] )( 'should accept valid relative path: %s', ( path ) => {
+		expect( isValidPath( path ) ).toBe( true );
+	} );
+
+	it.each( [
+		'https://evil.com',
+		'http://evil.com/path',
+		'//evil.com',
+		'https://evil.com/angie/wp-admin',
+	] )( 'should reject absolute URL or protocol-relative path: %s', ( path ) => {
+		expect( isValidPath( path ) ).toBe( false );
 	} );
 } );
