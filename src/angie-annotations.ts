@@ -3,6 +3,11 @@ export const ANGIE_MODEL_PREFERENCES = 'angie/modelPreferences' as const;
 export const ANGIE_EXTENDED_TIMEOUT = 'angie/extendedTimeout' as const;
 export const MCP_READONLY = 'readOnlyHint' as const;
 
+export enum McpAppDisplayMode {
+	Inline = 'inline',
+	EndOfTurn = 'end-of-turn',
+}
+
 export interface AngieRequiredResource {
 	uri: string;
 	whenToUse: string;
@@ -20,6 +25,11 @@ export interface AngieExtendedTimeout {
 	timeoutMs: number;
 }
 
+export interface AngieToolUiMeta {
+	resourceUri?: string;
+	displayMode?: McpAppDisplayMode;
+}
+
 /**
  * Custom Angie metadata to be placed in the `_meta` field of a tool.
  * These are vendor-specific extensions and should NOT be placed in `annotations`.
@@ -32,6 +42,7 @@ export interface AngieExtendedTimeout {
  *   _meta: {
  *     [ANGIE_REQUIRED_RESOURCES]: [{ uri: 'resource://...', whenToUse: '...' }],
  *     [ANGIE_MODEL_PREFERENCES]: { intelligencePriority: 0.8 },
+ *     ui: { displayMode: McpAppDisplayMode.Inline },
  *   }
  * }, handler);
  */
@@ -39,6 +50,7 @@ export interface AngieToolMeta {
 	[ANGIE_REQUIRED_RESOURCES]?: AngieRequiredResource[];
 	[ANGIE_MODEL_PREFERENCES]?: AngieModelPreferences;
 	[ANGIE_EXTENDED_TIMEOUT]?: AngieExtendedTimeout;
+	ui?: AngieToolUiMeta;
 }
 
 /**
