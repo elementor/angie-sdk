@@ -10,6 +10,8 @@ jest.mock('./client-manager');
 jest.mock('./browser-context-transport');
 jest.mock('./angie-iframe-utils', () => ({
   postMessageToAngieIframe: jest.fn(),
+  getAngieIframe: jest.fn(),
+  getAngieIframeOrigin: jest.fn(),
 }));
 jest.mock('./sidebar', () => ({
   initAngieSidebar: jest.fn(),
@@ -62,7 +64,10 @@ describe('AngieMcpSdk', () => {
     // Mock sidebar, iframe, and postMessage functions
     mockInitAngieSidebar = require('./sidebar').initAngieSidebar as jest.MockedFunction<any>;
     mockOpenIframe = require('./iframe').openIframe as jest.MockedFunction<any>;
-    mockOpenIframe.mockResolvedValue(undefined);
+    mockOpenIframe.mockResolvedValue({
+      iframe: { contentWindow: { postMessage: jest.fn() } },
+      iframeOrigin: 'https://angie.elementor.com',
+    });
     mockPostMessageToAngieIframe = require('./angie-iframe-utils').postMessageToAngieIframe as jest.MockedFunction<any>;
 
     // Mock the constructors
@@ -498,8 +503,13 @@ describe('AngieMcpSdk', () => {
       });
     });
 
-    it('should send widget config via postMessage when provided', async () => {
+    it('should send widget config directly to the instance iframe when provided', async () => {
       // Arrange
+      const mockPostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: mockPostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
       const widgetConfig = {
         title: 'Custom Title',
         subtitle: 'Custom Subtitle',
@@ -514,14 +524,19 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebar({ widgetConfig });
 
       // Assert
-      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
-        type: 'sdk-widget-config',
-        payload: widgetConfig,
-      });
+      expect(mockPostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://angie.elementor.com',
+      );
     });
 
-    it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
+    it('should send widget config with modeSwitcher and closeButton directly to iframe', async () => {
       // Arrange
+      const mockPostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: mockPostMessage } },
+        iframeOrigin: 'https://custom.example.com',
+      });
       const widgetConfig = {
         title: 'Custom Title',
         modeSwitcher: { enabled: true, default: 'plan' as const },
@@ -532,18 +547,36 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebar({ widgetConfig });
 
       // Assert
-      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
-        type: 'sdk-widget-config',
-        payload: widgetConfig,
-      });
+      expect(mockPostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://custom.example.com',
+      );
     });
 
     it('should not send widget config when not provided', async () => {
+      // Arrange
+      const mockPostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: mockPostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
+
       // Act
       await sdk.loadSidebar();
 
       // Assert
-      expect(mockPostMessageToAngieIframe).not.toHaveBeenCalled();
+      expect(mockPostMessage).not.toHaveBeenCalled();
+    });
+
+    it('should not send widget config when openIframe returns undefined (mobile)', async () => {
+      // Arrange
+      mockOpenIframe.mockResolvedValue(undefined);
+      const widgetConfig = { title: 'Test' };
+
+      // Act
+      await sdk.loadSidebar({ widgetConfig });
+
+      // Assert — no error thrown, config silently skipped
     });
   });
 }); 

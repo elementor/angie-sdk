@@ -53,7 +53,12 @@ export const disableNavigationPrevention = async (): Promise<void> => {
 	}
 };
 
-export const openIframe = async ( props: OpenIframeProps ) => {
+export type OpenIframeResult = {
+	iframe: HTMLIFrameElement;
+	iframeOrigin: string;
+};
+
+export const openIframe = async ( props: OpenIframeProps ): Promise<OpenIframeResult | undefined> => {
 	if ( isMobile() ) {
 		iframeLogger.log( 'Mobile detected, skipping iframe injection' );
 		return;
@@ -244,4 +249,9 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 		}
 
 	} );
+
+	return {
+		iframe,
+		iframeOrigin: iframeUrlObject.origin,
+	};
 };
