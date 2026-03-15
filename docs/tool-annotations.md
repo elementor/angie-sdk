@@ -196,25 +196,18 @@ interface AngieToolUiMeta {
 import { McpAppDisplayMode, AngieToolMeta } from '@elementor/angie-sdk';
 
 server.registerTool(
-  'ask-user-questions',
+  'apply-to-site',
   {
-    description: 'Displays a questionnaire to collect user input',
+    description: 'Applies generated code to the site',
     inputSchema: { /* ... */ },
     _meta: {
       ui: {
-        displayMode: McpAppDisplayMode.Inline
+        resourceUri: 'ui://apply-to-site/preview.html',
+        displayMode: McpAppDisplayMode.EndOfTurn
       }
     } as AngieToolMeta,
   },
-  async (args) => {
-    return {
-      content: [{
-        type: 'html',
-        content: '<form>...</form>',
-        title: 'User Questions'
-      }]
-    };
-  }
+  async (args) => { /* handler */ }
 );
 ```
 
