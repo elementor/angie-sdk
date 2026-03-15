@@ -20,7 +20,6 @@ type ModeSwitcherConfig = {
   enabled?: boolean;
   default?: 'agent' | 'plan' | 'ask';
 };
-
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
