@@ -26,6 +26,7 @@ The MCP protocol distinguishes between two types of tool metadata:
 | `ANGIE_REQUIRED_RESOURCES` | `'angie/requiredResources'` | Declare resources the tool needs |
 | `ANGIE_MODEL_PREFERENCES` | `'angie/modelPreferences'` | Request a specific AI model |
 | `ANGIE_EXTENDED_TIMEOUT` | `'angie/extendedTimeout'` | Request a longer execution timeout |
+| `ui` | `AngieToolUiMeta` | Configure UI display behavior for MCP apps |
 
 ---
 
@@ -157,6 +158,52 @@ server.registerTool(
     _meta: {
       [ANGIE_EXTENDED_TIMEOUT]: {
         timeoutMs: 60000 // 60 seconds
+      }
+    } as AngieToolMeta,
+  },
+  async (args) => { /* handler */ }
+);
+```
+
+---
+
+## `ui` (MCP App Display Configuration)
+
+Configure how MCP app UI content is displayed in the Angie chat interface.
+
+```typescript
+enum McpAppDisplayMode {
+  Inline = 'inline',        // Show immediately, agentic loop continues in parallel
+  EndOfTurn = 'end-of-turn' // Queue and show after agentic loop completes
+}
+
+interface AngieToolUiMeta {
+  resourceUri?: string;          // URI to load UI content from
+  displayMode?: McpAppDisplayMode; // When to display the UI (default: Inline)
+}
+```
+
+### Display Modes
+
+| Mode | Behavior |
+|---|---|
+| `Inline` (default) | UI appears immediately when the tool returns. The agentic loop continues in parallel. |
+| `EndOfTurn` | UI is queued and displayed after the entire agentic turn completes. |
+
+**Example:**
+
+```typescript
+import { McpAppDisplayMode, AngieToolMeta } from '@elementor/angie-sdk';
+
+server.registerTool(
+  'apply-to-site',
+  {
+    description: 'Applies generated code to the site',
+    inputSchema: { /* ... */ },
+    _meta: {
+      ui: {
+        resourceUri: 'ui://apply-to-site/preview.html',
+        displayMode: McpAppDisplayMode.EndOfTurn
       }
     } as AngieToolMeta,
   },
