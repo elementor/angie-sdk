@@ -43,7 +43,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 	}
 
 	// Check if sidebar container exists
-	let sidebarContainer = document.getElementById( 'angie-sidebar-container' );
+	let sidebarContainer = document.getElementById( appState.containerId );
 
 	if ( ! sidebarContainer ) {
 		// Use MutationObserver for more efficient DOM watching
@@ -54,7 +54,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 			// First try with shorter polling interval for immediate cases
 			let attempts = 0;
 			const quickCheck = setInterval( () => {
-				sidebarContainer = document.getElementById( 'angie-sidebar-container' );
+				sidebarContainer = document.getElementById( appState.containerId );
 				attempts++;
 				if ( sidebarContainer || attempts > 20 ) { // Check for 2 seconds max with 100ms intervals
 					clearInterval( quickCheck );
@@ -75,7 +75,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 				}
 
 				const observer = new MutationObserver( () => {
-					sidebarContainer = document.getElementById( 'angie-sidebar-container' );
+					sidebarContainer = document.getElementById( appState.containerId );
 					if ( sidebarContainer ) {
 						observer.disconnect();
 						resolve();
