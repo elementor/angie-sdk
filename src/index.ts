@@ -13,6 +13,7 @@ export {
 	saveState,
 	saveWidth,
 	type AngieSidebarState,
+	type SidebarInstanceHandle,
 } from './sidebar';
 export { waitForDocumentReady, toggleAngieSidebar } from './utils';
 export { navigateAngieIframe } from './navigation-utils';

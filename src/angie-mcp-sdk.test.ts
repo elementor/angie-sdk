@@ -14,7 +14,7 @@ jest.mock('./angie-iframe-utils', () => ({
   getAngieIframeOrigin: jest.fn(),
 }));
 jest.mock('./sidebar', () => ({
-  initAngieSidebar: jest.fn(),
+  initAngieSidebar: jest.fn().mockReturnValue({ setInstanceId: jest.fn() }),
 }));
 jest.mock('./iframe', () => ({
   openIframe: jest.fn(),
@@ -67,6 +67,7 @@ describe('AngieMcpSdk', () => {
     mockOpenIframe.mockResolvedValue({
       iframe: { contentWindow: { postMessage: jest.fn() } },
       iframeOrigin: 'https://angie.elementor.com',
+      instanceId: 'angie--wp-admin-test',
     });
     mockPostMessageToAngieIframe = require('./angie-iframe-utils').postMessageToAngieIframe as jest.MockedFunction<any>;
 
@@ -577,6 +578,36 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebar({ widgetConfig });
 
       // Assert — no error thrown, config silently skipped
+    });
+
+    it('should call setInstanceId on the sidebar handle with the iframe instanceId', async () => {
+      // Arrange
+      const mockSetInstanceId = jest.fn();
+      mockInitAngieSidebar.mockReturnValue({ setInstanceId: mockSetInstanceId });
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: jest.fn() } },
+        iframeOrigin: 'https://angie.elementor.com',
+        instanceId: 'angie--wp-admin-abc123',
+      });
+
+      // Act
+      await sdk.loadSidebar();
+
+      // Assert
+      expect(mockSetInstanceId).toHaveBeenCalledWith('angie--wp-admin-abc123');
+    });
+
+    it('should not call setInstanceId when openIframe returns undefined', async () => {
+      // Arrange
+      const mockSetInstanceId = jest.fn();
+      mockInitAngieSidebar.mockReturnValue({ setInstanceId: mockSetInstanceId });
+      mockOpenIframe.mockResolvedValue(undefined);
+
+      // Act
+      await sdk.loadSidebar();
+
+      // Assert
+      expect(mockSetInstanceId).not.toHaveBeenCalled();
     });
   });
 }); 

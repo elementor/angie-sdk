@@ -77,14 +77,18 @@ export class AngieMcpSdk {
     const { widgetConfig, ...rest } = options || {};
     const config = { ...DEFAULT_OPTIONS, ...rest };
     appState.containerId = config.containerId;
-    initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
+    const sidebarHandle = initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
     const result = await openIframe( config );
 
-    if ( widgetConfig && result ) {
-      result.iframe.contentWindow?.postMessage(
-        { type: 'sdk-widget-config', payload: widgetConfig },
-        result.iframeOrigin
-      );
+    if ( result ) {
+      sidebarHandle.setInstanceId( result.instanceId );
+
+      if ( widgetConfig ) {
+        result.iframe.contentWindow?.postMessage(
+          { type: 'sdk-widget-config', payload: widgetConfig },
+          result.iframeOrigin
+        );
+      }
     }
 
     this.setupPromptHashDetection();

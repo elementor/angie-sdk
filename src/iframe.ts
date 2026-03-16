@@ -56,6 +56,7 @@ export const disableNavigationPrevention = async (): Promise<void> => {
 export type OpenIframeResult = {
 	iframe: HTMLIFrameElement;
 	iframeOrigin: string;
+	instanceId: string;
 };
 
 export const openIframe = async ( props: OpenIframeProps ): Promise<OpenIframeResult | undefined> => {
@@ -253,5 +254,6 @@ export const openIframe = async ( props: OpenIframeProps ): Promise<OpenIframeRe
 	return {
 		iframe,
 		iframeOrigin: iframeUrlObject.origin,
+		instanceId: iframeUrlObject.searchParams.get( 'instanceId' ) || '',
 	};
 };
