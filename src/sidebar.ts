@@ -249,9 +249,18 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 	};
 }
 
-export function setupMessageListener(): void {
+export type SidebarInstanceHandle = {
+	setInstanceId: ( id: string ) => void;
+};
+
+export function setupMessageListener( getInstanceId: () => string ): void {
 	window.addEventListener( 'message', function( event ) {
 		if ( event.data && event.data.type === 'toggleAngieSidebar' ) {
+			const myId = getInstanceId();
+			const messageId = event.data.payload?.instanceId;
+			if ( messageId && myId !== messageId ) {
+				return;
+			}
 			const { force, skipTransition } = event.data.payload || {};
 			if ( window.toggleAngieSidebar ) {
 				window.toggleAngieSidebar( force, skipTransition );
@@ -265,15 +274,23 @@ type InitAngieSidebarOptions = {
 	skipDefaultCss?: boolean;
 };
 
-export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
+export function initAngieSidebar( options?: InitAngieSidebarOptions ): SidebarInstanceHandle {
 	if ( ! options?.skipDefaultCss ) {
 		injectCSS();
 	}
 
+	let sidebarInstanceId = '';
+
 	if ( typeof window !== 'undefined' ) {
 		window.toggleAngieSidebar = createToggleSidebarFunction( options?.onToggle );
-		setupMessageListener();
+		setupMessageListener( () => sidebarInstanceId );
 	}
+
+	return {
+		setInstanceId: ( id: string ) => {
+			sidebarInstanceId = id;
+		},
+	};
 }
 
 declare global {

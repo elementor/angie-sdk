@@ -1,5 +1,4 @@
 import type { Logger } from '@elementor/angie-logger';
-import { postMessageToAngieIframe } from './angie-iframe-utils';
 import { AngieDetector } from './angie-detector';
 import { BrowserContextTransport } from './browser-context-transport';
 import { ClientManager } from './client-manager';
@@ -78,11 +77,18 @@ export class AngieMcpSdk {
     const { widgetConfig, ...rest } = options || {};
     const config = { ...DEFAULT_OPTIONS, ...rest };
     appState.containerId = config.containerId;
-    initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
-    await openIframe( config );
+    const sidebarHandle = initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
+    const result = await openIframe( config );
 
-    if ( widgetConfig ) {
-      postMessageToAngieIframe( { type: 'sdk-widget-config', payload: widgetConfig } );
+    if ( result ) {
+      sidebarHandle.setInstanceId( result.instanceId );
+
+      if ( widgetConfig ) {
+        result.iframe.contentWindow?.postMessage(
+          { type: 'sdk-widget-config', payload: widgetConfig },
+          result.iframeOrigin
+        );
+      }
     }
 
     this.setupPromptHashDetection();
