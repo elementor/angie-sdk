@@ -24,7 +24,7 @@ describe( 'disableNavigationPrevention', () => {
 		
 		global.setTimeout = jest.fn( ( callback: () => void ) => {
 			callback();
-			return 0 as unknown as NodeJS.Timeout;
+			return 0 as unknown as ReturnType<typeof setTimeout>;
 		} ) as unknown as typeof setTimeout;
 
 		mockContentWindow = {
