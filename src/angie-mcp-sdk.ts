@@ -12,6 +12,11 @@ import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerCon
 
 export { DEFAULT_CONTAINER_ID } from './config';
 
+const HASH_PARAM_PROMPT = 'angie-prompt';
+const HASH_PARAM_NEW_CHAT = 'angie-newChat';
+const HASH_PARAM_AUTO_SEND = 'angie-autoSend';
+const HASH_SOURCE = 'hash-parameter';
+
 type FeatureToggle = { enabled: boolean };
 
 type PromptSuggestion = { label: string; value: string };
@@ -382,32 +387,44 @@ export class AngieMcpSdk {
     return `${this.instanceId}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
   }
 
+  private parseHashParams(hash: string): URLSearchParams {
+    const paramString = hash.startsWith('#') ? hash.substring(1) : hash;
+    return new URLSearchParams(paramString);
+  }
+
   private async handlePromptHash(): Promise<void> {
     const hash = window.location.hash;
 
-    if (!hash.startsWith('#angie-prompt=')) {
+    if (!hash.includes(`${HASH_PARAM_PROMPT}=`)) {
       return;
     }
 
     try {
-      const promptEncoded = hash.replace('#angie-prompt=', '');
-      const prompt = decodeURIComponent(promptEncoded);
+      const params = this.parseHashParams(hash);
+      const prompt = params.get(HASH_PARAM_PROMPT) || '';
 
       if (!prompt) {
         this.logger.warn('Empty prompt detected in hash');
         return;
       }
 
-      this.logger.log('Detected prompt in hash:', prompt);
+      const newChat = params.get(HASH_PARAM_NEW_CHAT) === 'true';
+      const autoSend = params.get(HASH_PARAM_AUTO_SEND) === 'true';
+
+      this.logger.log('Detected prompt in hash:', { prompt, newChat, autoSend });
 
       await this.waitForReady();
 
       const response = await this.triggerAngie({
         prompt,
         context: {
-          source: 'hash-parameter',
+          source: HASH_SOURCE,
           pageUrl: window.location.href,
           timestamp: new Date().toISOString(),
+        },
+        options: {
+          newChat,
+          autoSend,
         },
       });
 
