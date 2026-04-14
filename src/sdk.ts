@@ -81,7 +81,7 @@ export const listenToSDK = ( appState: AppState ) => {
 				sdkLogger.log( 'SDK Trigger Angie received', event.data );
 
 				try {
-					const { requestId, prompt, context } = event.data.payload;
+					const { requestId, prompt, context, options } = event.data.payload;
 
 					if ( appState.iframe ) {
 						appState.iframe.contentWindow?.postMessage( {
@@ -90,6 +90,7 @@ export const listenToSDK = ( appState: AppState ) => {
 								requestId,
 								prompt,
 								context,
+								options,
 							},
 						}, appState.iframeUrlObject?.origin || '' );
 					} else {

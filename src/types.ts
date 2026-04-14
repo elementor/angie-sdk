@@ -94,6 +94,8 @@ export interface AngieTriggerRequest {
   }& Record<string, any>;
   options?: {
     timeout?: number;
+    newChat?: boolean;
+    autoSend?: boolean;
   };
 }
 
