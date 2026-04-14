@@ -14,7 +14,6 @@ export { DEFAULT_CONTAINER_ID } from './config';
 
 const HASH_PARAM_PROMPT = 'angie-prompt';
 const HASH_PARAM_NEW_CHAT = 'angie-newChat';
-const HASH_PARAM_AUTO_SEND = 'angie-autoSend';
 const HASH_SOURCE = 'hash-parameter';
 
 type FeatureToggle = { enabled: boolean };
@@ -409,9 +408,8 @@ export class AngieMcpSdk {
       }
 
       const newChat = params.get(HASH_PARAM_NEW_CHAT) === 'true';
-      const autoSend = params.get(HASH_PARAM_AUTO_SEND) === 'true';
 
-      this.logger.log('Detected prompt in hash:', { prompt, newChat, autoSend });
+      this.logger.log('Detected prompt in hash:', { prompt, newChat });
 
       await this.waitForReady();
 
@@ -424,7 +422,6 @@ export class AngieMcpSdk {
         },
         options: {
           newChat,
-          autoSend,
         },
       });
 

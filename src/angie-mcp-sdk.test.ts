@@ -553,17 +553,15 @@ describe('AngieMcpSdk', () => {
       expect(params.get('angie-prompt')).toBe('Hello world');
     });
 
-    it('should parse prompt with newChat and autoSend', () => {
-      const params = (sdk as any).parseHashParams('#angie-prompt=Fix%20error&angie-newChat=true&angie-autoSend=true');
+    it('should parse prompt with newChat', () => {
+      const params = (sdk as any).parseHashParams('#angie-prompt=Fix%20error&angie-newChat=true');
       expect(params.get('angie-prompt')).toBe('Fix error');
       expect(params.get('angie-newChat')).toBe('true');
-      expect(params.get('angie-autoSend')).toBe('true');
     });
 
     it('should return null for missing params', () => {
       const params = (sdk as any).parseHashParams('#angie-prompt=Hello');
       expect(params.get('angie-newChat')).toBeNull();
-      expect(params.get('angie-autoSend')).toBeNull();
     });
 
     it('should handle hash without # prefix', () => {
@@ -617,8 +615,8 @@ describe('AngieMcpSdk', () => {
       expect(postMessageSpy).not.toHaveBeenCalled();
     });
 
-    it('should trigger with newChat=true and autoSend=true when params are set', async () => {
-      window.location.hash = '#angie-prompt=Fix%20error&angie-newChat=true&angie-autoSend=true';
+    it('should trigger with newChat=true when param is set', async () => {
+      window.location.hash = '#angie-prompt=Fix%20error&angie-newChat=true';
 
       await (sdk as any).handlePromptHash();
 
@@ -629,7 +627,6 @@ describe('AngieMcpSdk', () => {
             prompt: 'Fix error',
             options: expect.objectContaining({
               newChat: true,
-              autoSend: true,
             }),
           }),
         }),
@@ -637,7 +634,7 @@ describe('AngieMcpSdk', () => {
       );
     });
 
-    it('should default newChat and autoSend to false when not in hash', async () => {
+    it('should default newChat to false when not in hash', async () => {
       window.location.hash = '#angie-prompt=Just%20a%20prompt';
 
       await (sdk as any).handlePromptHash();
@@ -649,27 +646,6 @@ describe('AngieMcpSdk', () => {
             prompt: 'Just a prompt',
             options: expect.objectContaining({
               newChat: false,
-              autoSend: false,
-            }),
-          }),
-        }),
-        expect.anything()
-      );
-    });
-
-    it('should support newChat=true without autoSend', async () => {
-      window.location.hash = '#angie-prompt=Hello&angie-newChat=true';
-
-      await (sdk as any).handlePromptHash();
-
-      expect(postMessageSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'sdk-trigger-angie',
-          payload: expect.objectContaining({
-            prompt: 'Hello',
-            options: expect.objectContaining({
-              newChat: true,
-              autoSend: false,
             }),
           }),
         }),
@@ -678,7 +654,7 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should clear hash after successful trigger', async () => {
-      window.location.hash = '#angie-prompt=Test&angie-newChat=true&angie-autoSend=true';
+      window.location.hash = '#angie-prompt=Test&angie-newChat=true';
 
       await (sdk as any).handlePromptHash();
 
