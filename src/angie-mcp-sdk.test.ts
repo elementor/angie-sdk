@@ -553,15 +553,15 @@ describe('AngieMcpSdk', () => {
       expect(params.get('angie-prompt')).toBe('Hello world');
     });
 
-    it('should parse prompt with newChat', () => {
-      const params = (sdk as any).parseHashParams('#angie-prompt=Fix%20error&angie-newChat=true');
+    it('should parse prompt with new-chat', () => {
+      const params = (sdk as any).parseHashParams('#angie-prompt=Fix%20error&angie-new-chat=true');
       expect(params.get('angie-prompt')).toBe('Fix error');
-      expect(params.get('angie-newChat')).toBe('true');
+      expect(params.get('angie-new-chat')).toBe('true');
     });
 
     it('should return null for missing params', () => {
       const params = (sdk as any).parseHashParams('#angie-prompt=Hello');
-      expect(params.get('angie-newChat')).toBeNull();
+      expect(params.get('angie-new-chat')).toBeNull();
     });
 
     it('should handle hash without # prefix', () => {
@@ -616,7 +616,7 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should trigger with newChat=true when param is set', async () => {
-      window.location.hash = '#angie-prompt=Fix%20error&angie-newChat=true';
+      window.location.hash = '#angie-prompt=Fix%20error&angie-new-chat=true';
 
       await (sdk as any).handlePromptHash();
 
@@ -654,7 +654,7 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should clear hash after successful trigger', async () => {
-      window.location.hash = '#angie-prompt=Test&angie-newChat=true';
+      window.location.hash = '#angie-prompt=Test&angie-new-chat=true';
 
       await (sdk as any).handlePromptHash();
 
