@@ -212,7 +212,7 @@ await sdk.triggerAngie({
 
 **Options:**
 - `timeout`: How long to wait for Angie response (milliseconds)  
-- `priority`: Request priority level
+- `newChat`: When `true`, clears the current conversation and opens a fresh chat with the prompt pre-filled in the input
 - `context`: Additional data to help Angie understand the request
 
 ### Hash Parameter Method
@@ -221,8 +221,15 @@ await sdk.triggerAngie({
 // Trigger via URL hash - perfect for deep linking
 window.location.hash = 'angie-prompt=' + encodeURIComponent('Help me create a contact page');
 
-// Or visit URLs like: https://yoursite.com/wp-admin/edit.php#angie-prompt=Help%20me%20optimize%20SEO
+// Open a new chat via hash parameter
+window.location.hash = 'angie-prompt=' + encodeURIComponent('Fix this error') + '&angie-new-chat=true';
+
+// Example URL: https://yoursite.com/wp-admin/edit.php#angie-prompt=Help%20me%20optimize%20SEO&angie-new-chat=true
 ```
+
+**Hash Parameters:**
+- `angie-prompt`: The prompt text to populate in the input field
+- `angie-new-chat`: When set to `true`, clears the current conversation and opens a fresh chat with the prompt pre-filled in the input
 
 **Note:** Always call `await sdk.waitForReady()` before triggering Angie.
 
