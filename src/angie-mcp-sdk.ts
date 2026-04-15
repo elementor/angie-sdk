@@ -13,7 +13,7 @@ import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerCon
 export { DEFAULT_CONTAINER_ID } from './config';
 
 const HASH_PARAM_PROMPT = 'angie-prompt';
-const HASH_PARAM_NEW_CHAT = 'angie-newChat';
+const HASH_PARAM_NEW_CHAT = 'angie-new-chat';
 const HASH_SOURCE = 'hash-parameter';
 
 type FeatureToggle = { enabled: boolean };
