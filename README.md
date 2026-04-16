@@ -212,7 +212,7 @@ await sdk.triggerAngie({
 
 **Options:**
 - `timeout`: How long to wait for Angie response (milliseconds)  
-- `newChat`: When `true`, clears the current conversation and opens a fresh chat with the prompt pre-filled in the input
+- `angie-new-chat`: When `true`, clears the current conversation and opens a fresh chat with the prompt pre-filled in the input
 - `context`: Additional data to help Angie understand the request
 
 ### Hash Parameter Method
