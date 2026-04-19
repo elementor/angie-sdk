@@ -28,6 +28,10 @@ const baseConfig = {
   mode: 'production',
   optimization: {
     minimize: true,
+    // Single output file: inlined CSS via raw-loader; split chunks would leave
+    // ./sidebar.js importing ./sidebar.css (breaks Next and other consumers).
+    splitChunks: false,
+    runtimeChunk: false,
   },
 };
 
