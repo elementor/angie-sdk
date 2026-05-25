@@ -35,6 +35,10 @@ export type WidgetConfig = {
   featuredMcpServer?: string;
   modeSwitcher?: ModeSwitcherConfig;
   closeButton?: 'collapse' | 'close';
+  betaBanner?: FeatureToggle;
+  aiContextGuidance?: FeatureToggle;
+  userProfileMenu?: FeatureToggle;
+  isEmbeddedMode?: boolean;
 };
 
 export type AngieMcpSdkOptions = {
