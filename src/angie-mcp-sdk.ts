@@ -39,6 +39,8 @@ export type WidgetConfig = {
   featuredMcpServer?: string;
   modeSwitcher?: ModeSwitcherConfig;
   closeButton?: 'collapse' | 'close';
+  commands?: FeatureToggle;
+  testMode?: FeatureToggle;
   betaBanner?: FeatureToggle;
   aiContextGuidance?: FeatureToggle;
   userProfileMenu?: FeatureToggle;
