@@ -38,7 +38,7 @@ export type WidgetConfig = {
   betaBanner?: FeatureToggle;
   aiContextGuidance?: FeatureToggle;
   userProfileMenu?: FeatureToggle;
-  isEmbeddedMode?: boolean;
+  skipLoadingServers?: boolean;
 };
 
 export type AngieMcpSdkOptions = {
