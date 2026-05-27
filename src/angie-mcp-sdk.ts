@@ -25,6 +25,10 @@ export type ModeSwitcherConfig = {
   default?: 'agent' | 'plan' | 'ask';
 };
 
+export type LocalServersConfig = {
+  skipLoading?: boolean;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -35,10 +39,12 @@ export type WidgetConfig = {
   featuredMcpServer?: string;
   modeSwitcher?: ModeSwitcherConfig;
   closeButton?: 'collapse' | 'close';
+  commands?: FeatureToggle;
+  testMode?: FeatureToggle;
   betaBanner?: FeatureToggle;
   aiContextGuidance?: FeatureToggle;
   userProfileMenu?: FeatureToggle;
-  skipLoadingServers?: boolean;
+  localServers?: LocalServersConfig;
 };
 
 export type AngieMcpSdkOptions = {
