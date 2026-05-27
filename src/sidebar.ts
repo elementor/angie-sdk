@@ -3,21 +3,26 @@ import { appState } from "./config";
 import { MessageEventType } from "./types";
 import { createChildLogger } from "./logger";
 import { isOidcFlowInUrl } from "@elementor/oidc-auth";
-import { waitForDocumentReady } from "./utils";
+import { sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility, waitForDocumentReady } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
+import wordpressSidebarCssContent from "./sidebar-wordpress.css?raw";
 
 const sidebarLogger = createChildLogger( 'sidebar' );
 let cssInjected = false;
+let wordpressCssInjected = false;
 
 function injectCSS(): void {
-	if (typeof document === 'undefined' || cssInjected) {
+	if ( typeof document === 'undefined' ) {
 		return;
 	}
 
 	const styleId = 'angie-sidebar-styles';
-	
-	if (document.getElementById(styleId)) {
-		cssInjected = true;
+
+	if ( ! document.getElementById( styleId ) ) {
+		cssInjected = false;
+	}
+
+	if ( cssInjected ) {
 		return;
 	}
 
@@ -29,6 +34,31 @@ function injectCSS(): void {
 	head.insertBefore(style, head.firstChild);
 	
 	cssInjected = true;
+}
+
+function injectWordPressCSS(): void {
+	if ( typeof document === 'undefined' ) {
+		return;
+	}
+
+	const styleId = 'angie-sidebar-wordpress-styles';
+
+	if ( ! document.getElementById( styleId ) ) {
+		wordpressCssInjected = false;
+	}
+
+	if ( wordpressCssInjected ) {
+		return;
+	}
+
+	const style = document.createElement( 'style' );
+	style.id = styleId;
+	style.textContent = wordpressSidebarCssContent;
+
+	const head = document.head || document.getElementsByTagName( 'head' )[ 0 ];
+	head.appendChild( style );
+
+	wordpressCssInjected = true;
 }
 
 export const ANGIE_SIDEBAR_STATE_OPEN = 'open';
@@ -111,13 +141,13 @@ export function forceSidebarClosedDuringOAuth(): void {
 	}
 }
 
-export function loadState(): void {
+export function loadState( defaultState: AngieSidebarState = ANGIE_SIDEBAR_STATE_OPEN ): void {
 	if ( isOidcFlowInUrl() ) {
 		forceSidebarClosedDuringOAuth();
 		return;
 	}
 
-	applyState( getAngieSidebarSavedState() || ANGIE_SIDEBAR_STATE_OPEN );
+	applyState( getAngieSidebarSavedState() || defaultState );
 }
 
 export function applyState( state: AngieSidebarState ): void {
@@ -228,6 +258,10 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 			body.classList.remove( 'angie-sidebar-active' );
 		}
 
+		if ( appState.iframe ) {
+			setIframeAccessibility( appState.iframe, shouldOpen );
+		}
+
 		const focusDelay = skipTransition ? 0 : 300;
 		handleFocus( shouldOpen, focusDelay );
 
@@ -249,13 +283,33 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 	};
 }
 
+let sidebarToggleMessageListenerAttached = false;
+
 export function setupMessageListener(): void {
+	if ( sidebarToggleMessageListenerAttached ) {
+		return;
+	}
+
+	sidebarToggleMessageListenerAttached = true;
+
 	window.addEventListener( 'message', function( event ) {
-		if ( event.data && event.data.type === 'toggleAngieSidebar' ) {
-			const { force, skipTransition } = event.data.payload || {};
-			if ( window.toggleAngieSidebar ) {
-				window.toggleAngieSidebar( force, skipTransition );
-			}
+		if ( event.data?.type !== 'toggleAngieSidebar' ) {
+			return;
+		}
+
+		const iframeOrigin = appState.iframeUrlObject?.origin;
+		if ( iframeOrigin && event.origin !== iframeOrigin ) {
+			return;
+		}
+
+		const { force, skipTransition } = event.data.payload || {};
+		if ( window.toggleAngieSidebar ) {
+			window.toggleAngieSidebar( force, skipTransition );
+		}
+
+		const port = event.ports?.[ 0 ];
+		if ( port ) {
+			sendSuccessMessage( port );
 		}
 	} );
 }
@@ -263,11 +317,16 @@ export function setupMessageListener(): void {
 type InitAngieSidebarOptions = {
 	onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void;
 	skipDefaultCss?: boolean;
+	styleTheme?: 'wordpress' | '';
 };
 
 export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
 	if ( ! options?.skipDefaultCss ) {
 		injectCSS();
+	}
+
+	if ( options?.styleTheme === 'wordpress' ) {
+		injectWordPressCSS();
 	}
 
 	if ( typeof window !== 'undefined' ) {

@@ -16,3 +16,10 @@ export const sendEmbeddedConfig = ( payload: HostEmbeddedConfigPayload ): void =
 		type: EMBEDDED_CONFIG_MESSAGE_TYPE,
 	} );
 };
+
+export const sendWidgetConfig = ( widgetConfig: NonNullable<ResolvedConfigV2['widgetConfig']> ): void => {
+	postMessageToAngieIframe( {
+		payload: widgetConfig,
+		type: 'sdk-widget-config',
+	} );
+};

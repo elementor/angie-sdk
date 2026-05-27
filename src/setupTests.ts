@@ -30,4 +30,5 @@ global.console.warn = jest.fn();
 global.console.error = jest.fn();
 
 // Mock CSS imports globally
-jest.mock('../src/sidebar.css', () => '.angie-sidebar { width: 300px; }', { virtual: true }); 
+jest.mock('../src/sidebar.css', () => '.angie-sidebar { width: 300px; }', { virtual: true });
+jest.mock('../src/sidebar-wordpress.css', () => 'body.admin-bar { --angie-sidebar-z-index: 99999; }', { virtual: true });

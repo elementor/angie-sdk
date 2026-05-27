@@ -1,11 +1,12 @@
 import { appState } from '../config';
-import { openIframe } from '../iframe';
+import { initFloatingChatLayout } from './chat-toggle/init-floating-chat-layout';
 import { ensureSidebarContainer } from './container';
 import type { LoadSidebarV2Options } from './config';
-import { buildEmbeddedPayload, sendEmbeddedConfig } from './embedded-handshake';
+import { buildEmbeddedPayload, sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
 import { readEnv } from './env';
+import { openEmbeddedIframe } from './open-embedded-iframe';
 import { resolveConfig, shouldBoot } from './resolve-config';
-import { initSidebarShell } from './shell';
+import { applyInitialSidebarShellState, finalizeSidebarShellState, initSidebarShell } from './shell';
 
 export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
 	const env = readEnv();
@@ -17,19 +18,38 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 
 	appState.containerId = config.container.id;
 
-	if ( config.container.preset === 'sidebar' ) {
-		ensureSidebarContainer( config.container.id, env.isRTL );
+	ensureSidebarContainer( config.container.id, env.isRTL );
+
+	const { layout, chatToggleButton } = config.container;
+
+	if ( layout === 'floating-chat' ) {
+		initFloatingChatLayout( {
+			containerId: config.container.id,
+			iframeOrigin: config.iframe.origin,
+			onClose: config.callbacks.onClose,
+			toggleButtonId: chatToggleButton.id,
+			injectToggleButton: chatToggleButton.enabled,
+		} );
+	} else {
 		initSidebarShell( config.container, config.callbacks );
+		applyInitialSidebarShellState( config.container );
 	}
 
 	const embeddedPayload = buildEmbeddedPayload( config.host );
 
-	await openIframe( {
-		isRTL: config.iframe.isRTL,
-		origin: config.iframe.origin,
-		path: config.iframe.path,
-		uiTheme: config.iframe.uiTheme,
+	await openEmbeddedIframe( {
+		container: config.container,
+		iframe: config.iframe,
+		hostReadyEmbedded: embeddedPayload,
 	} );
 
+	if ( layout === 'sidebar' ) {
+		finalizeSidebarShellState( config.container );
+	}
+
 	sendEmbeddedConfig( embeddedPayload );
+
+	if ( config.widgetConfig ) {
+		sendWidgetConfig( config.widgetConfig );
+	}
 };

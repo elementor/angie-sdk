@@ -1,7 +1,14 @@
+import type { WidgetConfig } from '../angie-mcp-sdk';
+
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
-export type LoadSidebarV2ContainerPreset = 'sidebar' | 'none';
-export type LoadSidebarV2ContainerStylePreset = 'wordpress' | 'chat';
+export type LoadSidebarV2Layout = 'floating-chat' | 'sidebar';
+export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
+
+export type ChatToggleButtonConfig = {
+	enabled?: boolean;
+	id?: string;
+};
 
 export type LoadSidebarV2Options = {
 	host: {
@@ -14,10 +21,11 @@ export type LoadSidebarV2Options = {
 	};
 	container?: {
 		id?: string;
+		layout?: LoadSidebarV2Layout;
+		styleTheme?: LoadSidebarV2ContainerStyleTheme;
 		persistOpenState?: boolean;
-		preset?: LoadSidebarV2ContainerPreset;
 		resizable?: boolean;
-		stylePreset?: LoadSidebarV2ContainerStylePreset;
+		chatToggleButton?: ChatToggleButtonConfig;
 	};
 	iframe?: {
 		isRTL?: boolean;
@@ -28,6 +36,7 @@ export type LoadSidebarV2Options = {
 	callbacks?: {
 		onClose?: () => void;
 	};
+	widgetConfig?: WidgetConfig;
 };
 
 export type ResolvedConfigV2 = {
@@ -41,10 +50,14 @@ export type ResolvedConfigV2 = {
 	};
 	container: {
 		id: string;
-		preset: LoadSidebarV2ContainerPreset;
-		stylePreset: LoadSidebarV2ContainerStylePreset;
+		layout: LoadSidebarV2Layout;
+		styleTheme: LoadSidebarV2ContainerStyleTheme;
 		persistOpenState: boolean;
 		resizable: boolean;
+		chatToggleButton: {
+			enabled: boolean;
+			id: string;
+		};
 	};
 	iframe: {
 		origin: string;
@@ -55,6 +68,7 @@ export type ResolvedConfigV2 = {
 	callbacks: {
 		onClose?: () => void;
 	};
+	widgetConfig?: WidgetConfig;
 };
 
 export type LoadSidebarV2HostConfig = LoadSidebarV2Options & {

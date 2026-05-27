@@ -8,12 +8,15 @@ import { HostEventType, MessageEventType } from './types';
 import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
 import { ANGIE_SDK_VERSION } from './version';
 import { openSaaSPage } from './openSaaSPage';
+import { setAngieIframeRef } from './angie-iframe-utils';
+import type { HostEmbeddedConfigPayload } from './load-sidebar-v2/config';
 
 type OpenIframeProps = {
 	origin?: string;
 	uiTheme: string;
 	isRTL: boolean;
 	path?: string;
+	hostReadyEmbedded?: HostEmbeddedConfigPayload;
 }
 
 const iframeLogger = createChildLogger( 'iframe' );
@@ -138,13 +141,6 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 
 		// Insert iframe into sidebar
 		sidebarContainer?.appendChild( iframeElement );
-
-		toggleAngieSidebar( iframeElement, true );
-
-		// Focus management after iframe loads
-		iframeElement.addEventListener( 'load', () => {
-			iframeElement.focus();
-		} );
 	};
 
 	// Determine CSS styling based on mode
@@ -160,6 +156,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 		origin: props.origin || 'https://angie.elementor.com',
 		path: props.path && isValidPath( props.path ) ? props.path : DEFAULT_PATH,
 		insertCallback,
+		hostReadyEmbedded: props.hostReadyEmbedded,
 		css: iframeCss,
 		uiTheme: props.uiTheme,
 		isRTL: props.isRTL,
@@ -168,6 +165,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 
 	appState.iframe = iframe;
 	appState.iframeUrlObject = iframeUrlObject;
+	setAngieIframeRef( iframe );
 
 	addLocalStorageListener();
 

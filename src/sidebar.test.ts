@@ -115,6 +115,19 @@ describe('sidebar', () => {
       expect(styleElement?.textContent).toContain('angie-sidebar');
     });
 
+    it('should inject wordpress theme CSS when styleTheme is wordpress', () => {
+      initAngieSidebar({ styleTheme: 'wordpress' });
+
+      expect(document.getElementById('angie-sidebar-styles')).toBeTruthy();
+      expect(document.getElementById('angie-sidebar-wordpress-styles')).toBeTruthy();
+    });
+
+    it('should not inject wordpress theme CSS when styleTheme is empty', () => {
+      initAngieSidebar({ styleTheme: '', skipDefaultCss: true });
+
+      expect(document.getElementById('angie-sidebar-wordpress-styles')).toBeNull();
+    });
+
     it('should set up window.toggleAngieSidebar', () => {
       initAngieSidebar();
       
