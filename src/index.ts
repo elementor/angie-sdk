@@ -1,6 +1,7 @@
 export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type WidgetConfig } from './angie-mcp-sdk';
 export {
 	type ChatToggleButtonConfig,
+	type ExternalHeadersCallback,
 	type LoadSidebarV2ContainerStyleTheme,
 	type LoadSidebarV2Layout,
 	type LoadSidebarV2Options,

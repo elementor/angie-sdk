@@ -10,6 +10,10 @@ export type ChatToggleButtonConfig = {
 	selector?: string;
 };
 
+export type ExternalHeadersCallback = () =>
+	| Record<string, string | undefined>
+	| Promise<Record<string, string | undefined>>;
+
 export type LoadSidebarV2Options = {
 	host: {
 		appId: string;
@@ -35,6 +39,7 @@ export type LoadSidebarV2Options = {
 	};
 	callbacks?: {
 		onClose?: () => void;
+		getExternalHeaders?: ExternalHeadersCallback;
 	};
 	widgetConfig?: WidgetConfig;
 };
@@ -67,6 +72,7 @@ export type ResolvedConfigV2 = {
 	};
 	callbacks: {
 		onClose?: () => void;
+		getExternalHeaders?: ExternalHeadersCallback;
 	};
 	widgetConfig?: WidgetConfig;
 };
