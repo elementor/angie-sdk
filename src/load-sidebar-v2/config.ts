@@ -1,0 +1,90 @@
+export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
+
+export type LoadSidebarV2ContainerPreset = 'sidebar' | 'none';
+export type LoadSidebarV2ContainerStylePreset = 'wordpress' | 'chat';
+
+export type LoadSidebarV2Options = {
+	host: {
+		appId: string;
+		aiContext?: Record<string, unknown>;
+		website?: Record<string, unknown>;
+	};
+	boot?: {
+		allowInIframe?: boolean;
+	};
+	container?: {
+		id?: string;
+		persistOpenState?: boolean;
+		preset?: LoadSidebarV2ContainerPreset;
+		resizable?: boolean;
+		stylePreset?: LoadSidebarV2ContainerStylePreset;
+	};
+	iframe?: {
+		isRTL?: boolean;
+		origin?: string;
+		path?: string;
+		uiTheme?: string;
+	};
+	callbacks?: {
+		onClose?: () => void;
+	};
+};
+
+export type ResolvedConfigV2 = {
+	host: {
+		appId: string;
+		aiContext?: Record<string, unknown>;
+		website?: Record<string, unknown>;
+	};
+	boot: {
+		allowInIframe: boolean;
+	};
+	container: {
+		id: string;
+		preset: LoadSidebarV2ContainerPreset;
+		stylePreset: LoadSidebarV2ContainerStylePreset;
+		persistOpenState: boolean;
+		resizable: boolean;
+	};
+	iframe: {
+		origin: string;
+		path: string;
+		uiTheme: string;
+		isRTL: boolean;
+	};
+	callbacks: {
+		onClose?: () => void;
+	};
+};
+
+export type LoadSidebarV2HostConfig = LoadSidebarV2Options & {
+	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
+};
+
+export type HostEmbeddedConfigPayload = {
+	aiContext?: Record<string, unknown>;
+	appId?: string;
+	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
+	telemetry?: Record<string, unknown>;
+	website?: Record<string, unknown>;
+};
+
+export const buildHostEmbeddedConfigPayload = (
+	host: ResolvedConfigV2['host']
+): HostEmbeddedConfigPayload => ( {
+	aiContext: host.aiContext,
+	appId: host.appId,
+	configVersion: LOAD_SIDEBAR_V2_CONFIG_VERSION,
+	telemetry: {
+		screenPath: window.location.pathname,
+	},
+	website: {
+		docTitle: document.title,
+		homeUrl: window.location.origin,
+		name: document.title,
+		platform: 'frontend',
+		siteLang: document.documentElement.lang,
+		tagline: '',
+		...host.website,
+	},
+} );

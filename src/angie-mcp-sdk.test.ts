@@ -21,6 +21,9 @@ jest.mock('./iframe', () => ({
     SDK_ANGIE_REFRESH_PING: 'sdk-angie-refresh-ping',
   },
 }));
+jest.mock('./load-sidebar-v2/boot-sidebar', () => ({
+  bootSidebar: jest.fn( () => Promise.resolve() ),
+}));
 
 describe('AngieMcpSdk', () => {
   let sdk: AngieMcpSdk;
@@ -544,6 +547,22 @@ describe('AngieMcpSdk', () => {
 
       // Assert
       expect(mockPostMessageToAngieIframe).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('loadSidebarV2', () => {
+    it('should delegate to bootSidebar', async () => {
+      const mockBootSidebar = require('./load-sidebar-v2/boot-sidebar').bootSidebar as jest.MockedFunction<any>;
+      const options = {
+        host: {
+          appId: 'editor-lite',
+        },
+      };
+
+      await sdk.loadSidebarV2( options );
+
+      expect( mockBootSidebar ).toHaveBeenCalledTimes( 1 );
+      expect( mockBootSidebar ).toHaveBeenCalledWith( options );
     });
   });
 
