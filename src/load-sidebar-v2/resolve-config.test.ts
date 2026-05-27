@@ -27,7 +27,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 				resizable: false,
 				chatToggleButton: {
 					enabled: true,
-					id: 'angie-widget-toggle',
+					selector: '#angie-widget-toggle',
 				},
 			},
 			iframe: {
@@ -62,7 +62,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 			resizable: true,
 			chatToggleButton: {
 				enabled: false,
-				id: 'angie-widget-toggle',
+				selector: '#angie-widget-toggle',
 			},
 		} );
 		expect( config.widgetConfig ).toEqual( {
@@ -77,7 +77,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 					layout: 'sidebar',
 					chatToggleButton: {
 						enabled: true,
-						id: 'angie-lite-toggle',
+						selector: '#angie-lite-toggle',
 					},
 				},
 				host: { appId: 'editor-lite' },
@@ -87,7 +87,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 
 		expect( config.container.chatToggleButton ).toEqual( {
 			enabled: true,
-			id: 'angie-lite-toggle',
+			selector: '#angie-lite-toggle',
 		} );
 	} );
 
@@ -132,14 +132,14 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		);
 
 		expect( config.container.chatToggleButton.enabled ).toBe( true );
-		expect( config.container.chatToggleButton.id ).toBe( 'angie-widget-toggle' );
+		expect( config.container.chatToggleButton.selector ).toBe( '#angie-widget-toggle' );
 	} );
 
-	it( 'should resolve a custom chat toggle button id', () => {
+	it( 'should resolve a custom chat toggle button selector', () => {
 		const config = resolveConfig(
 			{
 				container: {
-					chatToggleButton: { id: 'angie-lite-toggle' },
+					chatToggleButton: { selector: '#angie-lite-toggle' },
 					layout: 'floating-chat',
 				},
 				host: { appId: 'editor-lite' },
@@ -147,7 +147,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 			DEFAULT_ENV,
 		);
 
-		expect( config.container.chatToggleButton.id ).toBe( 'angie-lite-toggle' );
+		expect( config.container.chatToggleButton.selector ).toBe( '#angie-lite-toggle' );
 	} );
 
 	it( 'should allow disabling chat toggle explicitly', () => {

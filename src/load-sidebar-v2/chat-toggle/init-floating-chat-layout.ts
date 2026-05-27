@@ -8,7 +8,7 @@ import {
 type InitFloatingChatLayoutArgs = {
 	containerId: string;
 	iframeOrigin: string;
-	toggleButtonId: string;
+	toggleButtonSelector: string;
 	injectToggleButton: boolean;
 	onClose?: () => void;
 };
@@ -18,13 +18,13 @@ export const initFloatingChatLayout = ( args: InitFloatingChatLayoutArgs ): void
 	prepareChatWidgetContainer( args.containerId );
 
 	if ( args.injectToggleButton ) {
-		injectChatToggleButton( args.toggleButtonId );
+		injectChatToggleButton( args.toggleButtonSelector );
 	}
 
 	initChatShell( {
 		containerId: args.containerId,
 		iframeOrigin: args.iframeOrigin,
 		onClose: args.onClose,
-		toggleButtonId: args.toggleButtonId,
+		toggleButtonSelector: args.toggleButtonSelector,
 	} );
 };

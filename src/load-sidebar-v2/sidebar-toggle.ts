@@ -1,11 +1,12 @@
 import { injectChatToggleButton, injectChatToggleButtonStyles } from './chat-toggle/widget-ui';
+import { findToggleButton } from './chat-toggle/toggle-button-element';
 
 type WireSidebarToggleButtonArgs = {
-	toggleButtonId: string;
+	toggleButtonSelector: string;
 };
 
-export const syncSidebarToggleButton = ( toggleButtonId: string, isOpen: boolean ): void => {
-	const toggleEl = document.getElementById( toggleButtonId );
+export const syncSidebarToggleButton = ( toggleButtonSelector: string, isOpen: boolean ): void => {
+	const toggleEl = findToggleButton( toggleButtonSelector );
 
 	if ( ! toggleEl ) {
 		return;
@@ -31,7 +32,7 @@ const attachSidebarToggleClickHandler = ( toggleEl: HTMLElement ): void => {
 };
 
 export const wireSidebarToggleButton = ( args: WireSidebarToggleButtonArgs ): boolean => {
-	const toggleEl = document.getElementById( args.toggleButtonId );
+	const toggleEl = findToggleButton( args.toggleButtonSelector );
 
 	if ( ! toggleEl ) {
 		return false;
@@ -41,9 +42,9 @@ export const wireSidebarToggleButton = ( args: WireSidebarToggleButtonArgs ): bo
 	return true;
 };
 
-const injectSidebarToggleButton = ( toggleButtonId: string ): void => {
+const injectSidebarToggleButton = ( toggleButtonSelector: string ): void => {
 	injectChatToggleButtonStyles();
-	injectChatToggleButton( toggleButtonId );
+	injectChatToggleButton( toggleButtonSelector );
 };
 
 export const ensureSidebarToggleButton = ( args: WireSidebarToggleButtonArgs ): void => {
@@ -52,7 +53,7 @@ export const ensureSidebarToggleButton = ( args: WireSidebarToggleButtonArgs ): 
 			return;
 		}
 
-		injectSidebarToggleButton( args.toggleButtonId );
+		injectSidebarToggleButton( args.toggleButtonSelector );
 
 		if ( wireSidebarToggleButton( args ) ) {
 			return;

@@ -4,16 +4,18 @@ import {
 	CHAT_WIDGET_HIDDEN_CLASS,
 } from './constants';
 
+import { findToggleButton } from './toggle-button-element';
+
 type InitChatShellArgs = {
 	containerId: string;
 	iframeOrigin: string;
-	toggleButtonId: string;
+	toggleButtonSelector: string;
 	onClose?: () => void;
 };
 
 type SetChatWidgetOpenArgs = {
 	containerId: string;
-	toggleButtonId: string;
+	toggleButtonSelector: string;
 	isOpen: boolean;
 };
 
@@ -25,7 +27,7 @@ const sendPortSuccess = ( port: MessagePort, payload?: unknown ) => {
 
 export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 	const container = document.getElementById( args.containerId );
-	const toggleButton = document.getElementById( args.toggleButtonId );
+	const toggleButton = findToggleButton( args.toggleButtonSelector );
 
 	if ( ! container || ! toggleButton ) {
 		return;
@@ -66,7 +68,7 @@ const handleSidebarToggleMessage = (
 	if ( force === false ) {
 		setChatWidgetOpen( {
 			containerId: args.containerId,
-			toggleButtonId: args.toggleButtonId,
+			toggleButtonSelector: args.toggleButtonSelector,
 			isOpen: false,
 		} );
 		args.onClose?.();
@@ -76,7 +78,7 @@ const handleSidebarToggleMessage = (
 	if ( force === true ) {
 		setChatWidgetOpen( {
 			containerId: args.containerId,
-			toggleButtonId: args.toggleButtonId,
+			toggleButtonSelector: args.toggleButtonSelector,
 			isOpen: true,
 		} );
 		return;
@@ -86,7 +88,7 @@ const handleSidebarToggleMessage = (
 	const isCurrentlyOpen = container && ! container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS );
 	setChatWidgetOpen( {
 		containerId: args.containerId,
-		toggleButtonId: args.toggleButtonId,
+		toggleButtonSelector: args.toggleButtonSelector,
 		isOpen: ! isCurrentlyOpen,
 	} );
 
@@ -96,7 +98,7 @@ const handleSidebarToggleMessage = (
 };
 
 const initToggleButton = ( args: InitChatShellArgs ): void => {
-	const toggleButton = document.getElementById( args.toggleButtonId );
+	const toggleButton = findToggleButton( args.toggleButtonSelector );
 
 	if ( ! toggleButton ) {
 		return;
@@ -106,7 +108,7 @@ const initToggleButton = ( args: InitChatShellArgs ): void => {
 		const isCurrentlyOpen = toggleButton.getAttribute( 'aria-expanded' ) === 'true';
 		setChatWidgetOpen( {
 			containerId: args.containerId,
-			toggleButtonId: args.toggleButtonId,
+			toggleButtonSelector: args.toggleButtonSelector,
 			isOpen: ! isCurrentlyOpen,
 		} );
 
@@ -141,7 +143,7 @@ const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
 				if ( isStudioOpen ) {
 					setChatWidgetOpen( {
 						containerId: args.containerId,
-						toggleButtonId: args.toggleButtonId,
+						toggleButtonSelector: args.toggleButtonSelector,
 						isOpen: true,
 					} );
 				}

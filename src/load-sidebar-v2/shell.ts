@@ -15,14 +15,14 @@ export const initSidebarShell = (
 	callbacks: ResolvedConfigV2['callbacks'],
 ): void => {
 	const skipDefaultCss = container.styleTheme !== 'wordpress';
-	const toggleButtonId = container.chatToggleButton.enabled
-		? container.chatToggleButton.id
+	const toggleButtonSelector = container.chatToggleButton.enabled
+		? container.chatToggleButton.selector
 		: undefined;
 
 	initAngieSidebar( {
 		onToggle: ( isOpen ) => {
-			if ( toggleButtonId ) {
-				syncSidebarToggleButton( toggleButtonId, isOpen );
+			if ( toggleButtonSelector ) {
+				syncSidebarToggleButton( toggleButtonSelector, isOpen );
 			}
 
 			if ( ! isOpen && callbacks.onClose ) {
@@ -33,8 +33,8 @@ export const initSidebarShell = (
 		styleTheme: container.styleTheme,
 	} );
 
-	if ( toggleButtonId ) {
-		ensureSidebarToggleButton( { toggleButtonId } );
+	if ( toggleButtonSelector ) {
+		ensureSidebarToggleButton( { toggleButtonSelector } );
 	}
 };
 

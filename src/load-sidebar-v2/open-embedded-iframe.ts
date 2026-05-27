@@ -22,7 +22,7 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 	if ( args.container.chatToggleButton.enabled ) {
 		setChatWidgetOpen( {
 			containerId: args.container.id,
-			toggleButtonId: args.container.chatToggleButton.id,
+			toggleButtonSelector: args.container.chatToggleButton.selector,
 			isOpen: false,
 		} );
 	}

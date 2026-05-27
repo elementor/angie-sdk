@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { MessageEventType } from '../../types';
-import { CHAT_WIDGET_HIDDEN_CLASS, DEFAULT_CHAT_TOGGLE_BUTTON_ID } from './constants';
+import {
+	CHAT_WIDGET_HIDDEN_CLASS,
+	DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,
+} from './constants';
 import { initChatShell, setChatWidgetOpen } from './chat-shell';
 import { injectChatToggleButton, prepareChatWidgetContainer } from './widget-ui';
 
 const CONTAINER_ID = 'angie-sidebar-container';
 const IFRAME_ORIGIN = 'https://angie.elementor.com';
-const CUSTOM_TOGGLE_ID = 'angie-lite-toggle';
+const CUSTOM_TOGGLE_SELECTOR = '#angie-lite-toggle';
 
 describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 	beforeEach( () => {
@@ -18,16 +21,16 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 		document.body.appendChild( container );
 
 		prepareChatWidgetContainer( CONTAINER_ID );
-		injectChatToggleButton( DEFAULT_CHAT_TOGGLE_BUTTON_ID );
+		injectChatToggleButton( DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR );
 		initChatShell( {
 			containerId: CONTAINER_ID,
 			iframeOrigin: IFRAME_ORIGIN,
-			toggleButtonId: DEFAULT_CHAT_TOGGLE_BUTTON_ID,
+			toggleButtonSelector: DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,
 		} );
 	} );
 
 	it( 'should toggle widget open/close on button click', () => {
-		const toggleButton = document.getElementById( DEFAULT_CHAT_TOGGLE_BUTTON_ID )!;
+		const toggleButton = document.querySelector<HTMLElement>( DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR )!;
 		const container = document.getElementById( CONTAINER_ID )!;
 
 		toggleButton.click();
@@ -45,7 +48,7 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 		const container = document.getElementById( CONTAINER_ID )!;
 		setChatWidgetOpen( {
 			containerId: CONTAINER_ID,
-			toggleButtonId: DEFAULT_CHAT_TOGGLE_BUTTON_ID,
+			toggleButtonSelector: DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,
 			isOpen: true,
 		} );
 
@@ -88,7 +91,7 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 		expect( container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) ).toBe( true );
 	} );
 
-	it( 'should support a custom toggle button id', () => {
+	it( 'should support a custom toggle button selector', () => {
 		document.body.innerHTML = '';
 
 		const container = document.createElement( 'div' );
@@ -96,14 +99,14 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 		document.body.appendChild( container );
 
 		prepareChatWidgetContainer( CONTAINER_ID );
-		injectChatToggleButton( CUSTOM_TOGGLE_ID );
+		injectChatToggleButton( CUSTOM_TOGGLE_SELECTOR );
 		initChatShell( {
 			containerId: CONTAINER_ID,
 			iframeOrigin: IFRAME_ORIGIN,
-			toggleButtonId: CUSTOM_TOGGLE_ID,
+			toggleButtonSelector: CUSTOM_TOGGLE_SELECTOR,
 		} );
 
-		const toggleButton = document.getElementById( CUSTOM_TOGGLE_ID );
+		const toggleButton = document.querySelector( CUSTOM_TOGGLE_SELECTOR );
 		expect( toggleButton ).not.toBeNull();
 		expect( toggleButton?.className ).toBe( 'angie-widget-toggle' );
 	} );

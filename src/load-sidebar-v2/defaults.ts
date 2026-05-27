@@ -1,5 +1,5 @@
 import { DEFAULT_CONTAINER_ID } from '../config';
-import { DEFAULT_CHAT_TOGGLE_BUTTON_ID } from './chat-toggle/constants';
+import { DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR } from './chat-toggle/constants';
 import { FLOATING_CHAT_PRESET_DEFAULTS } from './presets/floating-chat';
 
 export { DEFAULT_CONTAINER_ID };
@@ -13,7 +13,7 @@ export const DEFAULTS = {
 		styleTheme: FLOATING_CHAT_PRESET_DEFAULTS.styleTheme,
 		persistOpenState: FLOATING_CHAT_PRESET_DEFAULTS.persistOpenState,
 		resizable: FLOATING_CHAT_PRESET_DEFAULTS.resizable,
-		chatToggleButtonId: DEFAULT_CHAT_TOGGLE_BUTTON_ID,
+		chatToggleButtonSelector: DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,
 	},
 	iframe: {
 		origin: 'https://angie.elementor.com',

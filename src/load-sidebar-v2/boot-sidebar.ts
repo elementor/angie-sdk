@@ -27,7 +27,7 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 			containerId: config.container.id,
 			iframeOrigin: config.iframe.origin,
 			onClose: config.callbacks.onClose,
-			toggleButtonId: chatToggleButton.id,
+			toggleButtonSelector: chatToggleButton.selector,
 			injectToggleButton: chatToggleButton.enabled,
 		} );
 	} else {

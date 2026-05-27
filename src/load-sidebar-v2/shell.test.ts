@@ -33,7 +33,7 @@ describe( 'load-sidebar-v2/shell', () => {
 				styleTheme: 'wordpress',
 				persistOpenState: false,
 				resizable: false,
-				chatToggleButton: { enabled: false, id: 'angie-widget-toggle' },
+				chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
 			},
 			{ onClose },
 		);
@@ -53,7 +53,7 @@ describe( 'load-sidebar-v2/shell', () => {
 				styleTheme: '',
 				persistOpenState: false,
 				resizable: false,
-				chatToggleButton: { enabled: false, id: 'angie-widget-toggle' },
+				chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
 			},
 			{},
 		);
@@ -72,7 +72,7 @@ describe( 'load-sidebar-v2/shell', () => {
 			styleTheme: 'wordpress',
 			persistOpenState: true,
 			resizable: true,
-			chatToggleButton: { enabled: true, id: 'angie-lite-toggle' },
+			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 		} );
 
 		expect( applyState ).toHaveBeenCalledWith( 'closed' );
@@ -89,7 +89,7 @@ describe( 'load-sidebar-v2/shell', () => {
 			styleTheme: 'wordpress',
 			persistOpenState: true,
 			resizable: true,
-			chatToggleButton: { enabled: true, id: 'angie-lite-toggle' },
+			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 		} );
 
 		expect( applyState ).not.toHaveBeenCalled();
@@ -102,7 +102,7 @@ describe( 'load-sidebar-v2/shell', () => {
 			styleTheme: 'wordpress',
 			persistOpenState: true,
 			resizable: true,
-			chatToggleButton: { enabled: true, id: 'angie-lite-toggle' },
+			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 		} );
 
 		expect( loadState ).toHaveBeenCalledWith( 'closed' );
@@ -116,7 +116,7 @@ describe( 'load-sidebar-v2/shell', () => {
 			styleTheme: 'wordpress',
 			persistOpenState: true,
 			resizable: true,
-			chatToggleButton: { enabled: false, id: 'angie-widget-toggle' },
+			chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
 		} );
 
 		expect( loadState ).toHaveBeenCalledWith( 'open' );

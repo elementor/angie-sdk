@@ -158,7 +158,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 			container: {
 				chatToggleButton: {
 					enabled: true,
-					id: 'angie-lite-toggle',
+					selector: '#angie-lite-toggle',
 				},
 				layout: 'sidebar',
 			},
@@ -180,7 +180,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 			container: {
 				chatToggleButton: {
 					enabled: true,
-					id: 'angie-lite-toggle',
+					selector: '#angie-lite-toggle',
 				},
 				layout: 'sidebar',
 			},
@@ -214,7 +214,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 			container: {
 				chatToggleButton: {
 					enabled: true,
-					id: 'angie-lite-toggle',
+					selector: '#angie-lite-toggle',
 				},
 				layout: 'sidebar',
 			},
@@ -261,7 +261,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 			container: {
 				chatToggleButton: {
 					enabled: true,
-					id: 'angie-lite-toggle',
+					selector: '#angie-lite-toggle',
 				},
 				layout: 'floating-chat',
 			},

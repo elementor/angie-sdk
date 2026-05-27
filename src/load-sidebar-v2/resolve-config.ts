@@ -47,7 +47,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 			resizable: container.resizable ?? layoutDefaults.resizable,
 			chatToggleButton: {
 				enabled: chatToggleEnabled,
-				id: container.chatToggleButton?.id?.trim() || DEFAULTS.container.chatToggleButtonId,
+				selector: container.chatToggleButton?.selector?.trim() || DEFAULTS.container.chatToggleButtonSelector,
 			},
 		},
 		iframe: {

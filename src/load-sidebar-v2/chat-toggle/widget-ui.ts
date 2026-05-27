@@ -6,6 +6,7 @@ import {
 	CHAT_WIDGET_HIDDEN_CLASS,
 	CHAT_WIDGET_STYLES_ID,
 } from './constants';
+import { applySelectorToToggleButton, findToggleButton } from './toggle-button-element';
 
 const ANGIE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="none">
 	<path d="M15.0998 8.00414L14.622 8.18282C13.4991 8.60516 12.8142 9.50669 12.4001 10.6519L12.2249 11.1392L12.0497 10.6519C11.6356 9.50669 10.9109 8.60516 9.78801 8.18282L9.31018 8.00414L9.78801 7.82546C10.9109 7.40312 11.6356 6.50159 12.0497 5.3564L12.2249 4.86909L12.4001 5.3564C12.8142 6.50159 13.4991 7.40312 14.622 7.82546L15.0998 8.00414Z" fill="white"/>
@@ -154,13 +155,13 @@ export const prepareChatWidgetContainer = ( containerId: string ): void => {
 	container.setAttribute( 'tabindex', '-1' );
 };
 
-export const injectChatToggleButton = ( toggleButtonId: string ): void => {
-	if ( document.getElementById( toggleButtonId ) ) {
+export const injectChatToggleButton = ( toggleButtonSelector: string ): void => {
+	if ( findToggleButton( toggleButtonSelector ) ) {
 		return;
 	}
 
 	const toggleButton = document.createElement( 'button' );
-	toggleButton.id = toggleButtonId;
+	applySelectorToToggleButton( toggleButton, toggleButtonSelector );
 	toggleButton.className = CHAT_TOGGLE_BUTTON_CLASS;
 	toggleButton.setAttribute( 'aria-label', 'Open Angie' );
 	toggleButton.setAttribute( 'aria-expanded', 'false' );

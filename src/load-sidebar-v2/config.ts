@@ -7,7 +7,7 @@ export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 
 export type ChatToggleButtonConfig = {
 	enabled?: boolean;
-	id?: string;
+	selector?: string;
 };
 
 export type LoadSidebarV2Options = {
@@ -56,7 +56,7 @@ export type ResolvedConfigV2 = {
 		resizable: boolean;
 		chatToggleButton: {
 			enabled: boolean;
-			id: string;
+			selector: string;
 		};
 	};
 	iframe: {
