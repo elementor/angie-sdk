@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "@modelcontextprotocol/sdk/types.js": "/node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
-    "zod/v4": "/node_modules/zod/v4/index.js"
-  }
-}
