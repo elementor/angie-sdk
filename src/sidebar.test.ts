@@ -6,6 +6,7 @@ import {
   ANGIE_SIDEBAR_STATE_OPEN,
   ANGIE_SIDEBAR_STATE_CLOSED,
 } from './sidebar';
+import { appState } from './config';
 
 // CSS is mocked globally in setupTests.ts
 
@@ -23,6 +24,8 @@ jest.mock('./iframe', () => ({
 
 jest.mock('./utils', () => ({
   waitForDocumentReady: jest.fn().mockImplementation(() => Promise.resolve()),
+  sendSuccessMessage: jest.fn(),
+  toggleAngieSidebar: jest.fn(),
 }));
 
 describe('sidebar', () => {
@@ -164,4 +167,52 @@ describe('sidebar', () => {
       );
     });
   });
+
+  describe('setupMessageListener', () => {
+    const trustedOrigin = 'https://angie.example.com';
+
+    beforeEach(() => {
+      const sidebarContainer = document.createElement('div');
+      sidebarContainer.id = 'angie-sidebar-container';
+      document.body.appendChild(sidebarContainer);
+      appState.iframeUrlObject = new URL( 'https://angie.example.com/angie/embedded' );
+      initAngieSidebar();
+      ( global.window as any ).toggleAngieSidebar = jest.fn();
+    });
+
+    it( 'should ignore toggleAngieSidebar messages from untrusted origins', () => {
+      const toggle = ( global.window as any ).toggleAngieSidebar as jest.Mock;
+
+      window.dispatchEvent( new MessageEvent( 'message', {
+        origin: 'https://evil.example.com',
+        data: { type: 'toggleAngieSidebar', payload: { force: true } },
+      } ) );
+
+      expect( toggle ).not.toHaveBeenCalled();
+    } );
+
+    it( 'should handle toggleAngieSidebar from the iframe origin', () => {
+      const toggle = ( global.window as any ).toggleAngieSidebar as jest.Mock;
+
+      window.dispatchEvent( new MessageEvent( 'message', {
+        origin: trustedOrigin,
+        data: { type: 'toggleAngieSidebar', payload: { force: true } },
+      } ) );
+
+      expect( toggle ).toHaveBeenCalledWith( true, undefined );
+    } );
+
+    it( 'should ack toggleAngieSidebar requests over MessagePort', () => {
+      const { sendSuccessMessage } = require( './utils' ) as { sendSuccessMessage: jest.Mock };
+      const port = { postMessage: jest.fn() } as unknown as MessagePort;
+
+      window.dispatchEvent( new MessageEvent( 'message', {
+        origin: trustedOrigin,
+        data: { type: 'toggleAngieSidebar', payload: { force: false } },
+        ports: [ port ],
+      } ) );
+
+      expect( sendSuccessMessage ).toHaveBeenCalledWith( port );
+    } );
+  } );
 });
