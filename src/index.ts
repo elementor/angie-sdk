@@ -1,9 +1,12 @@
 export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type WidgetConfig } from './angie-mcp-sdk';
 export {
+	type ChatToggleButtonConfig,
+	type LoadSidebarV2ContainerStyleTheme,
 	type LoadSidebarV2Layout,
 	type LoadSidebarV2Options,
 	type ResolvedConfigV2,
 } from './load-sidebar-v2/config';
+export { FLOATING_CHAT_LAYOUT, FLOATING_CHAT_PRESET_DEFAULTS } from './load-sidebar-v2/presets/floating-chat';
 export { SIDEBAR_LAYOUT, SIDEBAR_PRESET_DEFAULTS } from './load-sidebar-v2/presets/sidebar';
 export { AngieDetector } from './angie-detector';
 export { RegistrationQueue } from './registration-queue';

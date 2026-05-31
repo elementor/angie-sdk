@@ -6,4 +6,5 @@ export const SIDEBAR_PRESET_DEFAULTS = {
 	layout: SIDEBAR_LAYOUT,
 	persistOpenState: true,
 	resizable: true,
+	chatToggleButtonEnabled: false,
 } as const;

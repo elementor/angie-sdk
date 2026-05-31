@@ -8,6 +8,7 @@ describe( 'load-sidebar-v2/presets/sidebar', () => {
 			layout: 'sidebar',
 			persistOpenState: true,
 			resizable: true,
+			chatToggleButtonEnabled: false,
 		} );
 	} );
 } );

@@ -2,7 +2,8 @@ import type { WidgetConfig } from '../angie-mcp-sdk';
 
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
-export type LoadSidebarV2Layout = 'sidebar';
+export type LoadSidebarV2Layout = 'floating-chat' | 'sidebar';
+export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 
 export type HostConfig = {
 	appId: string;
@@ -18,18 +19,32 @@ export type BootConfig = {
 	allowInIframe: boolean;
 };
 
+export type ChatToggleButtonConfig = {
+	enabled?: boolean;
+	selector?: string;
+};
+
+export type ResolvedChatToggleButtonConfig = {
+	enabled: boolean;
+	selector: string;
+};
+
 export type ContainerOptions = {
 	id?: string;
 	layout?: LoadSidebarV2Layout;
+	styleTheme?: LoadSidebarV2ContainerStyleTheme;
 	persistOpenState?: boolean;
 	resizable?: boolean;
+	chatToggleButton?: ChatToggleButtonConfig;
 };
 
 export type ContainerConfig = {
 	id: string;
 	layout: LoadSidebarV2Layout;
+	styleTheme: LoadSidebarV2ContainerStyleTheme;
 	persistOpenState: boolean;
 	resizable: boolean;
+	chatToggleButton: ResolvedChatToggleButtonConfig;
 };
 
 export type IframeOptions = {
