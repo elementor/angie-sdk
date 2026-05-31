@@ -4,7 +4,6 @@ import { toggleAngieSidebar as setIframeAccessibility } from '../utils';
 import type { HostEmbeddedConfigPayload, ResolvedConfigV2 } from './config';
 
 type OpenEmbeddedIframeArgs = {
-	container: ResolvedConfigV2['container'];
 	iframe: ResolvedConfigV2['iframe'];
 	hostReadyEmbedded?: HostEmbeddedConfigPayload;
 };

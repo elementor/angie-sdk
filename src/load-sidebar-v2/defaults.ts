@@ -1,9 +1,16 @@
 import { DEFAULT_CONTAINER_ID } from '../config';
-import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
 
 export { DEFAULT_CONTAINER_ID };
 
 export const DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR = '#angie-widget-toggle';
+
+export const SIDEBAR_PRESET_DEFAULTS = {
+	layout: 'sidebar' as const,
+	styleTheme: '' as const,
+	persistOpenState: true,
+	resizable: true,
+	chatToggleButtonEnabled: false,
+} as const;
 
 export const DEFAULTS = {
 	boot: {

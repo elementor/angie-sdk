@@ -25,7 +25,6 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 	const embeddedPayload = buildHostEmbeddedConfigPayload( config.host );
 
 	await openEmbeddedIframe( {
-		container: config.container,
 		iframe: config.iframe,
 		hostReadyEmbedded: embeddedPayload,
 	} );

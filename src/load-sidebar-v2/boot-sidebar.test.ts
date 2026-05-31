@@ -77,6 +77,10 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	} );
 
 	it( 'should start closed when host toggle is enabled', async () => {
+		const toggle = document.createElement( 'button' );
+		toggle.id = 'angie-lite-toggle';
+		document.body.appendChild( toggle );
+
 		await bootSidebar( {
 			container: {
 				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
@@ -87,7 +91,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockApplyState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockLoadState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockInitAngieSidebar ).toHaveBeenCalledWith(
-			expect.objectContaining( { skipDefaultCss: true, styleTheme: '' } ),
+			expect.objectContaining( { styleTheme: '' } ),
 		);
 	} );
 } );

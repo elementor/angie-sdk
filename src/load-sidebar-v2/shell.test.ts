@@ -1,7 +1,6 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { initAngieSidebar, initializeResize, loadState, applyState, getAngieSidebarSavedState } from '../sidebar';
-import type { ContainerConfig } from './config';
-import { initSidebarShell, applyInitialSidebarShellState, finalizeSidebarShellState } from './shell';
+import { initAngieSidebar, initializeResize, loadState } from '../sidebar';
+import { initSidebarShell, finalizeSidebarShellState } from './shell';
 
 jest.mock( '../sidebar', () => ( {
 	ANGIE_SIDEBAR_STATE_CLOSED: 'closed',
@@ -13,10 +12,10 @@ jest.mock( '../sidebar', () => ( {
 	loadState: jest.fn(),
 } ) );
 
-const baseContainer: ContainerConfig = {
+const baseContainer = {
 	id: 'angie-sidebar-container',
-	layout: 'sidebar',
-	styleTheme: 'wordpress',
+	layout: 'sidebar' as const,
+	styleTheme: '' as const,
 	persistOpenState: false,
 	resizable: false,
 	chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
@@ -40,6 +39,8 @@ describe( 'load-sidebar-v2/shell', () => {
 		capturedOnToggle?.( false );
 
 		expect( onClose ).toHaveBeenCalledTimes( 1 );
+		expect( loadState ).not.toHaveBeenCalled();
+		expect( initializeResize ).not.toHaveBeenCalled();
 	} );
 
 	it( 'should restore persisted open state on finalize', () => {
@@ -51,28 +52,5 @@ describe( 'load-sidebar-v2/shell', () => {
 
 		expect( loadState ).toHaveBeenCalledWith( 'open' );
 		expect( initializeResize ).toHaveBeenCalledTimes( 1 );
-	} );
-
-	it( 'should start closed when toggle is enabled', () => {
-		( getAngieSidebarSavedState as jest.Mock ).mockReturnValue( null );
-
-		applyInitialSidebarShellState( {
-			...baseContainer,
-			persistOpenState: true,
-			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
-		} );
-
-		expect( applyState ).toHaveBeenCalledWith( 'closed' );
-	} );
-
-	it( 'should restore closed state on finalize when toggle is enabled', () => {
-		finalizeSidebarShellState( {
-			...baseContainer,
-			persistOpenState: true,
-			resizable: true,
-			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
-		} );
-
-		expect( loadState ).toHaveBeenCalledWith( 'closed' );
 	} );
 } );

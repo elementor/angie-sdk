@@ -1,7 +1,6 @@
-import { DEFAULT_CONTAINER_ID, DEFAULTS } from './defaults';
+import { DEFAULT_CONTAINER_ID, DEFAULTS, SIDEBAR_PRESET_DEFAULTS } from './defaults';
 import type { Env } from './env';
 import type { LoadSidebarV2Options, ResolvedConfigV2 } from './config';
-import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
 import { resolveWidgetConfig } from './widget-config';
 
 export const shouldBoot = ( config: ResolvedConfigV2, env: Env ): boolean => {

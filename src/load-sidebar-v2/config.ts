@@ -32,19 +32,14 @@ export type ContainerConfig = {
 
 export type ContainerOptions = Partial<ContainerConfig>;
 
-export type IframeOptions = {
-	isRTL?: boolean;
-	origin?: string;
-	path?: string;
-	uiTheme?: string;
-};
-
 export type IframeConfig = {
 	origin: string;
 	path: string;
 	uiTheme: string;
 	isRTL: boolean;
 };
+
+export type IframeOptions = Partial<IframeConfig>;
 
 export type CallbacksConfig = {
 	onClose?: () => void;

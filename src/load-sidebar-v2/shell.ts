@@ -8,13 +8,12 @@ import {
 	loadState,
 } from '../sidebar';
 import type { ResolvedConfigV2 } from './config';
-import { ensureSidebarToggleButton, syncSidebarToggleButton } from './sidebar-toggle';
+import { syncSidebarToggleButton, wireSidebarToggleButton } from './sidebar-toggle';
 
 export const initSidebarShell = (
 	container: ResolvedConfigV2['container'],
 	callbacks: ResolvedConfigV2['callbacks'],
 ): void => {
-	const skipDefaultCss = container.styleTheme !== 'wordpress';
 	const toggleButtonSelector = container.chatToggleButton.enabled
 		? container.chatToggleButton.selector
 		: undefined;
@@ -29,12 +28,11 @@ export const initSidebarShell = (
 				callbacks.onClose();
 			}
 		},
-		skipDefaultCss,
 		styleTheme: container.styleTheme,
 	} );
 
 	if ( toggleButtonSelector ) {
-		ensureSidebarToggleButton( { toggleButtonSelector } );
+		wireSidebarToggleButton( { toggleButtonSelector } );
 	}
 };
 
