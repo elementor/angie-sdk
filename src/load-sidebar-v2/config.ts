@@ -11,13 +11,11 @@ export type HostConfig = {
 	website?: Record<string, unknown>;
 };
 
-export type BootOptions = {
-	allowInIframe?: boolean;
-};
-
 export type BootConfig = {
 	allowInIframe: boolean;
 };
+
+export type BootOptions = Partial<BootConfig>;
 
 export type ChatToggleButtonConfig = {
 	enabled?: boolean;
@@ -81,10 +79,6 @@ export type ResolvedConfigV2 = {
 	iframe: IframeConfig;
 	callbacks: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
-};
-
-export type LoadSidebarV2HostConfig = LoadSidebarV2Options & {
-	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
 };
 
 export type HostEmbeddedConfigPayload = {

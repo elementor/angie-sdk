@@ -1,8 +1,8 @@
 import { appState } from '../config';
 import { initFloatingChatLayout } from './chat-toggle/init-floating-chat-layout';
 import { ensureSidebarContainer } from './container';
-import type { LoadSidebarV2Options } from './config';
-import { buildEmbeddedPayload, sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
+import { buildHostEmbeddedConfigPayload, type LoadSidebarV2Options } from './config';
+import { sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
 import { readEnv } from './env';
 import { openEmbeddedIframe } from './open-embedded-iframe';
 import { resolveConfig, shouldBoot } from './resolve-config';
@@ -15,7 +15,6 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 	if ( ! shouldBoot( config, env ) ) {
 		return;
 	}
-
 
 	appState.containerId = config.container.id;
 
@@ -36,7 +35,7 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		applyInitialSidebarShellState( config.container );
 	}
 
-	const embeddedPayload = buildEmbeddedPayload( config.host );
+	const embeddedPayload = buildHostEmbeddedConfigPayload( config.host );
 
 	await openEmbeddedIframe( {
 		container: config.container,

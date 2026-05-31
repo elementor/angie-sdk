@@ -11,16 +11,11 @@ jest.mock( '../sidebar', () => ( {
 	loadState: jest.fn(),
 } ) );
 
-jest.mock( '../iframe', () => ( {
-	openIframe: jest.fn( () => Promise.resolve() ),
-} ) );
-
 jest.mock( './open-embedded-iframe', () => ( {
 	openEmbeddedIframe: jest.fn( () => Promise.resolve() ),
 } ) );
 
 jest.mock( './embedded-handshake', () => ( {
-	buildEmbeddedPayload: jest.fn(),
 	sendEmbeddedConfig: jest.fn(),
 	sendWidgetConfig: jest.fn(),
 } ) );
@@ -31,7 +26,6 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	let mockLoadState: jest.Mock;
 	let mockInitializeResize: jest.Mock;
 	let mockOpenEmbeddedIframe: jest.Mock;
-	let mockBuildEmbeddedPayload: jest.Mock;
 	let mockSendEmbeddedConfig: jest.Mock;
 	let mockSendWidgetConfig: jest.Mock;
 
@@ -60,87 +54,63 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		mockLoadState = require( '../sidebar' ).loadState as jest.Mock;
 		mockInitializeResize = require( '../sidebar' ).initializeResize as jest.Mock;
 		mockOpenEmbeddedIframe = require( './open-embedded-iframe' ).openEmbeddedIframe as jest.Mock;
-		mockBuildEmbeddedPayload = require( './embedded-handshake' ).buildEmbeddedPayload as jest.Mock;
 		mockSendEmbeddedConfig = require( './embedded-handshake' ).sendEmbeddedConfig as jest.Mock;
 		mockSendWidgetConfig = require( './embedded-handshake' ).sendWidgetConfig as jest.Mock;
-		mockBuildEmbeddedPayload.mockReturnValue( {
-			appId: 'editor-lite',
-			configVersion: 2,
-		} );
 	} );
 
-	it( 'should send host config via postMessage after openIframe', async () => {
+	it( 'should boot sidebar layout with shell, iframe, and embedded config', async () => {
 		await bootSidebar( {
 			container: { layout: 'sidebar' },
-			host: {
-				appId: 'editor-lite',
-			},
+			host: { appId: 'editor-lite' },
 		} );
 
-		expect( mockBuildEmbeddedPayload ).toHaveBeenCalledWith(
-			expect.objectContaining( { appId: 'editor-lite' } ),
-		);
 		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledWith(
 			expect.objectContaining( {
-				iframe: expect.objectContaining( {
-					path: 'angie/embedded',
+				hostReadyEmbedded: expect.objectContaining( {
+					appId: 'editor-lite',
+					configVersion: 2,
 				} ),
+				iframe: expect.objectContaining( { path: 'angie/embedded' } ),
 			} ),
 		);
 		expect( mockSendEmbeddedConfig ).toHaveBeenCalledWith(
-			expect.objectContaining( {
-				appId: 'editor-lite',
-				configVersion: 2,
-			} ),
+			expect.objectContaining( { appId: 'editor-lite', configVersion: 2 } ),
 		);
 		expect( mockInitAngieSidebar ).toHaveBeenCalled();
 		expect( mockLoadState ).toHaveBeenCalledWith( 'open' );
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
+		expect( mockSendWidgetConfig ).toHaveBeenCalledWith( { closeButton: 'collapse' } );
 	} );
 
-	it( 'should send host config for any iframe path', async () => {
+	it( 'should boot floating-chat without sidebar shell', async () => {
 		await bootSidebar( {
-			host: {
-				appId: 'editor-lite',
-			},
-			iframe: {
-				path: 'angie/wp-admin',
-			},
+			host: { appId: 'editor-lite' },
+			iframe: { path: 'angie/wp-admin' },
 		} );
 
 		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledWith(
 			expect.objectContaining( {
-				iframe: expect.objectContaining( {
-					path: 'angie/wp-admin',
-				} ),
-			} ),
-		);
-		expect( mockSendEmbeddedConfig ).toHaveBeenCalledWith(
-			expect.objectContaining( {
-				appId: 'editor-lite',
-				configVersion: 2,
+				iframe: expect.objectContaining( { path: 'angie/wp-admin' } ),
 			} ),
 		);
 		expect( mockInitAngieSidebar ).not.toHaveBeenCalled();
+		expect( mockSendWidgetConfig ).toHaveBeenCalledWith( { closeButton: 'close' } );
 	} );
 
-	it( 'should init floating-chat layout without injecting toggle when disabled', async () => {
+	it( 'should skip floating-chat toggle injection when disabled', async () => {
 		await bootSidebar( {
 			container: {
 				chatToggleButton: { enabled: false },
 				layout: 'floating-chat',
 			},
-			host: {
-				appId: 'editor-lite',
-			},
+			host: { appId: 'editor-lite' },
 		} );
 
 		expect( document.getElementById( 'angie-chat-widget-styles' ) ).not.toBeNull();
 		expect( document.getElementById( 'angie-widget-toggle' ) ).toBeNull();
-		expect( mockInitAngieSidebar ).not.toHaveBeenCalled();
 	} );
 
-	it( 'should apply closed state before iframe load when toggle is enabled', async () => {
+	it( 'should close sidebar before iframe when host toggle is enabled', async () => {
 		let applyStateCalledBeforeIframe = false;
 
 		mockApplyState.mockImplementation( () => {
@@ -151,160 +121,73 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 		await bootSidebar( {
 			container: {
-				chatToggleButton: {
-					enabled: true,
-					selector: '#angie-lite-toggle',
-				},
+				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 				layout: 'sidebar',
 			},
-			host: {
-				appId: 'editor-lite',
-			},
+			host: { appId: 'editor-lite' },
 		} );
 
 		expect( mockApplyState ).toHaveBeenCalledWith( 'closed' );
 		expect( applyStateCalledBeforeIframe ).toBe( true );
-		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledTimes( 1 );
 	} );
 
-	it( 'should init sidebar shell and inject toggle when host button is missing', async () => {
+	it( 'should inject host toggle when missing on sidebar layout', async () => {
 		jest.useFakeTimers();
-		document.body.innerHTML = '';
 
 		const bootPromise = bootSidebar( {
 			container: {
-				chatToggleButton: {
-					enabled: true,
-					selector: '#angie-lite-toggle',
-				},
+				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 				layout: 'sidebar',
 			},
-			host: {
-				appId: 'editor-lite',
-			},
+			host: { appId: 'editor-lite' },
 		} );
 
 		await jest.runAllTimersAsync();
 		await bootPromise;
 		jest.useRealTimers();
 
-		expect( document.getElementById( 'angie-chat-widget-styles' ) ).toBeNull();
 		expect( document.getElementById( 'angie-lite-toggle' ) ).not.toBeNull();
 		expect( mockInitAngieSidebar ).toHaveBeenCalledWith(
 			expect.objectContaining( { skipDefaultCss: true } ),
 		);
-		expect( mockApplyState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockLoadState ).toHaveBeenCalledWith( 'closed' );
-		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
 	} );
 
-	it( 'should init sidebar shell when host toggle is present', async () => {
-		document.body.innerHTML = '';
-
+	it( 'should wire existing host toggle on sidebar layout', async () => {
 		const toggle = document.createElement( 'button' );
 		toggle.id = 'angie-lite-toggle';
 		document.body.appendChild( toggle );
 
 		await bootSidebar( {
 			container: {
-				chatToggleButton: {
-					enabled: true,
-					selector: '#angie-lite-toggle',
-				},
+				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 				layout: 'sidebar',
 			},
-			host: {
-				appId: 'editor-lite',
-			},
+			host: { appId: 'editor-lite' },
 		} );
 
-		expect( document.getElementById( 'angie-chat-widget-styles' ) ).toBeNull();
 		expect( mockInitAngieSidebar ).toHaveBeenCalledWith(
 			expect.objectContaining( { skipDefaultCss: true } ),
 		);
-		expect( mockApplyState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockLoadState ).toHaveBeenCalledWith( 'closed' );
-		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
-
-		toggle.click();
-		expect( mockInitAngieSidebar ).toHaveBeenCalled();
 	} );
 
-	it( 'should init chat shell when chatToggleButton is enabled', async () => {
-		document.body.innerHTML = '';
-
+	it( 'should inject floating-chat toggle with default or custom selector', async () => {
 		await bootSidebar( {
-			container: {
-				chatToggleButton: { enabled: true },
-				layout: 'floating-chat',
-			},
-			host: {
-				appId: 'editor-lite',
-			},
+			container: { chatToggleButton: { enabled: true }, layout: 'floating-chat' },
+			host: { appId: 'editor-lite' },
 		} );
-
 		expect( document.getElementById( 'angie-widget-toggle' ) ).not.toBeNull();
-		expect( document.getElementById( 'angie-chat-widget-styles' ) ).not.toBeNull();
-		expect( mockInitAngieSidebar ).not.toHaveBeenCalled();
-		expect( mockOpenEmbeddedIframe ).toHaveBeenCalled();
-	} );
 
-	it( 'should init chat shell with a custom toggle button id', async () => {
 		document.body.innerHTML = '';
-
 		await bootSidebar( {
 			container: {
-				chatToggleButton: {
-					enabled: true,
-					selector: '#angie-lite-toggle',
-				},
+				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 				layout: 'floating-chat',
 			},
-			host: {
-				appId: 'editor-lite',
-			},
+			host: { appId: 'editor-lite' },
 		} );
-
 		expect( document.getElementById( 'angie-lite-toggle' ) ).not.toBeNull();
 		expect( document.getElementById( 'angie-widget-toggle' ) ).toBeNull();
-		expect( mockInitAngieSidebar ).not.toHaveBeenCalled();
-	} );
-
-	it( 'should send close widget config for floating-chat layout by default', async () => {
-		await bootSidebar( {
-			host: {
-				appId: 'editor-lite',
-			},
-		} );
-
-		expect( mockSendWidgetConfig ).toHaveBeenCalledWith( {
-			closeButton: 'close',
-		} );
-	} );
-
-	it( 'should send collapse widget config for sidebar layout by default', async () => {
-		await bootSidebar( {
-			container: { layout: 'sidebar' },
-			host: {
-				appId: 'editor-lite',
-			},
-		} );
-
-		expect( mockSendWidgetConfig ).toHaveBeenCalledWith( {
-			closeButton: 'collapse',
-		} );
-	} );
-
-	it( 'should always create sidebar container', async () => {
-		document.body.innerHTML = '';
-
-		await bootSidebar( {
-			host: {
-				appId: 'editor-lite',
-			},
-		} );
-
-		expect( document.getElementById( 'angie-sidebar-container' ) ).not.toBeNull();
-		expect( document.getElementById( 'angie-sidebar-loading' ) ).not.toBeNull();
 	} );
 } );

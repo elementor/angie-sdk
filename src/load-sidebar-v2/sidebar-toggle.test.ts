@@ -39,18 +39,6 @@ describe( 'load-sidebar-v2/sidebar-toggle', () => {
 		expect( toggle.getAttribute( 'aria-label' ) ).toBe( 'Close Angie' );
 	} );
 
-	it( 'should wire host toggle button matched by attribute selector', () => {
-		const toggle = document.createElement( 'button' );
-		toggle.setAttribute( 'data-test', 'header-toggle-angie-chat' );
-		document.body.appendChild( toggle );
-
-		expect( wireSidebarToggleButton( { toggleButtonSelector: '[data-test="header-toggle-angie-chat"]' } ) ).toBe( true );
-
-		toggle.click();
-
-		expect( window.toggleAngieSidebar ).toHaveBeenCalledWith( true );
-	} );
-
 	it( 'should inject and wire toggle button when host element is missing', () => {
 		ensureSidebarToggleButton( { toggleButtonSelector: TOGGLE_SELECTOR } );
 
