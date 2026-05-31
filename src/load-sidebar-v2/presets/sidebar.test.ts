@@ -6,6 +6,7 @@ describe( 'load-sidebar-v2/presets/sidebar', () => {
 		expect( SIDEBAR_LAYOUT ).toBe( 'sidebar' );
 		expect( SIDEBAR_PRESET_DEFAULTS ).toEqual( {
 			layout: 'sidebar',
+			styleTheme: '',
 			persistOpenState: true,
 			resizable: true,
 			chatToggleButtonEnabled: false,

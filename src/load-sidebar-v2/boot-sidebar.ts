@@ -36,16 +36,18 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		applyInitialSidebarShellState( config.container );
 	}
 
+	const embeddedPayload = buildEmbeddedPayload( config.host );
+
 	await openEmbeddedIframe( {
 		container: config.container,
 		iframe: config.iframe,
+		hostReadyEmbedded: embeddedPayload,
 	} );
 
 	if ( layout === 'sidebar' ) {
 		finalizeSidebarShellState( config.container );
 	}
 
-	const embeddedPayload = buildEmbeddedPayload( config.host );
 	sendEmbeddedConfig( embeddedPayload );
 
 	if ( config.widgetConfig ) {

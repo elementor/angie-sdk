@@ -4,6 +4,7 @@ export const SIDEBAR_LAYOUT: LoadSidebarV2Layout = 'sidebar';
 
 export const SIDEBAR_PRESET_DEFAULTS = {
 	layout: SIDEBAR_LAYOUT,
+	styleTheme: '' as const,
 	persistOpenState: true,
 	resizable: true,
 	chatToggleButtonEnabled: false,

@@ -71,6 +71,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 	it( 'should send host config via postMessage after openIframe', async () => {
 		await bootSidebar( {
+			container: { layout: 'sidebar' },
 			host: {
 				appId: 'editor-lite',
 			},
@@ -283,6 +284,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 	it( 'should send collapse widget config for sidebar layout by default', async () => {
 		await bootSidebar( {
+			container: { layout: 'sidebar' },
 			host: {
 				appId: 'editor-lite',
 			},

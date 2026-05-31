@@ -9,12 +9,14 @@ import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './u
 import { ANGIE_SDK_VERSION } from './version';
 import { openSaaSPage } from './openSaaSPage';
 import { setAngieIframeRef } from './angie-iframe-utils';
+import type { HostEmbeddedConfigPayload } from './load-sidebar-v2/config';
 
 type OpenIframeProps = {
 	origin?: string;
 	uiTheme: string;
 	isRTL: boolean;
 	path?: string;
+	hostReadyEmbedded?: HostEmbeddedConfigPayload;
 }
 
 const iframeLogger = createChildLogger( 'iframe' );
@@ -154,6 +156,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 		origin: props.origin || 'https://angie.elementor.com',
 		path: props.path && isValidPath( props.path ) ? props.path : DEFAULT_PATH,
 		insertCallback,
+		hostReadyEmbedded: props.hostReadyEmbedded,
 		css: iframeCss,
 		uiTheme: props.uiTheme,
 		isRTL: props.isRTL,

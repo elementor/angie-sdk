@@ -1,10 +1,13 @@
 import { HostEventType } from "./types";
 
+type HostReadyEmbeddedConfig = Record<string, unknown>;
+
 type OpenSaaSPageInput = {
 	origin: string;
 	path: string;
 	parent?: Document;
 	insertCallback?: ( iframe: HTMLIFrameElement ) => void;
+	hostReadyEmbedded?: HostReadyEmbeddedConfig;
 	css: {
 		[key: string]: string | number;
 	},
@@ -77,7 +80,8 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 					iframe.contentWindow?.postMessage( {
 						type: HostEventType.HOST_READY,
 						instanceId,
-						}, iframeUrlObject.origin );
+						...( props.hostReadyEmbedded ? { embedded: props.hostReadyEmbedded } : {} ),
+					}, iframeUrlObject.origin );
 					break;
 				default:
 					break;
