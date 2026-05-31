@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — floating-chat</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/types.js": "/node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "/node_modules/zod/v4/index.js"
+    }
+  }
+  </script>
+  <style>
+    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; }
+  </style>
+</head>
+<body>
+  <p>Host page — <code>loadSidebarV2</code> with <code>layout: floating-chat</code></p>
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>
