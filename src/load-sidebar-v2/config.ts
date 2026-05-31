@@ -18,33 +18,19 @@ export type BootConfig = {
 
 export type BootOptions = Partial<BootConfig>;
 
-export type ChatToggleButtonConfig = {
-	enabled?: boolean;
-	selector?: string;
-};
-
-export type ResolvedChatToggleButtonConfig = {
-	enabled: boolean;
-	selector: string;
-};
-
-export type ContainerOptions = {
-	id?: string;
-	layout?: LoadSidebarV2Layout;
-	styleTheme?: LoadSidebarV2ContainerStyleTheme;
-	persistOpenState?: boolean;
-	resizable?: boolean;
-	chatToggleButton?: ChatToggleButtonConfig;
-};
-
 export type ContainerConfig = {
 	id: string;
 	layout: LoadSidebarV2Layout;
 	styleTheme: LoadSidebarV2ContainerStyleTheme;
 	persistOpenState: boolean;
 	resizable: boolean;
-	chatToggleButton: ResolvedChatToggleButtonConfig;
+	chatToggleButton: {
+		enabled: boolean;
+		selector: string;
+	};
 };
+
+export type ContainerOptions = Partial<ContainerConfig>;
 
 export type IframeOptions = {
 	isRTL?: boolean;
