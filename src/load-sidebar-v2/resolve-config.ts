@@ -1,15 +1,8 @@
 import { DEFAULT_CONTAINER_ID, DEFAULTS } from './defaults';
 import type { Env } from './env';
-import type { LoadSidebarV2Layout, LoadSidebarV2Options, ResolvedConfigV2 } from './config';
-import { FLOATING_CHAT_PRESET_DEFAULTS } from './presets/floating-chat';
+import type { LoadSidebarV2Options, ResolvedConfigV2 } from './config';
 import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
 import { resolveWidgetConfig } from './widget-config';
-
-const getLayoutDefaults = ( layout: LoadSidebarV2Layout ) => (
-	layout === 'floating-chat'
-		? FLOATING_CHAT_PRESET_DEFAULTS
-		: SIDEBAR_PRESET_DEFAULTS
-);
 
 export const shouldBoot = ( config: ResolvedConfigV2, env: Env ): boolean => {
 	if ( ! config.boot.allowInIframe && env.isInIframe ) {
@@ -25,10 +18,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 	const iframe = options.iframe ?? {};
 	const callbacks = options.callbacks ?? {};
 
-	const layout = container.layout ?? DEFAULTS.container.layout;
-	const layoutDefaults = getLayoutDefaults( layout );
-	const styleTheme = container.styleTheme ?? DEFAULTS.container.styleTheme;
-	const chatToggleEnabled = container.chatToggleButton?.enabled ?? layoutDefaults.chatToggleButtonEnabled;
+	const chatToggleEnabled = container.chatToggleButton?.enabled ?? SIDEBAR_PRESET_DEFAULTS.chatToggleButtonEnabled;
 
 	return {
 		host: {
@@ -41,10 +31,10 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		},
 		container: {
 			id: container.id?.trim() || DEFAULT_CONTAINER_ID,
-			layout,
-			styleTheme,
-			persistOpenState: container.persistOpenState ?? layoutDefaults.persistOpenState,
-			resizable: container.resizable ?? layoutDefaults.resizable,
+			layout: container.layout ?? DEFAULTS.container.layout,
+			styleTheme: container.styleTheme ?? DEFAULTS.container.styleTheme,
+			persistOpenState: container.persistOpenState ?? SIDEBAR_PRESET_DEFAULTS.persistOpenState,
+			resizable: container.resizable ?? SIDEBAR_PRESET_DEFAULTS.resizable,
 			chatToggleButton: {
 				enabled: chatToggleEnabled,
 				selector: container.chatToggleButton?.selector?.trim() || DEFAULTS.container.chatToggleButtonSelector,
@@ -59,6 +49,6 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		callbacks: {
 			onClose: callbacks.onClose,
 		},
-		widgetConfig: resolveWidgetConfig( layout, options.widgetConfig ),
+		widgetConfig: resolveWidgetConfig( options.widgetConfig ),
 	};
 };

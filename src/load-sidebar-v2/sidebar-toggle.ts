@@ -1,5 +1,4 @@
-import { injectChatToggleButton, injectChatToggleButtonStyles } from './chat-toggle/widget-ui';
-import { findToggleButton } from './chat-toggle/toggle-button-element';
+import { findToggleButton, injectToggleButton } from './toggle-button';
 
 type WireSidebarToggleButtonArgs = {
 	toggleButtonSelector: string;
@@ -42,18 +41,13 @@ export const wireSidebarToggleButton = ( args: WireSidebarToggleButtonArgs ): bo
 	return true;
 };
 
-const injectSidebarToggleButton = ( toggleButtonSelector: string ): void => {
-	injectChatToggleButtonStyles();
-	injectChatToggleButton( toggleButtonSelector );
-};
-
 export const ensureSidebarToggleButton = ( args: WireSidebarToggleButtonArgs ): void => {
 	const attempt = (): void => {
 		if ( wireSidebarToggleButton( args ) ) {
 			return;
 		}
 
-		injectSidebarToggleButton( args.toggleButtonSelector );
+		injectToggleButton( args.toggleButtonSelector );
 
 		if ( wireSidebarToggleButton( args ) ) {
 			return;

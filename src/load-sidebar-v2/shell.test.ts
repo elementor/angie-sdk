@@ -13,15 +13,14 @@ jest.mock( '../sidebar', () => ( {
 	loadState: jest.fn(),
 } ) );
 
-const sidebarContainer = ( overrides: Partial<ContainerConfig> = {} ): ContainerConfig => ( {
+const baseContainer: ContainerConfig = {
 	id: 'angie-sidebar-container',
 	layout: 'sidebar',
 	styleTheme: 'wordpress',
-	persistOpenState: true,
-	resizable: true,
+	persistOpenState: false,
+	resizable: false,
 	chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
-	...overrides,
-} );
+};
 
 describe( 'load-sidebar-v2/shell', () => {
 	beforeEach( () => {
@@ -37,50 +36,43 @@ describe( 'load-sidebar-v2/shell', () => {
 			capturedOnToggle = options.onToggle;
 		} );
 
-		initSidebarShell( sidebarContainer( { persistOpenState: false } ), { onClose } );
+		initSidebarShell( baseContainer, { onClose } );
 		capturedOnToggle?.( false );
 
 		expect( onClose ).toHaveBeenCalledTimes( 1 );
 	} );
 
-	it( 'should skip default css when styleTheme is empty', () => {
-		initSidebarShell( sidebarContainer( { styleTheme: '', persistOpenState: false } ), {} );
+	it( 'should restore persisted open state on finalize', () => {
+		finalizeSidebarShellState( {
+			...baseContainer,
+			persistOpenState: true,
+			resizable: true,
+		} );
 
-		expect( initAngieSidebar ).toHaveBeenCalledWith(
-			expect.objectContaining( { skipDefaultCss: true, styleTheme: '' } ),
-		);
+		expect( loadState ).toHaveBeenCalledWith( 'open' );
+		expect( initializeResize ).toHaveBeenCalledTimes( 1 );
 	} );
 
-	it( 'should apply closed state before restore when toggle is enabled', () => {
+	it( 'should start closed when toggle is enabled', () => {
 		( getAngieSidebarSavedState as jest.Mock ).mockReturnValue( null );
 
-		applyInitialSidebarShellState(
-			sidebarContainer( { chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' } } ),
-		);
+		applyInitialSidebarShellState( {
+			...baseContainer,
+			persistOpenState: true,
+			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
+		} );
 
 		expect( applyState ).toHaveBeenCalledWith( 'closed' );
-		expect( loadState ).not.toHaveBeenCalled();
 	} );
 
-	it( 'should defer open restore when saved state is open', () => {
-		( getAngieSidebarSavedState as jest.Mock ).mockReturnValue( 'open' );
+	it( 'should restore closed state on finalize when toggle is enabled', () => {
+		finalizeSidebarShellState( {
+			...baseContainer,
+			persistOpenState: true,
+			resizable: true,
+			chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
+		} );
 
-		applyInitialSidebarShellState(
-			sidebarContainer( { chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' } } ),
-		);
-
-		expect( applyState ).not.toHaveBeenCalled();
-	} );
-
-	it( 'should restore persisted state on finalize based on toggle', () => {
-		finalizeSidebarShellState(
-			sidebarContainer( { chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' } } ),
-		);
 		expect( loadState ).toHaveBeenCalledWith( 'closed' );
-
-		jest.clearAllMocks();
-		finalizeSidebarShellState( sidebarContainer() );
-		expect( loadState ).toHaveBeenCalledWith( 'open' );
-		expect( initializeResize ).toHaveBeenCalled();
 	} );
 } );

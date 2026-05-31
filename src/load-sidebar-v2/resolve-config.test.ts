@@ -9,44 +9,28 @@ const DEFAULT_ENV: Env = {
 };
 
 describe( 'load-sidebar-v2/resolve-config', () => {
-	it( 'should resolve floating-chat defaults', () => {
+	it( 'should resolve host and iframe defaults', () => {
 		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
 
-		expect( config.container ).toEqual( {
-			id: 'angie-sidebar-container',
-			layout: 'floating-chat',
-			styleTheme: '',
-			persistOpenState: false,
-			resizable: false,
-			chatToggleButton: { enabled: true, selector: '#angie-widget-toggle' },
+		expect( config.host.appId ).toBe( 'editor-lite' );
+		expect( config.boot.allowInIframe ).toBe( false );
+		expect( config.container.id ).toBe( 'angie-sidebar-container' );
+		expect( config.container.persistOpenState ).toBe( true );
+		expect( config.container.chatToggleButton ).toEqual( {
+			enabled: false,
+			selector: '#angie-widget-toggle',
 		} );
-		expect( config.widgetConfig ).toEqual( { closeButton: 'close' } );
-	} );
-
-	it( 'should resolve sidebar layout defaults', () => {
-		const config = resolveConfig(
-			{ container: { layout: 'sidebar' }, host: { appId: 'editor-lite' } },
-			DEFAULT_ENV,
-		);
-
-		expect( config.container ).toEqual( {
-			id: 'angie-sidebar-container',
-			layout: 'sidebar',
-			styleTheme: '',
-			persistOpenState: true,
-			resizable: true,
-			chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
-		} );
+		expect( config.iframe.path ).toBe( 'angie/embedded' );
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
-	it( 'should apply container and chat toggle overrides', () => {
+	it( 'should apply container overrides', () => {
 		const config = resolveConfig(
 			{
 				container: {
-					layout: 'sidebar',
 					styleTheme: 'wordpress',
 					persistOpenState: false,
+					resizable: false,
 					chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 				},
 				host: { appId: 'editor-lite' },
@@ -56,25 +40,31 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 
 		expect( config.container.styleTheme ).toBe( 'wordpress' );
 		expect( config.container.persistOpenState ).toBe( false );
+		expect( config.container.resizable ).toBe( false );
 		expect( config.container.chatToggleButton ).toEqual( {
 			enabled: true,
 			selector: '#angie-lite-toggle',
 		} );
 	} );
 
-	it( 'should preserve callbacks.onClose and env iframe settings', () => {
+	it( 'should preserve callbacks.onClose', () => {
 		const onClose = jest.fn();
 		const config = resolveConfig(
-			{
-				callbacks: { onClose },
-				host: { appId: 'editor-lite' },
-			},
-			{ ...DEFAULT_ENV, browserUiTheme: 'dark', isRTL: true },
+			{ callbacks: { onClose }, host: { appId: 'editor-lite' } },
+			DEFAULT_ENV,
 		);
 
 		expect( config.callbacks.onClose ).toBe( onClose );
-		expect( config.iframe.uiTheme ).toBe( 'dark' );
+	} );
+
+	it( 'should apply env-detected RTL and theme to iframe', () => {
+		const config = resolveConfig(
+			{ host: { appId: 'editor-lite' } },
+			{ ...DEFAULT_ENV, browserUiTheme: 'dark', isRTL: true },
+		);
+
 		expect( config.iframe.isRTL ).toBe( true );
+		expect( config.iframe.uiTheme ).toBe( 'dark' );
 	} );
 
 	it( 'should skip boot when embedded in iframe by default', () => {
