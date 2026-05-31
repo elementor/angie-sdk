@@ -3,57 +3,68 @@ import type { WidgetConfig } from '../angie-mcp-sdk';
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
 export type LoadSidebarV2Layout = 'sidebar';
+
+export type HostConfig = {
+	appId: string;
+	aiContext?: Record<string, unknown>;
+	website?: Record<string, unknown>;
+};
+
+export type BootOptions = {
+	allowInIframe?: boolean;
+};
+
+export type BootConfig = {
+	allowInIframe: boolean;
+};
+
+export type ContainerOptions = {
+	id?: string;
+	layout?: LoadSidebarV2Layout;
+	persistOpenState?: boolean;
+	resizable?: boolean;
+};
+
+export type ContainerConfig = {
+	id: string;
+	layout: LoadSidebarV2Layout;
+	persistOpenState: boolean;
+	resizable: boolean;
+};
+
+export type IframeOptions = {
+	isRTL?: boolean;
+	origin?: string;
+	path?: string;
+	uiTheme?: string;
+};
+
+export type IframeConfig = {
+	origin: string;
+	path: string;
+	uiTheme: string;
+	isRTL: boolean;
+};
+
+export type CallbacksConfig = {
+	onClose?: () => void;
+};
+
 export type LoadSidebarV2Options = {
-	host: {
-		appId: string;
-		aiContext?: Record<string, unknown>;
-		website?: Record<string, unknown>;
-	};
-	boot?: {
-		allowInIframe?: boolean;
-	};
-	container?: {
-		id?: string;
-		layout?: LoadSidebarV2Layout;
-		persistOpenState?: boolean;
-		resizable?: boolean;
-	};
-	iframe?: {
-		isRTL?: boolean;
-		origin?: string;
-		path?: string;
-		uiTheme?: string;
-	};
-	callbacks?: {
-		onClose?: () => void;
-	};
+	host: HostConfig;
+	boot?: BootOptions;
+	container?: ContainerOptions;
+	iframe?: IframeOptions;
+	callbacks?: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
 };
 
 export type ResolvedConfigV2 = {
-	host: {
-		appId: string;
-		aiContext?: Record<string, unknown>;
-		website?: Record<string, unknown>;
-	};
-	boot: {
-		allowInIframe: boolean;
-	};
-	container: {
-		id: string;
-		layout: LoadSidebarV2Layout;
-		persistOpenState: boolean;
-		resizable: boolean;
-	};
-	iframe: {
-		origin: string;
-		path: string;
-		uiTheme: string;
-		isRTL: boolean;
-	};
-	callbacks: {
-		onClose?: () => void;
-	};
+	host: HostConfig;
+	boot: BootConfig;
+	container: ContainerConfig;
+	iframe: IframeConfig;
+	callbacks: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
 };
 
