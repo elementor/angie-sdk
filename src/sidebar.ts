@@ -12,14 +12,17 @@ let cssInjected = false;
 let wordpressCssInjected = false;
 
 function injectCSS(): void {
-	if ( typeof document === 'undefined' || cssInjected ) {
+	if ( typeof document === 'undefined' ) {
 		return;
 	}
 
 	const styleId = 'angie-sidebar-styles';
 
-	if ( document.getElementById( styleId ) ) {
-		cssInjected = true;
+	if ( ! document.getElementById( styleId ) ) {
+		cssInjected = false;
+	}
+
+	if ( cssInjected ) {
 		return;
 	}
 
