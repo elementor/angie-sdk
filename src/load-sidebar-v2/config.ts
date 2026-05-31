@@ -10,20 +10,11 @@ export type HostConfig = {
 	website?: Record<string, unknown>;
 };
 
-export type BootOptions = {
-	allowInIframe?: boolean;
-};
-
 export type BootConfig = {
 	allowInIframe: boolean;
 };
 
-export type ContainerOptions = {
-	id?: string;
-	layout?: LoadSidebarV2Layout;
-	persistOpenState?: boolean;
-	resizable?: boolean;
-};
+export type BootOptions = Partial<BootConfig>;
 
 export type ContainerConfig = {
 	id: string;
@@ -32,12 +23,7 @@ export type ContainerConfig = {
 	resizable: boolean;
 };
 
-export type IframeOptions = {
-	isRTL?: boolean;
-	origin?: string;
-	path?: string;
-	uiTheme?: string;
-};
+export type ContainerOptions = Partial<ContainerConfig>;
 
 export type IframeConfig = {
 	origin: string;
@@ -45,6 +31,8 @@ export type IframeConfig = {
 	uiTheme: string;
 	isRTL: boolean;
 };
+
+export type IframeOptions = Partial<IframeConfig>;
 
 export type CallbacksConfig = {
 	onClose?: () => void;
