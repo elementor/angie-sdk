@@ -8,6 +8,8 @@ import { createChildLogger } from './logger';
 import { openIframe } from './iframe';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
+import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
+import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
 import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
 
 export { DEFAULT_CONTAINER_ID } from './config';
@@ -100,6 +102,10 @@ export class AngieMcpSdk {
     }
 
     this.setupPromptHashDetection();
+  }
+
+  public async loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
+    await bootSidebar( options );
   }
 
   // listen to MessageEventType.SDK_ANGIE_READY_PING

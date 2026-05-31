@@ -3,21 +3,24 @@ import { appState } from "./config";
 import { MessageEventType } from "./types";
 import { createChildLogger } from "./logger";
 import { isOidcFlowInUrl } from "@elementor/oidc-auth";
-import { waitForDocumentReady } from "./utils";
+import { sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility, waitForDocumentReady } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
 
 const sidebarLogger = createChildLogger( 'sidebar' );
 let cssInjected = false;
 
 function injectCSS(): void {
-	if (typeof document === 'undefined' || cssInjected) {
+	if ( typeof document === 'undefined' ) {
 		return;
 	}
 
 	const styleId = 'angie-sidebar-styles';
-	
-	if (document.getElementById(styleId)) {
-		cssInjected = true;
+
+	if ( ! document.getElementById( styleId ) ) {
+		cssInjected = false;
+	}
+
+	if ( cssInjected ) {
 		return;
 	}
 
@@ -111,13 +114,13 @@ export function forceSidebarClosedDuringOAuth(): void {
 	}
 }
 
-export function loadState(): void {
+export function loadState( defaultState: AngieSidebarState = ANGIE_SIDEBAR_STATE_OPEN ): void {
 	if ( isOidcFlowInUrl() ) {
 		forceSidebarClosedDuringOAuth();
 		return;
 	}
 
-	applyState( getAngieSidebarSavedState() || ANGIE_SIDEBAR_STATE_OPEN );
+	applyState( getAngieSidebarSavedState() || defaultState );
 }
 
 export function applyState( state: AngieSidebarState ): void {
@@ -228,6 +231,10 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 			body.classList.remove( 'angie-sidebar-active' );
 		}
 
+		if ( appState.iframe ) {
+			setIframeAccessibility( appState.iframe, shouldOpen );
+		}
+
 		const focusDelay = skipTransition ? 0 : 300;
 		handleFocus( shouldOpen, focusDelay );
 
@@ -249,13 +256,33 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 	};
 }
 
+let sidebarToggleMessageListenerAttached = false;
+
 export function setupMessageListener(): void {
+	if ( sidebarToggleMessageListenerAttached ) {
+		return;
+	}
+
+	sidebarToggleMessageListenerAttached = true;
+
 	window.addEventListener( 'message', function( event ) {
-		if ( event.data && event.data.type === 'toggleAngieSidebar' ) {
-			const { force, skipTransition } = event.data.payload || {};
-			if ( window.toggleAngieSidebar ) {
-				window.toggleAngieSidebar( force, skipTransition );
-			}
+		if ( event.data?.type !== 'toggleAngieSidebar' ) {
+			return;
+		}
+
+		const iframeOrigin = appState.iframeUrlObject?.origin;
+		if ( iframeOrigin && event.origin !== iframeOrigin ) {
+			return;
+		}
+
+		const { force, skipTransition } = event.data.payload || {};
+		if ( window.toggleAngieSidebar ) {
+			window.toggleAngieSidebar( force, skipTransition );
+		}
+
+		const port = event.ports?.[ 0 ];
+		if ( port ) {
+			sendSuccessMessage( port );
 		}
 	} );
 }
@@ -269,6 +296,7 @@ export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
 	if ( ! options?.skipDefaultCss ) {
 		injectCSS();
 	}
+
 
 	if ( typeof window !== 'undefined' ) {
 		window.toggleAngieSidebar = createToggleSidebarFunction( options?.onToggle );
