@@ -18,12 +18,6 @@ export const initSidebarShell = (
 		},
 	} );
 };
-
-export const applyInitialSidebarShellState = (
-	_container: ResolvedConfigV2['container'],
-): void => {
-};
-
 export const finalizeSidebarShellState = (
 	container: ResolvedConfigV2['container'],
 ): void => {

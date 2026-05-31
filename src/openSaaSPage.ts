@@ -77,7 +77,7 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 					iframe.contentWindow?.postMessage( {
 						type: HostEventType.HOST_READY,
 						instanceId,
-						}, iframeUrlObject.origin );
+					}, iframeUrlObject.origin );
 					break;
 				default:
 					break;

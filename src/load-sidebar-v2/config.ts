@@ -67,11 +67,6 @@ export type ResolvedConfigV2 = {
 	callbacks: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
 };
-
-export type LoadSidebarV2HostConfig = LoadSidebarV2Options & {
-	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
-};
-
 export type HostEmbeddedConfigPayload = {
 	aiContext?: Record<string, unknown>;
 	appId?: string;

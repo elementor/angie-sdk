@@ -10,13 +10,13 @@ const sidebarLogger = createChildLogger( 'sidebar' );
 let cssInjected = false;
 
 function injectCSS(): void {
-	if ( typeof document === 'undefined' || cssInjected ) {
+	if (typeof document === 'undefined' || cssInjected) {
 		return;
 	}
 
 	const styleId = 'angie-sidebar-styles';
-
-	if ( document.getElementById( styleId ) ) {
+	
+	if (document.getElementById(styleId)) {
 		cssInjected = true;
 		return;
 	}
@@ -293,7 +293,6 @@ export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
 	if ( ! options?.skipDefaultCss ) {
 		injectCSS();
 	}
-
 
 	if ( typeof window !== 'undefined' ) {
 		window.toggleAngieSidebar = createToggleSidebarFunction( options?.onToggle );

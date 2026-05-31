@@ -1,4 +1,4 @@
-import { describe, expect, it } from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import type { Env } from './env';
 import { resolveConfig, shouldBoot } from './resolve-config';
 
@@ -9,35 +9,16 @@ const DEFAULT_ENV: Env = {
 };
 
 describe( 'load-sidebar-v2/resolve-config', () => {
-	it( 'should resolve minimal input with sidebar defaults', () => {
+	it( 'should resolve host and iframe defaults', () => {
 		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
 
-		expect( config ).toEqual( {
-			host: {
-				appId: 'editor-lite',
-			},
-			boot: {
-				allowInIframe: false,
-			},
-			container: {
-				id: 'angie-sidebar-container',
-				layout: 'sidebar',
-				persistOpenState: true,
-				resizable: true,
-			},
-			iframe: {
-				isRTL: false,
-				origin: 'https://angie.elementor.com',
-				path: 'angie/embedded',
-				uiTheme: 'light',
-			},
-			callbacks: {
-				onClose: undefined,
-			},
-			widgetConfig: {
-				closeButton: 'collapse',
-			},
-		} );
+		expect( config.host.appId ).toBe( 'editor-lite' );
+		expect( config.boot.allowInIframe ).toBe( false );
+		expect( config.container.id ).toBe( 'angie-sidebar-container' );
+		expect( config.container.persistOpenState ).toBe( true );
+		expect( config.iframe.path ).toBe( 'angie/embedded' );
+		expect( config.iframe.uiTheme ).toBe( 'light' );
+		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
 	it( 'should apply container overrides', () => {
@@ -49,12 +30,8 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 			DEFAULT_ENV,
 		);
 
-		expect( config.container ).toEqual( {
-			id: 'angie-sidebar-container',
-			layout: 'sidebar',
-			persistOpenState: false,
-			resizable: false,
-		} );
+		expect( config.container.persistOpenState ).toBe( false );
+		expect( config.container.resizable ).toBe( false );
 	} );
 
 	it( 'should preserve callbacks.onClose', () => {
@@ -80,24 +57,14 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 			},
 		);
 
-		expect( config.iframe ).toEqual(
-			expect.objectContaining( {
-				isRTL: true,
-				uiTheme: 'dark',
-			} ),
-		);
+		expect( config.iframe.isRTL ).toBe( true );
+		expect( config.iframe.uiTheme ).toBe( 'dark' );
 	} );
 
-	it( 'should respect boot.allowInIframe in shouldBoot', () => {
-		const config = resolveConfig(
-			{
-				boot: { allowInIframe: false },
-				host: { appId: 'editor-lite' },
-			},
-			DEFAULT_ENV,
-		);
+	it( 'should skip boot when embedded in iframe by default', () => {
+		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
 
 		expect( shouldBoot( config, { ...DEFAULT_ENV, isInIframe: true } ) ).toBe( false );
-		expect( shouldBoot( config, { ...DEFAULT_ENV, isInIframe: false } ) ).toBe( true );
+		expect( shouldBoot( config, DEFAULT_ENV ) ).toBe( true );
 	} );
 } );

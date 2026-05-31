@@ -115,8 +115,6 @@ describe('sidebar', () => {
       expect(styleElement?.textContent).toContain('angie-sidebar');
     });
 
-
-
     it('should set up window.toggleAngieSidebar', () => {
       initAngieSidebar();
       
