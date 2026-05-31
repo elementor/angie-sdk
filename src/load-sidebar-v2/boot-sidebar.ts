@@ -1,4 +1,5 @@
 import { appState } from '../config';
+import { initFloatingChatLayout } from './chat-toggle/init-floating-chat-layout';
 import { ensureSidebarContainer } from './container';
 import { buildHostEmbeddedConfigPayload, type LoadSidebarV2Options } from './config';
 import { sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
@@ -19,17 +20,32 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 
 	ensureSidebarContainer( config.container.id, env.isRTL );
 
-	initSidebarShell( config.container, config.callbacks );
-	applyInitialSidebarShellState( config.container );
+	const { layout, chatToggleButton } = config.container;
+
+	if ( layout === 'floating-chat' ) {
+		initFloatingChatLayout( {
+			containerId: config.container.id,
+			iframeOrigin: config.iframe.origin,
+			onClose: config.callbacks.onClose,
+			toggleButtonSelector: chatToggleButton.selector,
+			injectToggleButton: chatToggleButton.enabled,
+		} );
+	} else {
+		initSidebarShell( config.container, config.callbacks );
+		applyInitialSidebarShellState( config.container );
+	}
 
 	const embeddedPayload = buildHostEmbeddedConfigPayload( config.host );
 
 	await openEmbeddedIframe( {
+		container: config.container,
 		iframe: config.iframe,
 		hostReadyEmbedded: embeddedPayload,
 	} );
 
-	finalizeSidebarShellState( config.container );
+	if ( layout === 'sidebar' ) {
+		finalizeSidebarShellState( config.container );
+	}
 
 	sendEmbeddedConfig( embeddedPayload );
 

@@ -57,6 +57,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 	it( 'should boot sidebar shell, iframe, and embedded config', async () => {
 		await bootSidebar( {
+			container: { layout: 'sidebar' },
 			host: { appId: 'editor-lite' },
 			iframe: { path: 'angie/wp-admin' },
 		} );
@@ -76,6 +77,20 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
 	} );
 
+	it( 'should boot floating-chat without sidebar shell', async () => {
+		await bootSidebar( {
+			container: {
+				layout: 'floating-chat',
+				chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
+			},
+			host: { appId: 'editor-lite' },
+		} );
+
+		expect( document.getElementById( 'angie-chat-widget-styles' ) ).not.toBeNull();
+		expect( mockInitAngieSidebar ).not.toHaveBeenCalled();
+		expect( mockLoadState ).not.toHaveBeenCalled();
+	} );
+
 	it( 'should start closed when host toggle is enabled', async () => {
 		const toggle = document.createElement( 'button' );
 		toggle.id = 'angie-lite-toggle';
@@ -83,6 +98,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 		await bootSidebar( {
 			container: {
+				layout: 'sidebar',
 				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 			},
 			host: { appId: 'editor-lite' },

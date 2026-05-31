@@ -1,26 +1,22 @@
 import { DEFAULT_CONTAINER_ID } from '../config';
+import { FLOATING_CHAT_PRESET_DEFAULTS } from './presets/floating-chat';
+import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
+
+export { SIDEBAR_PRESET_DEFAULTS };
 
 export { DEFAULT_CONTAINER_ID };
 
 export const DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR = '#angie-widget-toggle';
-
-export const SIDEBAR_PRESET_DEFAULTS = {
-	layout: 'sidebar' as const,
-	styleTheme: '' as const,
-	persistOpenState: true,
-	resizable: true,
-	chatToggleButtonEnabled: false,
-} as const;
 
 export const DEFAULTS = {
 	boot: {
 		allowInIframe: false,
 	},
 	container: {
-		layout: SIDEBAR_PRESET_DEFAULTS.layout,
-		styleTheme: SIDEBAR_PRESET_DEFAULTS.styleTheme,
-		persistOpenState: SIDEBAR_PRESET_DEFAULTS.persistOpenState,
-		resizable: SIDEBAR_PRESET_DEFAULTS.resizable,
+		layout: FLOATING_CHAT_PRESET_DEFAULTS.layout,
+		styleTheme: FLOATING_CHAT_PRESET_DEFAULTS.styleTheme,
+		persistOpenState: FLOATING_CHAT_PRESET_DEFAULTS.persistOpenState,
+		resizable: FLOATING_CHAT_PRESET_DEFAULTS.resizable,
 		chatToggleButtonSelector: DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,
 	},
 	iframe: {

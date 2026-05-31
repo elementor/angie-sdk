@@ -2,8 +2,10 @@ import { appState } from '../config';
 import { openIframe } from '../iframe';
 import { toggleAngieSidebar as setIframeAccessibility } from '../utils';
 import type { HostEmbeddedConfigPayload, ResolvedConfigV2 } from './config';
+import { setChatWidgetOpen } from './chat-toggle/chat-shell';
 
 type OpenEmbeddedIframeArgs = {
+	container: ResolvedConfigV2['container'];
 	iframe: ResolvedConfigV2['iframe'];
 	hostReadyEmbedded?: HostEmbeddedConfigPayload;
 };
@@ -16,6 +18,17 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 		uiTheme: args.iframe.uiTheme,
 		hostReadyEmbedded: args.hostReadyEmbedded,
 	} );
+
+	if (
+		args.container.layout === 'floating-chat' &&
+		args.container.chatToggleButton.enabled
+	) {
+		setChatWidgetOpen( {
+			containerId: args.container.id,
+			toggleButtonSelector: args.container.chatToggleButton.selector,
+			isOpen: false,
+		} );
+	}
 
 	if ( appState.iframe ) {
 		setIframeAccessibility( appState.iframe, false );

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>loadSidebarV2 PR1 demo</title>
+  <title>loadSidebarV2 demo</title>
   <script type="importmap">
   {
     "imports": {
@@ -14,10 +14,25 @@
   </script>
   <style>
     body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; }
+    nav a { margin-inline-end: 1rem; }
+    #demo-sidebar-toggle {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <p>Host page — <code>loadSidebarV2</code> with <code>appId: demo</code></p>
+  <nav>
+    <a href="?layout=floating-chat">floating-chat (default)</a>
+    <a href="?layout=sidebar">sidebar</a>
+  </nav>
+  <p>Active layout: <code id="layout-label"></code></p>
+  <button type="button" id="demo-sidebar-toggle" hidden>Open Angie</button>
+  <script type="module">
+    const layout = new URLSearchParams(location.search).get('layout') ?? 'floating-chat';
+    document.getElementById('layout-label').textContent = layout;
+    document.getElementById('demo-sidebar-toggle').hidden = layout !== 'sidebar';
+  </script>
   <script type="module" src="./host.js"></script>
 </body>
 </html>

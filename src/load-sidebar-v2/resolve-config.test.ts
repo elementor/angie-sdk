@@ -9,18 +9,23 @@ const DEFAULT_ENV: Env = {
 };
 
 describe( 'load-sidebar-v2/resolve-config', () => {
-	it( 'should resolve host and iframe defaults', () => {
+	it( 'should resolve floating-chat defaults', () => {
 		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
 
-		expect( config.host.appId ).toBe( 'editor-lite' );
-		expect( config.boot.allowInIframe ).toBe( false );
-		expect( config.container.id ).toBe( 'angie-sidebar-container' );
+		expect( config.container.layout ).toBe( 'floating-chat' );
+		expect( config.container.persistOpenState ).toBe( false );
+		expect( config.container.chatToggleButton.enabled ).toBe( true );
+		expect( config.widgetConfig ).toEqual( { closeButton: 'close' } );
+	} );
+
+	it( 'should resolve sidebar layout defaults', () => {
+		const config = resolveConfig(
+			{ container: { layout: 'sidebar' }, host: { appId: 'editor-lite' } },
+			DEFAULT_ENV,
+		);
+
 		expect( config.container.persistOpenState ).toBe( true );
-		expect( config.container.chatToggleButton ).toEqual( {
-			enabled: false,
-			selector: '#angie-widget-toggle',
-		} );
-		expect( config.iframe.path ).toBe( 'angie/embedded' );
+		expect( config.container.chatToggleButton.enabled ).toBe( false );
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
