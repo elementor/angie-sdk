@@ -8,6 +8,7 @@ import { HostEventType, MessageEventType } from './types';
 import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
 import { ANGIE_SDK_VERSION } from './version';
 import { openSaaSPage } from './openSaaSPage';
+import { setAngieIframeRef } from './angie-iframe-utils';
 
 type OpenIframeProps = {
 	origin?: string;
@@ -138,13 +139,6 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 
 		// Insert iframe into sidebar
 		sidebarContainer?.appendChild( iframeElement );
-
-		toggleAngieSidebar( iframeElement, true );
-
-		// Focus management after iframe loads
-		iframeElement.addEventListener( 'load', () => {
-			iframeElement.focus();
-		} );
 	};
 
 	// Determine CSS styling based on mode
@@ -168,6 +162,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 
 	appState.iframe = iframe;
 	appState.iframeUrlObject = iframeUrlObject;
+	setAngieIframeRef( iframe );
 
 	addLocalStorageListener();
 

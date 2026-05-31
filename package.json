@@ -21,7 +21,8 @@
     "dev": "tsc --watch",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix"
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "demo": "npm run build && npx --yes serve . -l 8080"
   },
   "keywords": [
     "mcp",
