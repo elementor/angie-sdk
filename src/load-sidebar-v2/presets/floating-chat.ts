@@ -1,9 +1,7 @@
-import type { LoadSidebarV2Layout } from '../config';
-
-export const FLOATING_CHAT_LAYOUT: LoadSidebarV2Layout = 'floating-chat';
+import { LAYOUT_FLOATING_CHAT } from '../config';
 
 export const FLOATING_CHAT_PRESET_DEFAULTS = {
-	layout: FLOATING_CHAT_LAYOUT,
+	layout: LAYOUT_FLOATING_CHAT,
 	styleTheme: '' as const,
 	persistOpenState: false,
 	resizable: false,

@@ -1,14 +1,17 @@
 import { DEFAULT_CONTAINER_ID, DEFAULTS } from './defaults';
 import type { Env } from './env';
-import type { LoadSidebarV2Layout, LoadSidebarV2Options, ResolvedConfigV2 } from './config';
+import {
+	LAYOUT_FLOATING_CHAT,
+	type LoadSidebarV2Layout,
+	type LoadSidebarV2Options,
+	type ResolvedConfigV2,
+} from './config';
 import { FLOATING_CHAT_PRESET_DEFAULTS } from './presets/floating-chat';
 import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
 import { resolveWidgetConfig } from './widget-config';
 
 const getLayoutDefaults = ( layout: LoadSidebarV2Layout ) => (
-	layout === 'floating-chat'
-		? FLOATING_CHAT_PRESET_DEFAULTS
-		: SIDEBAR_PRESET_DEFAULTS
+	layout === LAYOUT_FLOATING_CHAT ? FLOATING_CHAT_PRESET_DEFAULTS : SIDEBAR_PRESET_DEFAULTS
 );
 
 export const shouldBoot = ( config: ResolvedConfigV2, env: Env ): boolean => {
@@ -41,7 +44,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		container: {
 			id: container.id?.trim() || DEFAULT_CONTAINER_ID,
 			layout,
-			styleTheme: container.styleTheme ?? DEFAULTS.container.styleTheme,
+			styleTheme: container.styleTheme ?? layoutDefaults.styleTheme,
 			persistOpenState: container.persistOpenState ?? layoutDefaults.persistOpenState,
 			resizable: container.resizable ?? layoutDefaults.resizable,
 			chatToggleButton: {

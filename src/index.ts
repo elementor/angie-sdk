@@ -1,5 +1,9 @@
 export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type WidgetConfig } from './angie-mcp-sdk';
-export { type LoadSidebarV2Options } from './load-sidebar-v2/config';
+export {
+	LAYOUT_FLOATING_CHAT,
+	LAYOUT_SIDEBAR,
+	type LoadSidebarV2Options,
+} from './load-sidebar-v2/config';
 export { AngieDetector } from './angie-detector';
 export { RegistrationQueue } from './registration-queue';
 export { ClientManager } from './client-manager';

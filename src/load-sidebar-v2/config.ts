@@ -2,7 +2,11 @@ import type { WidgetConfig } from '../angie-mcp-sdk';
 
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
-export type LoadSidebarV2Layout = 'floating-chat' | 'sidebar';
+export const LAYOUT_SIDEBAR = 'sidebar' as const;
+
+export const LAYOUT_FLOATING_CHAT = 'floatingChat' as const;
+
+export type LoadSidebarV2Layout = typeof LAYOUT_SIDEBAR | typeof LAYOUT_FLOATING_CHAT;
 
 export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 

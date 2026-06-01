@@ -1,5 +1,7 @@
+import { LAYOUT_SIDEBAR } from '../config';
+
 export const SIDEBAR_PRESET_DEFAULTS = {
-	layout: 'sidebar' as const,
+	layout: LAYOUT_SIDEBAR,
 	styleTheme: '' as const,
 	persistOpenState: true,
 	resizable: true,

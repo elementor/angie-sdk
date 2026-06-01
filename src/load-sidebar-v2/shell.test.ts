@@ -62,4 +62,12 @@ describe( 'load-sidebar-v2/shell', () => {
 
 		expect( document.getElementById( 'angie-sidebar-wordpress-styles' ) ).toBeTruthy();
 	} );
+
+	it( 'should inject default sidebar CSS when styleTheme is empty', () => {
+		initSidebarShell( baseContainer, { onClose: jest.fn() } );
+
+		expect( initAngieSidebar ).toHaveBeenCalledWith(
+			expect.not.objectContaining( { skipDefaultCss: true } ),
+		);
+	} );
 } );

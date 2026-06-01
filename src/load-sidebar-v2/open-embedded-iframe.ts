@@ -1,9 +1,9 @@
 import { appState } from '../config';
 import { openIframe } from '../iframe';
 import { toggleAngieSidebar } from '../utils';
-import type { HostEmbeddedConfigPayload, ResolvedConfigV2 } from './config';
+import { LAYOUT_FLOATING_CHAT, type HostEmbeddedConfigPayload, type ResolvedConfigV2 } from './config';
 import { setChatWidgetOpen } from './chat-toggle/chat-shell';
-import { syncSidebarToggleButton } from './sidebar-toggle';
+import { syncToggleButton } from './toggle-button';
 
 type OpenEmbeddedIframeArgs = {
 	container: ResolvedConfigV2['container'];
@@ -21,7 +21,7 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 	} );
 
 	if (
-		args.container.layout === 'floating-chat' &&
+		args.container.layout === LAYOUT_FLOATING_CHAT &&
 		args.container.chatToggleButton.enabled
 	) {
 		setChatWidgetOpen( {
@@ -37,6 +37,6 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 	}
 
 	if ( args.container.chatToggleButton.enabled ) {
-		syncSidebarToggleButton( args.container.chatToggleButton.selector, false );
+		syncToggleButton( args.container.chatToggleButton.selector, false );
 	}
 };

@@ -1,4 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import { bootSidebar } from './boot-sidebar';
 
 jest.mock( '../sidebar', () => ( {
@@ -57,7 +58,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 	it( 'should boot sidebar shell, iframe, and embedded config', async () => {
 		await bootSidebar( {
-			container: { layout: 'sidebar' },
+			container: { layout: LAYOUT_SIDEBAR },
 			host: { appId: 'editor-lite' },
 			iframe: { path: 'angie/wp-admin' },
 		} );
@@ -80,7 +81,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	it( 'should boot floating-chat without sidebar shell', async () => {
 		await bootSidebar( {
 			container: {
-				layout: 'floating-chat',
+				layout: LAYOUT_FLOATING_CHAT,
 				chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
 			},
 			host: { appId: 'editor-lite' },
@@ -98,7 +99,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 		await bootSidebar( {
 			container: {
-				layout: 'sidebar',
+				layout: LAYOUT_SIDEBAR,
 				chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
 			},
 			host: { appId: 'editor-lite' },

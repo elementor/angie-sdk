@@ -1,9 +1,5 @@
 import type { WidgetConfig } from '../angie-mcp-sdk';
-import type { LoadSidebarV2Layout } from './config';
-
-const FLOATING_CHAT_WIDGET_DEFAULTS: WidgetConfig = {
-	closeButton: 'close',
-};
+import { LAYOUT_FLOATING_CHAT, type LoadSidebarV2Layout } from './config';
 
 const SIDEBAR_WIDGET_DEFAULTS: WidgetConfig = {
 	closeButton: 'collapse',
@@ -13,9 +9,9 @@ export const resolveWidgetConfig = (
 	layout: LoadSidebarV2Layout,
 	widgetConfig?: WidgetConfig,
 ): WidgetConfig | undefined => {
-	if ( layout === 'floating-chat' ) {
+	if ( layout === LAYOUT_FLOATING_CHAT ) {
 		return {
-			...FLOATING_CHAT_WIDGET_DEFAULTS,
+			closeButton: 'close',
 			...widgetConfig,
 		};
 	}

@@ -7,12 +7,15 @@ import {
 	initializeResize,
 	loadState,
 } from '../sidebar';
-import type { ResolvedConfigV2 } from './config';
+import type { ContainerConfig, ResolvedConfigV2 } from './config';
+import {
+	syncToggleButton,
+	wireToggleButton,
+} from './toggle-button';
 import { injectStyleThemeCss } from './inject-style-theme';
-import { syncSidebarToggleButton, wireSidebarToggleButton } from './sidebar-toggle';
 
 export const initSidebarShell = (
-	container: ResolvedConfigV2['container'],
+	container: ContainerConfig,
 	callbacks: ResolvedConfigV2['callbacks'],
 ): void => {
 	const toggleButtonSelector = container.chatToggleButton.enabled
@@ -22,7 +25,7 @@ export const initSidebarShell = (
 	initAngieSidebar( {
 		onToggle: ( isOpen ) => {
 			if ( toggleButtonSelector ) {
-				syncSidebarToggleButton( toggleButtonSelector, isOpen );
+				syncToggleButton( toggleButtonSelector, isOpen );
 			}
 
 			if ( ! isOpen && callbacks.onClose ) {
@@ -34,12 +37,18 @@ export const initSidebarShell = (
 	injectStyleThemeCss( container.styleTheme );
 
 	if ( toggleButtonSelector ) {
-		wireSidebarToggleButton( { toggleButtonSelector } );
+		wireToggleButton( {
+			toggleButtonSelector,
+			onClick: ( event ) => {
+				event.preventDefault();
+				window.toggleAngieSidebar?.();
+			},
+		} );
 	}
 };
 
 export const applyInitialSidebarShellState = (
-	container: ResolvedConfigV2['container'],
+	container: ContainerConfig,
 ): void => {
 	if ( ! container.chatToggleButton.enabled ) {
 		return;
@@ -56,7 +65,7 @@ export const applyInitialSidebarShellState = (
 };
 
 export const finalizeSidebarShellState = (
-	container: ResolvedConfigV2['container'],
+	container: ContainerConfig,
 ): void => {
 	if ( container.persistOpenState ) {
 		loadState(

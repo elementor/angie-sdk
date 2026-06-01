@@ -1,11 +1,12 @@
 import { appState } from '../../config';
 import { MessageEventType } from '../../types';
-import { toggleAngieSidebar } from '../../utils';
+import { sendSuccessMessage, toggleAngieSidebar } from '../../utils';
+import { syncToggleButton, wireToggleButton } from '../toggle-button';
+import { addHostMessageHandler } from '../host-message-router';
 import {
 	CHAT_WIDGET_FULLSCREEN_CLASS,
 	CHAT_WIDGET_HIDDEN_CLASS,
 } from './constants';
-import { syncSidebarToggleButton } from '../sidebar-toggle';
 import { findToggleButton } from './toggle-button-element';
 
 type InitChatShellArgs = {
@@ -23,9 +24,7 @@ type SetChatWidgetOpenArgs = {
 
 const TOGGLE_ANGIE_SIDEBAR_MESSAGE = 'toggleAngieSidebar';
 
-const sendPortSuccess = ( port: MessagePort, payload?: unknown ) => {
-	port.postMessage( { status: 'success', payload } );
-};
+let removeChatShellMessageHandler: ( () => void ) | null = null;
 
 export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 	const container = document.getElementById( args.containerId );
@@ -44,7 +43,7 @@ export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 		toggleAngieSidebar( appState.iframe, args.isOpen );
 	}
 
-	syncSidebarToggleButton( args.toggleButtonSelector, args.isOpen );
+	syncToggleButton( args.toggleButtonSelector, args.isOpen );
 };
 
 const setChatWidgetFullscreen = ( containerId: string, isFullscreen: boolean ): void => {
@@ -103,25 +102,50 @@ const initToggleButton = ( args: InitChatShellArgs ): void => {
 	const toggleButton = findToggleButton( args.toggleButtonSelector );
 
 	if ( ! toggleButton ) {
+		wireToggleButton( {
+			toggleButtonSelector: args.toggleButtonSelector,
+			onClick: () => {
+				const toggleEl = findToggleButton( args.toggleButtonSelector );
+
+				if ( ! toggleEl ) {
+					return;
+				}
+
+				const isCurrentlyOpen = toggleEl.getAttribute( 'aria-expanded' ) === 'true';
+				setChatWidgetOpen( {
+					containerId: args.containerId,
+					toggleButtonSelector: args.toggleButtonSelector,
+					isOpen: ! isCurrentlyOpen,
+				} );
+
+				if ( isCurrentlyOpen ) {
+					args.onClose?.();
+				}
+			},
+		} );
 		return;
 	}
 
-	toggleButton.addEventListener( 'click', () => {
-		const isCurrentlyOpen = toggleButton.getAttribute( 'aria-expanded' ) === 'true';
-		setChatWidgetOpen( {
-			containerId: args.containerId,
-			toggleButtonSelector: args.toggleButtonSelector,
-			isOpen: ! isCurrentlyOpen,
-		} );
+	wireToggleButton( {
+		toggleButtonSelector: args.toggleButtonSelector,
+		onClick: () => {
+			const isCurrentlyOpen = toggleButton.getAttribute( 'aria-expanded' ) === 'true';
+			setChatWidgetOpen( {
+				containerId: args.containerId,
+				toggleButtonSelector: args.toggleButtonSelector,
+				isOpen: ! isCurrentlyOpen,
+			} );
 
-		if ( isCurrentlyOpen ) {
-			args.onClose?.();
-		}
+			if ( isCurrentlyOpen ) {
+				args.onClose?.();
+			}
+		},
 	} );
 };
 
 const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
-	window.addEventListener( 'message', ( event: MessageEvent ) => {
+	removeChatShellMessageHandler?.();
+	removeChatShellMessageHandler = addHostMessageHandler( ( event: MessageEvent ) => {
 		if ( event.origin !== args.iframeOrigin ) {
 			return;
 		}
@@ -134,7 +158,7 @@ const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
 			case TOGGLE_ANGIE_SIDEBAR_MESSAGE:
 				handleSidebarToggleMessage( args, payload );
 				if ( port ) {
-					sendPortSuccess( port );
+					sendSuccessMessage( port );
 				}
 				break;
 
@@ -151,7 +175,7 @@ const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
 				}
 
 				if ( port ) {
-					sendPortSuccess( port );
+					sendSuccessMessage( port );
 				}
 				break;
 			}
@@ -166,4 +190,9 @@ export const initChatShell = ( args: InitChatShellArgs ): void => {
 	window.toggleAngieSidebar = ( force?: boolean ) => {
 		handleSidebarToggleMessage( args, { force } );
 	};
+};
+
+export const resetChatShellForTests = (): void => {
+	removeChatShellMessageHandler?.();
+	removeChatShellMessageHandler = null;
 };

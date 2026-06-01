@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
+import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import type { Env } from './env';
 import { resolveConfig, shouldBoot } from './resolve-config';
 
@@ -9,10 +10,24 @@ const DEFAULT_ENV: Env = {
 };
 
 describe( 'load-sidebar-v2/resolve-config', () => {
-	it( 'should resolve floating-chat defaults', () => {
+	it( 'should resolve sidebar defaults when layout is omitted', () => {
 		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
 
-		expect( config.container.layout ).toBe( 'floating-chat' );
+		expect( config.container.layout ).toBe( LAYOUT_SIDEBAR );
+		expect( config.container.styleTheme ).toBe( '' );
+		expect( config.container.persistOpenState ).toBe( true );
+		expect( config.container.chatToggleButton.enabled ).toBe( false );
+		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
+	} );
+
+	it( 'should resolve floating-chat defaults', () => {
+		const config = resolveConfig(
+			{ container: { layout: LAYOUT_FLOATING_CHAT }, host: { appId: 'editor-lite' } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.container.layout ).toBe( LAYOUT_FLOATING_CHAT );
+		expect( config.container.styleTheme ).toBe( '' );
 		expect( config.container.persistOpenState ).toBe( false );
 		expect( config.container.chatToggleButton.enabled ).toBe( true );
 		expect( config.widgetConfig ).toEqual( { closeButton: 'close' } );
@@ -20,7 +35,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 
 	it( 'should resolve sidebar layout defaults', () => {
 		const config = resolveConfig(
-			{ container: { layout: 'sidebar' }, host: { appId: 'editor-lite' } },
+			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'editor-lite' } },
 			DEFAULT_ENV,
 		);
 

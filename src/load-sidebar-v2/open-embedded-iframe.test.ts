@@ -14,8 +14,8 @@ jest.mock( './chat-toggle/chat-shell', () => ( {
 	setChatWidgetOpen: jest.fn(),
 } ) );
 
-jest.mock( './sidebar-toggle', () => ( {
-	syncSidebarToggleButton: jest.fn(),
+jest.mock( './toggle-button', () => ( {
+	syncToggleButton: jest.fn(),
 } ) );
 
 describe( 'load-sidebar-v2/open-embedded-iframe', () => {
@@ -26,7 +26,7 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 
 	it( 'should sync a custom host toggle when sidebar layout starts closed', async () => {
 		const { toggleAngieSidebar } = require( '../utils' );
-		const { syncSidebarToggleButton } = require( './sidebar-toggle' );
+		const { syncToggleButton } = require( './toggle-button' );
 
 		await openEmbeddedIframe( {
 			container: {
@@ -49,6 +49,6 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 		} );
 
 		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, false );
-		expect( syncSidebarToggleButton ).toHaveBeenCalledWith( '#demo-sidebar-toggle', false );
+		expect( syncToggleButton ).toHaveBeenCalledWith( '#demo-sidebar-toggle', false );
 	} );
 } );
