@@ -1,7 +1,11 @@
 import { DEFAULT_CONTAINER_ID } from '../config';
 import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
 
+export { SIDEBAR_PRESET_DEFAULTS };
+
 export { DEFAULT_CONTAINER_ID };
+
+export const DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR = '#angie-widget-toggle';
 
 export const DEFAULTS = {
 	boot: {
@@ -9,8 +13,10 @@ export const DEFAULTS = {
 	},
 	container: {
 		layout: SIDEBAR_PRESET_DEFAULTS.layout,
+		styleTheme: SIDEBAR_PRESET_DEFAULTS.styleTheme,
 		persistOpenState: SIDEBAR_PRESET_DEFAULTS.persistOpenState,
 		resizable: SIDEBAR_PRESET_DEFAULTS.resizable,
+		chatToggleButtonSelector: DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,
 	},
 	iframe: {
 		origin: 'https://angie.elementor.com',

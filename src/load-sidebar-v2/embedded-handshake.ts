@@ -1,6 +1,7 @@
 import { postMessageToAngieIframe } from '../angie-iframe-utils';
 import type { HostEmbeddedConfigPayload, ResolvedConfigV2 } from './config';
 import { EMBEDDED_CONFIG_MESSAGE_TYPE } from './defaults';
+
 export const sendEmbeddedConfig = ( payload: HostEmbeddedConfigPayload ): void => {
 	postMessageToAngieIframe( {
 		payload,

@@ -1,10 +1,12 @@
 import { HostEventType } from "./types";
+import type { HostEmbeddedConfigPayload } from "./load-sidebar-v2/config";
 
 type OpenSaaSPageInput = {
 	origin: string;
 	path: string;
 	parent?: Document;
 	insertCallback?: ( iframe: HTMLIFrameElement ) => void;
+	embeddedConfig?: HostEmbeddedConfigPayload;
 	css: {
 		[key: string]: string | number;
 	},
@@ -77,6 +79,7 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 					iframe.contentWindow?.postMessage( {
 						type: HostEventType.HOST_READY,
 						instanceId,
+						...( props.embeddedConfig ? { embedded: props.embeddedConfig } : {} ),
 					}, iframeUrlObject.origin );
 					break;
 				default:

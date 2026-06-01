@@ -2,7 +2,13 @@ import type { WidgetConfig } from '../angie-mcp-sdk';
 
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
-export type LoadSidebarV2Layout = 'sidebar';
+export const LAYOUT_SIDEBAR = 'sidebar' as const;
+
+export const LAYOUT_FLOATING_CHAT = 'floatingChat' as const;
+
+export type LoadSidebarV2Layout = typeof LAYOUT_SIDEBAR | typeof LAYOUT_FLOATING_CHAT;
+
+export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 
 export type HostConfig = {
 	appId: string;
@@ -19,8 +25,13 @@ export type BootOptions = Partial<BootConfig>;
 export type ContainerConfig = {
 	id: string;
 	layout: LoadSidebarV2Layout;
+	styleTheme: LoadSidebarV2ContainerStyleTheme;
 	persistOpenState: boolean;
 	resizable: boolean;
+	chatToggleButton: {
+		enabled: boolean;
+		selector: string;
+	};
 };
 
 export type ContainerOptions = Partial<ContainerConfig>;
@@ -55,6 +66,7 @@ export type ResolvedConfigV2 = {
 	callbacks: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
 };
+
 export type HostEmbeddedConfigPayload = {
 	aiContext?: Record<string, unknown>;
 	appId?: string;

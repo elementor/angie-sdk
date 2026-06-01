@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
+import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import type { Env } from './env';
 import { resolveConfig, shouldBoot } from './resolve-config';
 
@@ -9,38 +10,67 @@ const DEFAULT_ENV: Env = {
 };
 
 describe( 'load-sidebar-v2/resolve-config', () => {
-	it( 'should resolve host and iframe defaults', () => {
+	it( 'should resolve sidebar defaults when layout is omitted', () => {
 		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
 
-		expect( config.host.appId ).toBe( 'editor-lite' );
-		expect( config.boot.allowInIframe ).toBe( false );
-		expect( config.container.id ).toBe( 'angie-sidebar-container' );
+		expect( config.container.layout ).toBe( LAYOUT_SIDEBAR );
+		expect( config.container.styleTheme ).toBe( '' );
 		expect( config.container.persistOpenState ).toBe( true );
-		expect( config.iframe.path ).toBe( 'angie/embedded' );
-		expect( config.iframe.uiTheme ).toBe( 'light' );
+		expect( config.container.chatToggleButton.enabled ).toBe( false );
+		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
+	} );
+
+	it( 'should resolve floating-chat defaults', () => {
+		const config = resolveConfig(
+			{ container: { layout: LAYOUT_FLOATING_CHAT }, host: { appId: 'editor-lite' } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.container.layout ).toBe( LAYOUT_FLOATING_CHAT );
+		expect( config.container.styleTheme ).toBe( '' );
+		expect( config.container.persistOpenState ).toBe( false );
+		expect( config.container.chatToggleButton.enabled ).toBe( true );
+		expect( config.widgetConfig ).toEqual( { closeButton: 'close' } );
+	} );
+
+	it( 'should resolve sidebar layout defaults', () => {
+		const config = resolveConfig(
+			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'editor-lite' } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.container.persistOpenState ).toBe( true );
+		expect( config.container.chatToggleButton.enabled ).toBe( false );
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
 	it( 'should apply container overrides', () => {
 		const config = resolveConfig(
 			{
-				container: { persistOpenState: false, resizable: false },
+				container: {
+					styleTheme: 'wordpress',
+					persistOpenState: false,
+					resizable: false,
+					chatToggleButton: { enabled: true, selector: '#angie-lite-toggle' },
+				},
 				host: { appId: 'editor-lite' },
 			},
 			DEFAULT_ENV,
 		);
 
+		expect( config.container.styleTheme ).toBe( 'wordpress' );
 		expect( config.container.persistOpenState ).toBe( false );
 		expect( config.container.resizable ).toBe( false );
+		expect( config.container.chatToggleButton ).toEqual( {
+			enabled: true,
+			selector: '#angie-lite-toggle',
+		} );
 	} );
 
 	it( 'should preserve callbacks.onClose', () => {
 		const onClose = jest.fn();
 		const config = resolveConfig(
-			{
-				callbacks: { onClose },
-				host: { appId: 'editor-lite' },
-			},
+			{ callbacks: { onClose }, host: { appId: 'editor-lite' } },
 			DEFAULT_ENV,
 		);
 
@@ -50,11 +80,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 	it( 'should apply env-detected RTL and theme to iframe', () => {
 		const config = resolveConfig(
 			{ host: { appId: 'editor-lite' } },
-			{
-				...DEFAULT_ENV,
-				browserUiTheme: 'dark',
-				isRTL: true,
-			},
+			{ ...DEFAULT_ENV, browserUiTheme: 'dark', isRTL: true },
 		);
 
 		expect( config.iframe.isRTL ).toBe( true );

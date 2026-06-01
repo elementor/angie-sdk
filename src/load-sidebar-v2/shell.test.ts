@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { initAngieSidebar, initializeResize, loadState } from '../sidebar';
 import { initSidebarShell, finalizeSidebarShellState } from './shell';
 
@@ -15,8 +15,10 @@ jest.mock( '../sidebar', () => ( {
 const baseContainer = {
 	id: 'angie-sidebar-container',
 	layout: 'sidebar' as const,
+	styleTheme: '' as const,
 	persistOpenState: false,
 	resizable: false,
+	chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
 };
 
 describe( 'load-sidebar-v2/shell', () => {
@@ -34,7 +36,6 @@ describe( 'load-sidebar-v2/shell', () => {
 		} );
 
 		initSidebarShell( baseContainer, { onClose } );
-
 		capturedOnToggle?.( false );
 
 		expect( onClose ).toHaveBeenCalledTimes( 1 );
@@ -51,5 +52,22 @@ describe( 'load-sidebar-v2/shell', () => {
 
 		expect( loadState ).toHaveBeenCalledWith( 'open' );
 		expect( initializeResize ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'should inject wordpress theme CSS when styleTheme is wordpress', () => {
+		initSidebarShell(
+			{ ...baseContainer, styleTheme: 'wordpress' },
+			{ onClose: jest.fn() },
+		);
+
+		expect( document.getElementById( 'angie-sidebar-wordpress-styles' ) ).toBeTruthy();
+	} );
+
+	it( 'should inject default sidebar CSS when styleTheme is empty', () => {
+		initSidebarShell( baseContainer, { onClose: jest.fn() } );
+
+		expect( initAngieSidebar ).toHaveBeenCalledWith(
+			expect.not.objectContaining( { skipDefaultCss: true } ),
+		);
 	} );
 } );

@@ -1,12 +1,11 @@
 import { appState } from '../config';
 import { ensureSidebarContainer } from './container';
-import type { LoadSidebarV2Options } from './config';
-import { buildHostEmbeddedConfigPayload } from './config';
+import { buildHostEmbeddedConfigPayload, type LoadSidebarV2Options } from './config';
 import { sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
 import { readEnv } from './env';
+import { LAYOUT_STRATEGIES } from './layouts';
 import { openEmbeddedIframe } from './open-embedded-iframe';
 import { resolveConfig, shouldBoot } from './resolve-config';
-import { finalizeSidebarShellState, initSidebarShell } from './shell';
 
 export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
 	const env = readEnv();
@@ -20,15 +19,23 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 
 	ensureSidebarContainer( config.container.id, env.isRTL );
 
-	initSidebarShell( config.container, config.callbacks );
+	const strategy = LAYOUT_STRATEGIES[ config.container.layout ];
+	const bootContext = { config, env };
+
+	strategy.initShell( bootContext );
+	strategy.beforeOpenIframe?.( bootContext );
+
+	const embeddedPayload = buildHostEmbeddedConfigPayload( config.host );
+
 	await openEmbeddedIframe( {
 		container: config.container,
 		iframe: config.iframe,
+		embeddedConfig: embeddedPayload,
 	} );
 
-	finalizeSidebarShellState( config.container );
+	strategy.afterOpenIframe?.( bootContext );
 
-	const embeddedPayload = buildHostEmbeddedConfigPayload( config.host );
+	// HOST_READY delivers config during iframe load; post-open message supports older embedded clients.
 	sendEmbeddedConfig( embeddedPayload );
 
 	if ( config.widgetConfig ) {
