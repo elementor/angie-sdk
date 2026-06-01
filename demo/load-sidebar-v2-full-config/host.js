@@ -70,3 +70,17 @@ await sdk.loadSidebarV2( {
 		closeButton: 'collapse',
 	},
 } );
+
+const toggle = document.getElementById( 'demo-toggle' );
+
+toggle?.addEventListener( 'click', async () => {
+	const isOpening = toggle.getAttribute( 'aria-expanded' ) !== 'true';
+
+	if ( ! isOpening ) {
+		return;
+	}
+
+	await sdk.triggerAngie( {
+		prompt: 'Help me optimize this page for SEO',
+	} );
+}, true );
