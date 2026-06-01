@@ -10,17 +10,14 @@ const sidebarLogger = createChildLogger( 'sidebar' );
 let cssInjected = false;
 
 function injectCSS(): void {
-	if ( typeof document === 'undefined' ) {
+	if (typeof document === 'undefined' || cssInjected) {
 		return;
 	}
 
 	const styleId = 'angie-sidebar-styles';
-
-	if ( ! document.getElementById( styleId ) ) {
-		cssInjected = false;
-	}
-
-	if ( cssInjected ) {
+	
+	if (document.getElementById(styleId)) {
+		cssInjected = true;
 		return;
 	}
 
