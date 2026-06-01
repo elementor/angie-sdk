@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — full config example</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/types.js": "/node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "/node_modules/zod/v4/index.js"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="./demo-host.css" />
+  <style>
+    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; max-width: 40rem; }
+    a { color: #2563eb; }
+    #demo-host-app { margin: 1rem 0; padding: 1rem; border: 1px solid #d8dde6; border-radius: 6px; }
+    #demo-host-app h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <p><a href="../">← All demos</a></p>
+  <h1>loadSidebarV2 — full config</h1>
+  <p>
+    Options in <code>host.js</code>. Host styles in <code>demo-host.css</code>
+    (<code>#demo-toggle</code>, <code>#angie-sidebar-container</code>, <code>iframe#angie-iframe</code>).
+  </p>
+  <main
+    id="demo-host-app"
+    data-screen-id="product-editor"
+    data-product-id="prod_42"
+    data-status="draft"
+    data-price="79.99"
+    data-sku="WH-100"
+  >
+    <h2 data-field="name">Wireless Headphones</h2>
+    <p><strong>Status:</strong> draft · <strong>Price:</strong> $79.99 · <strong>SKU:</strong> WH-100</p>
+    <p data-field="description">
+      Lightweight over-ear headphones with noise isolation.
+    </p>
+  </main>
+  <button type="button" id="demo-toggle">Open Angie</button>
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>

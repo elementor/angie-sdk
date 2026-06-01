@@ -1,0 +1,57 @@
+/**
+ * Host-owned styles for loadSidebarV2 (sidebar layout).
+ *
+ * Toggle: your element — use the same selector as container.chatToggleButton.selector (#demo-toggle).
+ * Panel: container.id (default angie-sidebar-container). SDK sets layout when open (body.angie-sidebar-active).
+ * Iframe: #angie-iframe inside the container.
+ */
+
+:root {
+	--angie-sidebar-width: 380px;
+	--angie-sidebar-z-index: 1300;
+	/* Extra space between the sidebar panel and your page content */
+	--angie-sidebar-content-gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+	body.angie-sidebar-active {
+		padding-inline-start: calc(var(--angie-sidebar-width) + var(--angie-sidebar-content-gap)) !important;
+	}
+}
+
+/* Host toggle button (not injected by the SDK) */
+#demo-toggle {
+	padding: 0.6rem 1.25rem;
+	font: inherit;
+	font-weight: 600;
+	color: #fff;
+	background: linear-gradient(135deg, #4f46e5, #7c3aed);
+	border: none;
+	border-radius: 999px;
+	cursor: pointer;
+	box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+}
+
+#demo-toggle:hover {
+	filter: brightness(1.05);
+}
+
+#demo-toggle[aria-expanded="true"] {
+	background: linear-gradient(135deg, #374151, #1f2937);
+}
+
+/* Sidebar panel — override SDK defaults (see src/sidebar.css) */
+#angie-sidebar-container {
+	background: #f8fafc;
+	box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+	border-inline-end: 1px solid #e2e8f0;
+}
+
+body.angie-sidebar-active #angie-sidebar-container {
+	border-inline-end-color: #c7d2fe;
+}
+
+/* Angie iframe inside the panel */
+#angie-sidebar-container iframe#angie-iframe {
+	border-radius: 12px 0 0 0;
+}
