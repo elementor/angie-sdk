@@ -7,7 +7,7 @@ type OpenSaaSPageInput = {
 	path: string;
 	parent?: Document;
 	insertCallback?: ( iframe: HTMLIFrameElement ) => void;
-	hostReadyEmbedded?: HostReadyEmbeddedConfig;
+	embeddedConfig?: HostReadyEmbeddedConfig;
 	css: {
 		[key: string]: string | number;
 	},
@@ -80,7 +80,7 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 					iframe.contentWindow?.postMessage( {
 						type: HostEventType.HOST_READY,
 						instanceId,
-						...( props.hostReadyEmbedded ? { embedded: props.hostReadyEmbedded } : {} ),
+						...( props.embeddedConfig ? { embedded: props.embeddedConfig } : {} ),
 					}, iframeUrlObject.origin );
 					break;
 				default:

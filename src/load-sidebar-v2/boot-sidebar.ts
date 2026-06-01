@@ -30,7 +30,7 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 	await openEmbeddedIframe( {
 		container: config.container,
 		iframe: config.iframe,
-		hostReadyEmbedded: embeddedPayload,
+		embeddedConfig: embeddedPayload,
 	} );
 
 	strategy.afterOpenIframe?.( bootContext );

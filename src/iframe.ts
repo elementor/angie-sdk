@@ -16,7 +16,7 @@ type OpenIframeProps = {
 	uiTheme: string;
 	isRTL: boolean;
 	path?: string;
-	hostReadyEmbedded?: HostEmbeddedConfigPayload;
+	embeddedConfig?: HostEmbeddedConfigPayload;
 }
 
 const iframeLogger = createChildLogger( 'iframe' );
@@ -156,7 +156,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 		origin: props.origin || 'https://angie.elementor.com',
 		path: props.path && isValidPath( props.path ) ? props.path : DEFAULT_PATH,
 		insertCallback,
-		hostReadyEmbedded: props.hostReadyEmbedded,
+		embeddedConfig: props.embeddedConfig,
 		css: iframeCss,
 		uiTheme: props.uiTheme,
 		isRTL: props.isRTL,

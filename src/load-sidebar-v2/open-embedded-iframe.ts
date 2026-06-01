@@ -8,7 +8,7 @@ import { syncToggleButton } from './toggle-button';
 type OpenEmbeddedIframeArgs = {
 	container: ResolvedConfigV2['container'];
 	iframe: ResolvedConfigV2['iframe'];
-	hostReadyEmbedded?: HostEmbeddedConfigPayload;
+	embeddedConfig?: HostEmbeddedConfigPayload;
 };
 
 export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promise<void> => {
@@ -17,7 +17,7 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 		origin: args.iframe.origin,
 		path: args.iframe.path,
 		uiTheme: args.iframe.uiTheme,
-		hostReadyEmbedded: args.hostReadyEmbedded,
+		embeddedConfig: args.embeddedConfig,
 	} );
 
 	if (

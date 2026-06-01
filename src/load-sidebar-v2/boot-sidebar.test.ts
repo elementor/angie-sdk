@@ -67,7 +67,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockInitAngieSidebar ).toHaveBeenCalled();
 		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledWith(
 			expect.objectContaining( {
-				hostReadyEmbedded: expect.objectContaining( { appId: 'editor-lite', configVersion: 2 } ),
+				embeddedConfig: expect.objectContaining( { appId: 'editor-lite', configVersion: 2 } ),
 				iframe: expect.objectContaining( { path: 'angie/wp-admin' } ),
 			} ),
 		);
