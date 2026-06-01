@@ -1,6 +1,6 @@
 import { appState } from '../config';
 import { openIframe } from '../iframe';
-import { toggleAngieSidebar as setIframeAccessibility } from '../utils';
+import { toggleAngieSidebar } from '../utils';
 import type { HostEmbeddedConfigPayload, ResolvedConfigV2 } from './config';
 import { setChatWidgetOpen } from './chat-toggle/chat-shell';
 
@@ -28,9 +28,10 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 			toggleButtonSelector: args.container.chatToggleButton.selector,
 			isOpen: false,
 		} );
+		return;
 	}
 
 	if ( appState.iframe ) {
-		setIframeAccessibility( appState.iframe, false );
+		toggleAngieSidebar( appState.iframe, false );
 	}
 };

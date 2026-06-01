@@ -1,9 +1,10 @@
+import { appState } from '../../config';
 import { MessageEventType } from '../../types';
+import { toggleAngieSidebar } from '../../utils';
 import {
 	CHAT_WIDGET_FULLSCREEN_CLASS,
 	CHAT_WIDGET_HIDDEN_CLASS,
 } from './constants';
-
 import { findToggleButton } from './toggle-button-element';
 
 type InitChatShellArgs = {
@@ -27,22 +28,27 @@ const sendPortSuccess = ( port: MessagePort, payload?: unknown ) => {
 
 export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 	const container = document.getElementById( args.containerId );
-	const toggleButton = findToggleButton( args.toggleButtonSelector );
 
-	if ( ! container || ! toggleButton ) {
+	if ( ! container ) {
 		return;
 	}
 
 	if ( args.isOpen ) {
 		container.classList.remove( CHAT_WIDGET_HIDDEN_CLASS );
-		container.setAttribute( 'aria-hidden', 'false' );
 	} else {
 		container.classList.add( CHAT_WIDGET_HIDDEN_CLASS );
-		container.setAttribute( 'aria-hidden', 'true' );
 	}
 
-	toggleButton.setAttribute( 'aria-expanded', String( args.isOpen ) );
-	toggleButton.setAttribute( 'aria-label', args.isOpen ? 'Close Angie' : 'Open Angie' );
+	if ( appState.iframe ) {
+		toggleAngieSidebar( appState.iframe, args.isOpen );
+	}
+
+	const toggleButton = findToggleButton( args.toggleButtonSelector );
+
+	if ( toggleButton ) {
+		toggleButton.setAttribute( 'aria-expanded', String( args.isOpen ) );
+		toggleButton.setAttribute( 'aria-label', args.isOpen ? 'Close Angie' : 'Open Angie' );
+	}
 };
 
 const setChatWidgetFullscreen = ( containerId: string, isFullscreen: boolean ): void => {
