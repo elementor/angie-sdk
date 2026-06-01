@@ -21,6 +21,10 @@ jest.mock( './embedded-handshake', () => ( {
 	sendWidgetConfig: jest.fn(),
 } ) );
 
+jest.mock( './host-api-bridge', () => ( {
+	initHostApiBridge: jest.fn(),
+} ) );
+
 describe( 'load-sidebar-v2/boot-sidebar', () => {
 	let mockApplyState: jest.Mock;
 	let mockInitAngieSidebar: jest.Mock;

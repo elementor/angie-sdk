@@ -45,8 +45,13 @@ export type IframeConfig = {
 
 export type IframeOptions = Partial<IframeConfig>;
 
+export type ExternalHeadersCallback = () =>
+	| Record<string, string | undefined>
+	| Promise<Record<string, string | undefined>>;
+
 export type CallbacksConfig = {
 	onClose?: () => void;
+	getExternalHeaders?: ExternalHeadersCallback;
 };
 
 export type LoadSidebarV2Options = {

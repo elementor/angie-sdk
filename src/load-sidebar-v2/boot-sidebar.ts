@@ -3,6 +3,7 @@ import { ensureSidebarContainer } from './container';
 import { buildHostEmbeddedConfigPayload, type LoadSidebarV2Options } from './config';
 import { sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
 import { readEnv } from './env';
+import { initHostApiBridge } from './host-api-bridge';
 import { LAYOUT_STRATEGIES } from './layouts';
 import { openEmbeddedIframe } from './open-embedded-iframe';
 import { resolveConfig, shouldBoot } from './resolve-config';
@@ -14,6 +15,11 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 	if ( ! shouldBoot( config, env ) ) {
 		return;
 	}
+
+	initHostApiBridge( {
+		iframeOrigin: config.iframe.origin,
+		getExternalHeaders: config.callbacks.getExternalHeaders,
+	} );
 
 	appState.containerId = config.container.id;
 

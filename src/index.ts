@@ -2,6 +2,7 @@ export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSw
 export {
 	LAYOUT_FLOATING_CHAT,
 	LAYOUT_SIDEBAR,
+	type ExternalHeadersCallback,
 	type LoadSidebarV2Options,
 } from './load-sidebar-v2/config';
 export { AngieDetector } from './angie-detector';

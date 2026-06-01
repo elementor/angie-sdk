@@ -77,6 +77,16 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.callbacks.onClose ).toBe( onClose );
 	} );
 
+	it( 'should preserve callbacks.getExternalHeaders', () => {
+		const getExternalHeaders = jest.fn<() => Record<string, string>>();
+		const config = resolveConfig(
+			{ callbacks: { getExternalHeaders }, host: { appId: 'editor-lite' } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.callbacks.getExternalHeaders ).toBe( getExternalHeaders );
+	} );
+
 	it( 'should apply env-detected RTL and theme to iframe', () => {
 		const config = resolveConfig(
 			{ host: { appId: 'editor-lite' } },
