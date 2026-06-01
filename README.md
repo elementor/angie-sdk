@@ -27,6 +27,7 @@ This SDK enables you to create custom MCP servers that Angie can discover and us
 - [Error Handling](#error-handling)
 - [Changelog](#changelog)
 - [Demo Plugin](#demo-plugin)
+- [Embedded Angie in any web page](#embedded-angie-loadsidebarv2)
 - [Debugging & Testing](#debugging--testing)
 - [FAQ](#faq)
 
@@ -485,6 +486,11 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 ## Demo Plugin
 
 **For more examples, see the demo plugin and MCP server in the example folder**
+
+## Embedded Angie in any web page
+
+To embed the Angie UI in your own site (sidebar or floating chat), use `AngieMcpSdk.loadSidebarV2()`. See the dedicated guide: [loadSidebarV2](./src/load-sidebar-v2/README.md).
+
 
 If you have questions or need help, open an issue or contact the Elementor team! 
 
