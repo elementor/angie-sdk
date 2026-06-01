@@ -5,6 +5,7 @@ import {
 	CHAT_WIDGET_FULLSCREEN_CLASS,
 	CHAT_WIDGET_HIDDEN_CLASS,
 } from './constants';
+import { syncSidebarToggleButton } from '../sidebar-toggle';
 import { findToggleButton } from './toggle-button-element';
 
 type InitChatShellArgs = {
@@ -43,12 +44,7 @@ export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 		toggleAngieSidebar( appState.iframe, args.isOpen );
 	}
 
-	const toggleButton = findToggleButton( args.toggleButtonSelector );
-
-	if ( toggleButton ) {
-		toggleButton.setAttribute( 'aria-expanded', String( args.isOpen ) );
-		toggleButton.setAttribute( 'aria-label', args.isOpen ? 'Close Angie' : 'Open Angie' );
-	}
+	syncSidebarToggleButton( args.toggleButtonSelector, args.isOpen );
 };
 
 const setChatWidgetFullscreen = ( containerId: string, isFullscreen: boolean ): void => {

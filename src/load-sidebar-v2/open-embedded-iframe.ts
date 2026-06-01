@@ -3,6 +3,7 @@ import { openIframe } from '../iframe';
 import { toggleAngieSidebar } from '../utils';
 import type { HostEmbeddedConfigPayload, ResolvedConfigV2 } from './config';
 import { setChatWidgetOpen } from './chat-toggle/chat-shell';
+import { syncSidebarToggleButton } from './sidebar-toggle';
 
 type OpenEmbeddedIframeArgs = {
 	container: ResolvedConfigV2['container'];
@@ -33,5 +34,9 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 
 	if ( appState.iframe ) {
 		toggleAngieSidebar( appState.iframe, false );
+	}
+
+	if ( args.container.chatToggleButton.enabled ) {
+		syncSidebarToggleButton( args.container.chatToggleButton.selector, false );
 	}
 };
