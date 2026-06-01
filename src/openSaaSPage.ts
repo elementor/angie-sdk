@@ -1,13 +1,12 @@
 import { HostEventType } from "./types";
-
-type HostReadyEmbeddedConfig = Record<string, unknown>;
+import type { HostEmbeddedConfigPayload } from "./load-sidebar-v2/config";
 
 type OpenSaaSPageInput = {
 	origin: string;
 	path: string;
 	parent?: Document;
 	insertCallback?: ( iframe: HTMLIFrameElement ) => void;
-	embeddedConfig?: HostReadyEmbeddedConfig;
+	embeddedConfig?: HostEmbeddedConfigPayload;
 	css: {
 		[key: string]: string | number;
 	},
