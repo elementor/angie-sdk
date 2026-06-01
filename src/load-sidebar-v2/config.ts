@@ -14,6 +14,7 @@ export type HostConfig = {
 	appId: string;
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
+	analytics?: Record<string, unknown>;
 };
 
 export type BootConfig = {

@@ -18,6 +18,7 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 
 	initHostApiBridge( {
 		iframeOrigin: config.iframe.origin,
+		host: config.host,
 		getExternalHeaders: config.callbacks.getExternalHeaders,
 	} );
 

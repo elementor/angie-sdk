@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { HostLocalStorageEventType } from '../types';
 import type { ExternalHeadersCallback } from './config';
-import { GET_EXTERNAL_HEADERS_MESSAGE_TYPE, initHostApiBridge, resetHostApiBridgeForTests } from './host-api-bridge';
+import {
+	GET_ANALYTICS_CONTEXT_MESSAGE_TYPE,
+	GET_EXTERNAL_HEADERS_MESSAGE_TYPE,
+	GET_WEBSITE_CONTEXT_MESSAGE_TYPE,
+	initHostApiBridge,
+	resetHostApiBridgeForTests,
+} from './host-api-bridge';
 
 const IFRAME_ORIGIN = 'http://localhost:4000';
 
@@ -121,5 +128,110 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 			status: 'error',
 			payload: { message: 'Token unavailable' },
 		} );
+	} );
+
+	it( 'should respond with website context from host config', async () => {
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: {
+				appId: 'test-app',
+				website: { name: 'Custom Site', wpVersion: '6.4' },
+			},
+		} );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_WEBSITE_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: expect.objectContaining( {
+				payload: expect.objectContaining( {
+					name: 'Custom Site',
+					wpVersion: '6.4',
+					platform: 'frontend',
+					homeUrl: expect.any( String ),
+					timezone: expect.any( String ),
+					today: expect.stringMatching( /^\d{4}-\d{2}-\d{2}$/ ),
+				} ),
+			} ),
+		} );
+	} );
+
+	it( 'should respond with analytics context from host config', async () => {
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: {
+				appId: 'test-app',
+				analytics: {
+					pluginVersion: '1.0.0',
+					siteKey: 'test-key',
+					plugins: { elementor: true },
+				},
+			},
+		} );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_ANALYTICS_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: expect.objectContaining( {
+				payload: expect.objectContaining( {
+					pluginVersion: '1.0.0',
+					siteKey: 'test-key',
+					screenPath: expect.any( String ),
+					plugins: { elementor: true },
+				} ),
+			} ),
+		} );
+	} );
+
+	it( 'should handle localStorage GET', async () => {
+		window.localStorage.setItem( 'angie-test-key', 'stored-value' );
+
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN } );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: HostLocalStorageEventType.GET, key: 'angie-test-key' },
+			origin: IFRAME_ORIGIN,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( { value: 'stored-value' } );
+
+		window.localStorage.removeItem( 'angie-test-key' );
+	} );
+
+	it( 'should handle localStorage SET', async () => {
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN } );
+
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: {
+				type: HostLocalStorageEventType.SET,
+				key: 'angie-set-key',
+				value: 'new-value',
+			},
+			origin: IFRAME_ORIGIN,
+		} ) );
+
+		await flushAsync();
+
+		expect( window.localStorage.getItem( 'angie-set-key' ) ).toBe( 'new-value' );
+		window.localStorage.removeItem( 'angie-set-key' );
 	} );
 } );
