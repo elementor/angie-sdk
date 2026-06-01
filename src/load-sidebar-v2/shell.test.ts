@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { initAngieSidebar, initializeResize, loadState } from '../sidebar';
 import { initSidebarShell, finalizeSidebarShellState } from './shell';
 
@@ -52,5 +52,14 @@ describe( 'load-sidebar-v2/shell', () => {
 
 		expect( loadState ).toHaveBeenCalledWith( 'open' );
 		expect( initializeResize ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'should inject wordpress theme CSS when styleTheme is wordpress', () => {
+		initSidebarShell(
+			{ ...baseContainer, styleTheme: 'wordpress' },
+			{ onClose: jest.fn() },
+		);
+
+		expect( document.getElementById( 'angie-sidebar-wordpress-styles' ) ).toBeTruthy();
 	} );
 } );

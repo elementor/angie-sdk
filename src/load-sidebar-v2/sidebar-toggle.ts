@@ -23,8 +23,7 @@ const attachSidebarToggleClickHandler = ( toggleEl: HTMLElement ): void => {
 	toggleEl.setAttribute( SIDEBAR_TOGGLE_WIRED_ATTR, 'true' );
 	toggleEl.addEventListener( 'click', ( event ) => {
 		event.preventDefault();
-		const isOpen = toggleEl.getAttribute( 'aria-expanded' ) === 'true';
-		window.toggleAngieSidebar?.( ! isOpen );
+		window.toggleAngieSidebar?.();
 	} );
 };
 

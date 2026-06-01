@@ -106,8 +106,6 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 
 		expect( mockApplyState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockLoadState ).toHaveBeenCalledWith( 'closed' );
-		expect( mockInitAngieSidebar ).toHaveBeenCalledWith(
-			expect.objectContaining( { styleTheme: '' } ),
-		);
+		expect( mockInitAngieSidebar ).toHaveBeenCalled();
 	} );
 } );

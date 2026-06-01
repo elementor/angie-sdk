@@ -118,12 +118,6 @@ describe('sidebar', () => {
       expect(styleElement?.textContent).toContain('angie-sidebar');
     });
 
-    it('should inject wordpress theme CSS when styleTheme is wordpress', () => {
-      initAngieSidebar({ styleTheme: 'wordpress' });
-
-      expect(document.getElementById('angie-sidebar-wordpress-styles')).toBeTruthy();
-    });
-
     it('should set up window.toggleAngieSidebar', () => {
       initAngieSidebar();
       

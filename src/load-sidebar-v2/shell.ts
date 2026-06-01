@@ -8,6 +8,7 @@ import {
 	loadState,
 } from '../sidebar';
 import type { ResolvedConfigV2 } from './config';
+import { injectStyleThemeCss } from './inject-style-theme';
 import { syncSidebarToggleButton, wireSidebarToggleButton } from './sidebar-toggle';
 
 export const initSidebarShell = (
@@ -28,8 +29,9 @@ export const initSidebarShell = (
 				callbacks.onClose();
 			}
 		},
-		styleTheme: container.styleTheme,
 	} );
+
+	injectStyleThemeCss( container.styleTheme );
 
 	if ( toggleButtonSelector ) {
 		wireSidebarToggleButton( { toggleButtonSelector } );

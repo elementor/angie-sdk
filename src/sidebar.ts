@@ -5,11 +5,9 @@ import { createChildLogger } from "./logger";
 import { isOidcFlowInUrl } from "@elementor/oidc-auth";
 import { sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility, waitForDocumentReady } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
-import wordpressSidebarCssContent from "./sidebar-wordpress.css?raw";
 
 const sidebarLogger = createChildLogger( 'sidebar' );
 let cssInjected = false;
-let wordpressCssInjected = false;
 
 function injectCSS(): void {
 	if ( typeof document === 'undefined' ) {
@@ -34,31 +32,6 @@ function injectCSS(): void {
 	head.insertBefore(style, head.firstChild);
 	
 	cssInjected = true;
-}
-
-function injectWordPressCSS(): void {
-	if ( typeof document === 'undefined' ) {
-		return;
-	}
-
-	const styleId = 'angie-sidebar-wordpress-styles';
-
-	if ( ! document.getElementById( styleId ) ) {
-		wordpressCssInjected = false;
-	}
-
-	if ( wordpressCssInjected ) {
-		return;
-	}
-
-	const style = document.createElement( 'style' );
-	style.id = styleId;
-	style.textContent = wordpressSidebarCssContent;
-
-	const head = document.head || document.getElementsByTagName( 'head' )[ 0 ];
-	head.appendChild( style );
-
-	wordpressCssInjected = true;
 }
 
 export const ANGIE_SIDEBAR_STATE_OPEN = 'open';
@@ -317,16 +290,11 @@ export function setupMessageListener(): void {
 type InitAngieSidebarOptions = {
 	onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void;
 	skipDefaultCss?: boolean;
-	styleTheme?: 'wordpress' | '';
 };
 
 export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
 	if ( ! options?.skipDefaultCss ) {
 		injectCSS();
-	}
-
-	if ( options?.styleTheme === 'wordpress' ) {
-		injectWordPressCSS();
 	}
 
 	if ( typeof window !== 'undefined' ) {
