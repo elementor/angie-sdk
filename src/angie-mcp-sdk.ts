@@ -75,6 +75,7 @@ export class AngieMcpSdk {
   private registrationQueue: RegistrationQueue;
   private isInitialized = false;
   private instanceId: string;
+  private sidebarV2BootPromise: Promise<void> | null = null;
 
   constructor() {
     this.instanceId = Math.random().toString(36).substring(2, 8);
@@ -104,8 +105,9 @@ export class AngieMcpSdk {
     this.setupPromptHashDetection();
   }
 
-  public async loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
-    await bootSidebar( options );
+  public loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
+    this.sidebarV2BootPromise = bootSidebar( options );
+    return this.sidebarV2BootPromise;
   }
 
   // listen to MessageEventType.SDK_ANGIE_READY_PING
@@ -253,6 +255,14 @@ export class AngieMcpSdk {
   }
 
   public async waitForReady(): Promise<void> {
+    if ( this.sidebarV2BootPromise ) {
+      await this.sidebarV2BootPromise;
+    } else {
+      while ( !appState.iframe ) {
+        await new Promise( resolve => setTimeout( resolve, 100 ) );
+      }
+    }
+
     const result = await this.angieDetector.waitForReady();
     if (!result.isReady) {
       throw new Error('Angie is not available');
