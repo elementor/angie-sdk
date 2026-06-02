@@ -3,46 +3,146 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>loadSidebarV2 — full config example</title>
+  <meta name="description" content="Interactive demo of loadSidebarV2 with full configuration — aiContext, custom styling, and triggerAngie." />
+  <title>Acme Store Builder · Angie SDK Demo</title>
   <script type="importmap">
   {
     "imports": {
-      "@modelcontextprotocol/sdk/types.js": "/node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
-      "zod/v4": "/node_modules/zod/v4/index.js"
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js"
     }
   }
   </script>
   <link rel="stylesheet" href="./demo-host.css" />
-  <style>
-    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; max-width: 40rem; }
-    a { color: #2563eb; }
-    #demo-host-app { margin: 1rem 0; padding: 1rem; border: 1px solid #d8dde6; border-radius: 6px; }
-    #demo-host-app h2 { margin: 0 0 0.5rem; font-size: 1.1rem; }
-  </style>
 </head>
 <body>
-  <p><a href="../">← All demos</a></p>
-  <h1>loadSidebarV2 — full config</h1>
-  <p>
-    Options in <code>host.js</code>. Host styles in <code>demo-host.css</code>
-    (<code>#demo-toggle</code>, <code>#angie-sidebar-container</code>, <code>iframe#angie-iframe</code>).
-    Opening Angie via the toggle triggers an SEO prompt with <code>triggerAngie</code>.
-  </p>
-  <main
-    id="demo-host-app"
-    data-screen-id="product-editor"
-    data-product-id="prod_42"
-    data-status="draft"
-    data-price="79.99"
-    data-sku="WH-100"
-  >
-    <h2 data-field="name">Wireless Headphones</h2>
-    <p><strong>Status:</strong> draft · <strong>Price:</strong> $79.99 · <strong>SKU:</strong> WH-100</p>
-    <p data-field="description">
-      Lightweight over-ear headphones with noise isolation.
-    </p>
-  </main>
-  <button type="button" id="demo-toggle">Open Angie</button>
+  <div class="demo-app">
+    <header class="demo-app-header">
+      <div class="demo-app-header-start">
+        <a class="demo-app-brand" href="../">
+          <span class="demo-app-logo" aria-hidden="true">A</span>
+          <span class="demo-app-brand-text">
+            <strong>Acme</strong>
+            <span>Store Builder</span>
+          </span>
+        </a>
+        <nav class="demo-app-nav" aria-label="Primary navigation (mock UI)">
+          <span class="demo-app-nav-link demo-mock-item is-active" aria-disabled="true">Products</span>
+          <span class="demo-app-nav-link demo-mock-item" aria-disabled="true">Orders</span>
+          <span class="demo-app-nav-link demo-mock-item" aria-disabled="true">Analytics</span>
+        </nav>
+      </div>
+      <div class="demo-app-header-end">
+        <button type="button" id="demo-toggle" aria-expanded="false">
+          <span class="demo-toggle-icon" aria-hidden="true">✦</span>
+          Ask Angie
+        </button>
+        <div class="demo-app-user demo-mock-item" aria-hidden="true" title="Decorative profile — not functional in this demo">
+          <span class="demo-app-user-name">Jordan Lee</span>
+          <span class="demo-app-user-avatar">JL</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="demo-app-shell">
+      <aside class="demo-app-rail" aria-label="Product sections (mock UI)">
+        <p class="demo-mock-caption">Decorative only</p>
+        <span class="demo-app-rail-link demo-mock-item is-active" aria-disabled="true">General</span>
+        <span class="demo-app-rail-link demo-mock-item" aria-disabled="true">Media</span>
+        <span class="demo-app-rail-link demo-mock-item" aria-disabled="true">Pricing</span>
+        <span class="demo-app-rail-link demo-mock-item" aria-disabled="true">SEO</span>
+      </aside>
+
+      <main class="demo-app-main">
+        <div class="demo-app-toolbar">
+          <nav class="demo-breadcrumb" aria-label="Breadcrumb">
+            <a href="../">Demos</a>
+            <span aria-hidden="true">/</span>
+            <span>Product editor</span>
+          </nav>
+          <div class="demo-app-toolbar-actions">
+            <button type="button" class="demo-btn demo-btn-ghost demo-mock-item" disabled title="Decorative — not functional in this demo">Save draft</button>
+            <button type="button" class="demo-btn demo-btn-primary demo-mock-item" disabled title="Decorative — not functional in this demo">Publish</button>
+          </div>
+        </div>
+
+        <article
+          id="demo-host-app"
+          class="demo-product"
+          data-screen-id="product-editor"
+          data-product-id="prod_42"
+          data-status="draft"
+          data-price="79.99"
+          data-sku="WH-100"
+        >
+          <header class="demo-product-header">
+            <div>
+              <p class="demo-product-eyebrow">Product · WH-100</p>
+              <h1 class="demo-product-title" data-field="name">Wireless Headphones</h1>
+            </div>
+            <span class="demo-status-badge" data-field="status">Draft</span>
+          </header>
+
+          <div class="demo-product-grid">
+            <section class="demo-card">
+              <h2 class="demo-card-title">Description</h2>
+              <p class="demo-field-value" data-field="description">
+                Lightweight over-ear headphones with noise isolation and 30-hour battery life.
+                Ideal for remote work and travel.
+              </p>
+            </section>
+
+            <section class="demo-card demo-card-compact">
+              <h2 class="demo-card-title">Details</h2>
+              <dl class="demo-details">
+                <div>
+                  <dt>Status</dt>
+                  <dd>Draft</dd>
+                </div>
+                <div>
+                  <dt>Price</dt>
+                  <dd>$79.99</dd>
+                </div>
+                <div>
+                  <dt>SKU</dt>
+                  <dd>WH-100</dd>
+                </div>
+                <div>
+                  <dt>Inventory</dt>
+                  <dd>128 in stock</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="demo-card demo-card-highlight">
+              <h2 class="demo-card-title">Try Angie on this screen</h2>
+              <p class="demo-card-copy">
+                Open Angie to get context-aware help. This demo passes
+                <code>aiContext</code> from the product editor and asks Angie to review the listing on first open.
+                Top navigation, the left menu, and Save/Publish buttons are decorative only.
+              </p>
+              <ul class="demo-feature-list">
+                <li>Custom sidebar styling via <code>demo-host.css</code></li>
+                <li>Full <code>loadSidebarV2</code> options in <code>host.js</code></li>
+                <li>Resizable sidebar with persisted open state</li>
+              </ul>
+            </section>
+          </div>
+        </article>
+      </main>
+    </div>
+
+    <footer class="demo-app-footer">
+      <p>
+        <a href="https://github.com/elementor/angie-sdk">Angie SDK</a>
+        ·
+        <a href="../">All demos</a>
+        ·
+        <a href="https://github.com/elementor/angie-sdk/blob/main/src/load-sidebar-v2/README.md">loadSidebarV2 docs</a>
+      </p>
+    </footer>
+  </div>
+
   <div id="angie-sidebar-container" aria-hidden="true"></div>
   <script type="module" src="./host.js"></script>
 </body>

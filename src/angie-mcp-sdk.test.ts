@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
 import { AngieMcpSdk } from './angie-mcp-sdk';
+import { appState } from './config';
 import type { AngieServerConfig, ServerRegistration, AngieDetectionResult, ClientCreationResponse } from './types';
 import { AngieServerType } from './types';
 
@@ -204,6 +205,7 @@ describe('AngieMcpSdk', () => {
   describe('waitForReady', () => {
     it('should wait for Angie and initialization', async () => {
       // Arrange
+      appState.iframe = document.createElement( 'iframe' );
       mockAngieDetector.waitForReady.mockResolvedValue({ isReady: true });
 
       // Act
@@ -223,6 +225,7 @@ describe('AngieMcpSdk', () => {
 
     it('should throw error when Angie is not available', async () => {
       // Arrange
+      appState.iframe = document.createElement( 'iframe' );
       mockAngieDetector.waitForReady.mockResolvedValue({ isReady: false });
 
       // Act & Assert
@@ -610,6 +613,7 @@ describe('AngieMcpSdk', () => {
       });
       mockAngieDetector.isReady.mockReturnValue(true);
       mockAngieDetector.waitForReady.mockResolvedValue({ isReady: true });
+      appState.iframe = document.createElement( 'iframe' );
       (sdk as any).isInitialized = true;
     });
 

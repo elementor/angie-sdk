@@ -3,17 +3,126 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Angie SDK demos</title>
+  <meta name="description" content="Live demos for embedding Angie with loadSidebarV2." />
+  <title>Angie SDK Demos</title>
   <style>
-    body { margin: 0; padding: 2rem; font-family: system-ui, sans-serif; }
-    a { display: block; margin: 0.5rem 0; }
+    :root {
+      color-scheme: light;
+      --bg: #f4f6fb;
+      --surface: #fff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #4f46e5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .page {
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.6rem, 4vw, 2rem);
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      margin: 0 0 1.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .cards {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .card {
+      display: block;
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+
+    .card:hover {
+      border-color: #c7d2fe;
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .card span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .card.featured {
+      border-color: #c7d2fe;
+      background: linear-gradient(180deg, #fafbff 0%, #fff 100%);
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--accent); }
   </style>
 </head>
 <body>
-  <h1>Angie SDK demos</h1>
-  <a href="./load-sidebar-v1-demo/">loadSidebar (v1)</a>
-  <a href="./load-sidebar-v2-sidebar/">loadSidebarV2 — sidebar</a>
-  <a href="./load-sidebar-v2-floating-chat/">loadSidebarV2 — floatingChat</a>
-  <a href="./load-sidebar-v2-full-config/">loadSidebarV2 — full example</a>
+  <div class="page">
+    <h1>Angie SDK demos</h1>
+    <p class="lead">
+      Interactive examples for embedding Angie in a host app with
+      <code>loadSidebar</code> and <code>loadSidebarV2</code>.
+    </p>
+
+    <div class="cards">
+      <a class="card featured" href="./load-sidebar-v2-full-config/">
+        <strong>loadSidebarV2 — full example</strong>
+        <span>Product editor UI, aiContext, custom CSS, and triggerAngie.</span>
+      </a>
+      <a class="card" href="./load-sidebar-v2-sidebar/">
+        <strong>loadSidebarV2 — sidebar</strong>
+        <span>Minimal sidebar layout with a host toggle button.</span>
+      </a>
+      <a class="card" href="./load-sidebar-v2-floating-chat/">
+        <strong>loadSidebarV2 — floating chat</strong>
+        <span>Minimal floating chat widget layout.</span>
+      </a>
+      <a class="card" href="./load-sidebar-v1-demo/">
+        <strong>loadSidebar (v1)</strong>
+        <span>Legacy sidebar embedding API.</span>
+      </a>
+    </div>
+
+    <footer>
+      <a href="https://github.com/elementor/angie-sdk">View on GitHub</a>
+      ·
+      <a href="https://github.com/elementor/angie-sdk/blob/main/src/load-sidebar-v2/README.md">loadSidebarV2 docs</a>
+    </footer>
+  </div>
 </body>
 </html>
