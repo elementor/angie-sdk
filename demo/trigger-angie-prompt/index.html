@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive demo of triggerAngie — open Angie with a pre-filled prompt from your host app." />
+  <title>triggerAngie · Angie SDK Demo</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="./demo-host.css" />
+</head>
+<body>
+  <div class="demo-app">
+    <header class="demo-app-header">
+      <a class="demo-app-brand" href="../">
+        <span class="demo-app-logo" aria-hidden="true">A</span>
+        <span class="demo-app-brand-text">
+          <strong>Angie SDK</strong>
+          <span>triggerAngie</span>
+        </span>
+      </a>
+      <button type="button" id="demo-toggle" aria-expanded="false">
+        Open Angie
+      </button>
+    </header>
+
+    <main class="demo-main">
+      <nav class="demo-breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Demos</a>
+        <span aria-hidden="true">/</span>
+        <span>triggerAngie</span>
+      </nav>
+
+      <div class="demo-hero">
+        <h1>Trigger Angie with a prompt</h1>
+        <p>
+          Use <code>sdk.triggerAngie()</code> from your host page to open Angie with a prompt
+          already in the input — for help buttons, onboarding flows, or deep links.
+          Call <code>await sdk.waitForReady()</code> before triggering.
+        </p>
+      </div>
+
+      <div class="demo-grid">
+        <section class="demo-card" aria-labelledby="prompt-heading">
+          <h2 id="prompt-heading">1. Programmatic trigger</h2>
+          <p class="demo-card-lead">
+            The most common pattern: your UI calls <code>triggerAngie</code> with a prompt string.
+          </p>
+
+          <div class="demo-field">
+            <label for="demo-prompt-input">Prompt</label>
+            <textarea id="demo-prompt-input" spellcheck="false">Help me improve the headline on this page for conversions.</textarea>
+          </div>
+
+          <ul class="demo-chip-list" aria-label="Quick prompts">
+            <li><button type="button" class="demo-chip" data-prompt-chip="Summarize this page in three bullet points.">Summarize page</button></li>
+            <li><button type="button" class="demo-chip" data-prompt-chip="What should I change before publishing this page?">Pre-publish review</button></li>
+            <li><button type="button" class="demo-chip" data-prompt-chip="Suggest a clearer call to action for this screen.">Better CTA</button></li>
+          </ul>
+
+          <div class="demo-actions">
+            <button type="button" class="demo-btn demo-btn-primary" id="demo-trigger-fill">
+              Fill input &amp; open Angie
+            </button>
+            <button type="button" class="demo-btn demo-btn-secondary" id="demo-trigger-new-chat">
+              New chat + prompt
+            </button>
+          </div>
+
+          <pre class="demo-code-block" aria-hidden="true">await sdk.waitForReady();
+await sdk.triggerAngie({
+  prompt: 'Help me improve the headline…',
+  options: { newChat: false },
+});</pre>
+        </section>
+
+        <section class="demo-card" aria-labelledby="hash-heading">
+          <h2 id="hash-heading">2. Hash deep link</h2>
+          <p class="demo-card-lead">
+            Share a URL with <code>#angie-prompt=…</code> in the hash. Use an in-page link on the
+            same screen, or open in a new tab when linking from emails, docs, or another page.
+            Add <code>&amp;angie-new-chat=true</code> to start a fresh chat.
+          </p>
+
+          <h3 class="demo-hash-group-title">In this page</h3>
+          <ul class="demo-hash-links">
+            <li>
+              <a
+                class="demo-hash-link--in-page"
+                href="#angie-prompt=What%20should%20I%20change%20before%20publishing%3F"
+              >
+                Pre-publish review
+              </a>
+            </li>
+            <li>
+              <a
+                class="demo-hash-link--in-page"
+                href="#angie-prompt=Suggest%20a%20clearer%20call%20to%20action%20for%20this%20screen."
+              >
+                Better CTA
+              </a>
+            </li>
+          </ul>
+
+          <h3 class="demo-hash-group-title">New tab</h3>
+          <ul class="demo-hash-links">
+            <li>
+              <a
+                class="demo-hash-link--new-tab"
+                href="#angie-prompt=Help%20me%20optimize%20this%20page%20for%20SEO"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Opens in new tab"
+              >
+                Optimize for SEO
+                <span class="demo-sr-only">Opens in new tab</span>
+              </a>
+            </li>
+            <li>
+              <a
+                class="demo-hash-link--new-tab"
+                href="#angie-prompt=Fix%20this%20error%20on%20my%20site&amp;angie-new-chat=true"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Opens in new tab"
+              >
+                Fix an error (new chat)
+                <span class="demo-sr-only">Opens in new tab</span>
+              </a>
+            </li>
+          </ul>
+
+          <pre class="demo-code-block" aria-hidden="true">&lt;a
+  href="#angie-prompt=Help%20me%20create%20a%20contact%20page"
+  target="_blank"
+  rel="noopener noreferrer"
+&gt;
+  Get help creating a contact page
+&lt;/a&gt;</pre>
+        </section>
+
+        <section class="demo-card" aria-labelledby="status-heading">
+          <h2 id="status-heading">3. Status</h2>
+          <p class="demo-card-lead">Last trigger result from the host page.</p>
+          <div class="demo-status" id="demo-status" role="status" aria-live="polite">
+            Loading Angie sidebar…
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="demo-app-footer">
+      <a href="https://github.com/elementor/angie-sdk">Angie SDK</a>
+      ·
+      <a href="../">All demos</a>
+      ·
+      <a href="https://github.com/elementor/angie-sdk#triggering-angie-with-prompts">triggerAngie docs</a>
+    </footer>
+  </div>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>
