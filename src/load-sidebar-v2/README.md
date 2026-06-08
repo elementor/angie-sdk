@@ -36,6 +36,7 @@ Local demos:
 - [`demo/load-sidebar-v2-sidebar/`](../../demo/load-sidebar-v2-sidebar/) — minimal sidebar
 - [`demo/load-sidebar-v2-floating-chat/`](../../demo/load-sidebar-v2-floating-chat/) — minimal floating chat
 - [`demo/load-sidebar-v2-full-config/`](../../demo/load-sidebar-v2-full-config/) — full example (`aiContext`, custom CSS)
+- [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/) — `widgetConfig` presets (help center, visitor widget, sandbox)
 
 ## Layouts
 
@@ -57,7 +58,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
 | `callbacks` | `onClose`, `getExternalHeaders` for auth/API headers |
-| `widgetConfig` | Close button behavior (`collapse` vs `close`); layout-specific defaults in [`widget-config.ts`](./widget-config.ts) |
+| `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
 
@@ -74,7 +75,7 @@ Keep it focused on what helps the agent answer screen-level questions:
 
 Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js) reads `#demo-host-app` into `whatUserSees` and lists allowed actions in `whatUserCanDo`.
 
-Enable `widgetConfig.aiContextGuidance: { enabled: true }` so users see that host context is available.
+Enable `widgetConfig.aiContextGuidance: { enabled: true }` so users see that host context is available. Full reference: [widget-config.md](./widget-config.md).
 
 ### Custom CSS (toggle + sidebar panel)
 
@@ -131,4 +132,4 @@ Jest specs live next to modules (`*.test.ts`). Run the package test script from 
 
 ## Exports
 
-From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `ExternalHeadersCallback`.
+From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`.

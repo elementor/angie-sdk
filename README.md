@@ -489,7 +489,7 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
 
 ## Embedded Angie in any web page
 
-To embed the Angie UI in your own site (sidebar or floating chat), use `AngieMcpSdk.loadSidebarV2()`. See the dedicated guide: [loadSidebarV2](./src/load-sidebar-v2/README.md).
+To embed the Angie UI in your own site (sidebar or floating chat), use `AngieMcpSdk.loadSidebarV2()`. See the dedicated guide: [loadSidebarV2](./src/load-sidebar-v2/README.md). To customize the embedded chat UI (title, suggestions, feature toggles), see [widgetConfig](./src/load-sidebar-v2/widget-config.md) and the [widgetConfig demo](./demo/load-sidebar-v2-widget-config/).
 
 
 If you have questions or need help, open an issue or contact the Elementor team! 

@@ -1,0 +1,331 @@
+:root {
+	--demo-bg: #f4f6fb;
+	--demo-surface: #ffffff;
+	--demo-border: #e2e8f0;
+	--demo-text: #0f172a;
+	--demo-muted: #64748b;
+	--demo-accent: #4f46e5;
+	--demo-accent-soft: #eef2ff;
+	--demo-radius: 12px;
+	--demo-font: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+	--angie-sidebar-width: 380px;
+	--angie-sidebar-z-index: 1300;
+	--angie-sidebar-content-gap: 1.5rem;
+	/* Dock sidebar on the right (overrides SDK default left placement) */
+	--angie-sidebar-hide-transform: translateX(100%);
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	color-scheme: light;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: var(--demo-font);
+	font-size: 15px;
+	line-height: 1.5;
+	color: var(--demo-text);
+	background: var(--demo-bg);
+}
+
+a {
+	color: var(--demo-accent);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+code {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 0.88em;
+	background: #f1f5f9;
+	padding: 0.12em 0.35em;
+	border-radius: 4px;
+}
+
+.demo-app {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.demo-app-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.85rem 1.25rem;
+	background: var(--demo-surface);
+	border-bottom: 1px solid var(--demo-border);
+	position: sticky;
+	top: 0;
+	z-index: 10;
+}
+
+.demo-app-brand {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.65rem;
+	color: inherit;
+	text-decoration: none;
+}
+
+.demo-app-brand:hover {
+	text-decoration: none;
+}
+
+.demo-app-logo {
+	display: inline-grid;
+	place-items: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 8px;
+	background: linear-gradient(135deg, #6366f1, #4f46e5);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.demo-app-brand-text {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.2;
+}
+
+.demo-app-brand-text span {
+	color: var(--demo-muted);
+	font-size: 0.82rem;
+}
+
+#demo-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.5rem 0.9rem;
+	border: 1px solid #c7d2fe;
+	border-radius: 999px;
+	background: var(--demo-accent-soft);
+	color: var(--demo-accent);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+#demo-toggle:hover {
+	background: #e0e7ff;
+}
+
+.demo-toggle-icon {
+	font-size: 1rem;
+}
+
+.demo-main {
+	width: min(960px, 100%);
+	margin: 0 auto;
+	padding: 1.25rem 1rem 2.5rem;
+}
+
+.demo-breadcrumb {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	align-items: center;
+	margin-bottom: 1rem;
+	font-size: 0.9rem;
+	color: var(--demo-muted);
+}
+
+.demo-hero h1 {
+	margin: 0 0 0.5rem;
+	font-size: clamp(1.5rem, 4vw, 1.9rem);
+	letter-spacing: -0.02em;
+}
+
+.demo-hero p {
+	margin: 0 0 1.25rem;
+	color: var(--demo-muted);
+	max-width: 52rem;
+}
+
+.demo-main > .demo-card {
+	margin-bottom: 1rem;
+}
+
+.demo-grid {
+	display: grid;
+	gap: 1rem;
+}
+
+.demo-grid > .demo-card {
+	min-width: 0;
+}
+
+@media (min-width: 800px) {
+	.demo-grid {
+		grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+		align-items: start;
+	}
+}
+
+.demo-card {
+	padding: 1rem 1.1rem;
+	border: 1px solid var(--demo-border);
+	border-radius: var(--demo-radius);
+	background: var(--demo-surface);
+	min-width: 0;
+}
+
+.demo-card h2 {
+	margin: 0 0 0.5rem;
+	font-size: 1.05rem;
+}
+
+.demo-card-lead {
+	margin: 0 0 0.85rem;
+	color: var(--demo-muted);
+	font-size: 0.92rem;
+}
+
+.demo-preset-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	gap: 0.55rem;
+}
+
+.demo-preset-link {
+	display: block;
+	padding: 0.7rem 0.85rem;
+	border: 1px solid var(--demo-border);
+	border-radius: 10px;
+	color: inherit;
+	text-decoration: none;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.demo-preset-link:hover {
+	border-color: #c7d2fe;
+	text-decoration: none;
+}
+
+.demo-preset-link.is-active {
+	border-color: #818cf8;
+	background: var(--demo-accent-soft);
+}
+
+.demo-preset-link strong {
+	display: block;
+	margin-bottom: 0.15rem;
+}
+
+.demo-preset-link span {
+	color: var(--demo-muted);
+	font-size: 0.88rem;
+}
+
+.demo-active-preset {
+	margin: 0.85rem 0 0;
+	font-size: 0.92rem;
+	color: var(--demo-muted);
+}
+
+.demo-code {
+	margin: 0;
+	padding: 0.85rem 1rem;
+	border-radius: 8px;
+	background: #0f172a;
+	color: #e2e8f0;
+	font-size: 0.78rem;
+	line-height: 1.45;
+	overflow: auto;
+	max-height: 22rem;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.demo-code code {
+	background: transparent;
+	padding: 0;
+	color: inherit;
+	font-size: inherit;
+}
+
+.demo-hint {
+	margin: 0.75rem 0 0;
+	font-size: 0.85rem;
+	color: var(--demo-muted);
+	word-break: break-word;
+}
+
+.demo-field-list {
+	margin: 0;
+	display: grid;
+	gap: 0.65rem;
+}
+
+.demo-field-list div {
+	display: grid;
+	gap: 0.15rem;
+}
+
+.demo-field-list dt {
+	font-weight: 600;
+}
+
+.demo-field-list dd {
+	margin: 0;
+	color: var(--demo-muted);
+	font-size: 0.9rem;
+}
+
+.demo-app-footer {
+	margin-top: auto;
+	padding: 1rem 1.25rem;
+	border-top: 1px solid var(--demo-border);
+	font-size: 0.88rem;
+	color: var(--demo-muted);
+	text-align: center;
+}
+
+/* Sidebar panel — dock on the right (see load-sidebar-v2-full-config demo) */
+#angie-sidebar-container {
+	background: #f8fafc;
+	box-shadow: -4px 0 24px rgba(15, 23, 42, 0.12);
+	border-inline-start: 1px solid var(--demo-border);
+	border-inline-end: none;
+}
+
+body.angie-sidebar-active #angie-sidebar-container {
+	border-inline-start-color: #c7d2fe;
+}
+
+#angie-sidebar-container iframe#angie-iframe {
+	border-radius: 0 12px 0 0;
+}
+
+@media (min-width: 768px) {
+	body.angie-sidebar-active {
+		padding-inline-start: 0 !important;
+		padding-inline-end: calc(var(--angie-sidebar-width) + var(--angie-sidebar-content-gap)) !important;
+	}
+
+	#angie-sidebar-container {
+		inset-inline-start: auto !important;
+		inset-inline-end: 0 !important;
+	}
+
+	#angie-sidebar-container::after {
+		inset-inline-end: auto !important;
+		inset-inline-start: 0 !important;
+	}
+}
