@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive demo of widgetConfig — customize Angie embedded UI copy, features, and MCP focus." />
+  <title>widgetConfig · Angie SDK Demo</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js"
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="./demo-host.css" />
+</head>
+<body>
+  <div class="demo-app">
+    <header class="demo-app-header">
+      <div class="demo-app-header-start">
+        <a class="demo-app-brand" href="../">
+          <span class="demo-app-logo" aria-hidden="true">A</span>
+          <span class="demo-app-brand-text">
+            <strong>Angie SDK</strong>
+            <span>widgetConfig</span>
+          </span>
+        </a>
+      </div>
+      <div class="demo-app-header-end">
+        <button type="button" id="demo-toggle" aria-expanded="false">
+          <span class="demo-toggle-icon" aria-hidden="true">✦</span>
+          Open Angie
+        </button>
+      </div>
+    </header>
+
+    <main class="demo-main">
+      <nav class="demo-breadcrumb" aria-label="Breadcrumb">
+        <a href="../">Demos</a>
+        <span aria-hidden="true">/</span>
+        <span>widgetConfig</span>
+      </nav>
+
+      <div class="demo-hero">
+        <h1>Customize the embedded Angie UI</h1>
+        <p>
+          <code>widgetConfig</code> controls empty-state copy, starter prompts, feature toggles,
+          close behavior, and which host MCP server Angie should feature first.
+          Config is sent to the iframe as <code>sdk-widget-config</code>.
+        </p>
+      </div>
+
+      <section class="demo-card" aria-labelledby="preset-heading">
+        <h2 id="preset-heading">Presets</h2>
+        <p class="demo-card-lead">
+          Patterns from Elementor production hosts. Pick a preset to reload with a different
+          <code>widgetConfig</code> and layout.
+        </p>
+        <ul class="demo-preset-list">
+          <li>
+            <a class="demo-preset-link" data-preset-link="helpCenter" href="?preset=helpCenter">
+              <strong>Help center sidebar</strong>
+              <span>my.elementor-style embed</span>
+            </a>
+          </li>
+          <li>
+            <a class="demo-preset-link" data-preset-link="visitor" href="?preset=visitor">
+              <strong>Visitor floating search</strong>
+              <span>angie-for-visitors-style widget</span>
+            </a>
+          </li>
+          <li>
+            <a class="demo-preset-link" data-preset-link="sandbox" href="?preset=sandbox">
+              <strong>Feature sandbox</strong>
+              <span>most toggles enabled</span>
+            </a>
+          </li>
+        </ul>
+        <p class="demo-active-preset">
+          Active: <strong id="demo-preset-label">Help center sidebar</strong>
+          — <span id="demo-preset-desc"></span>
+        </p>
+      </section>
+
+      <div class="demo-grid">
+        <section class="demo-card" aria-labelledby="config-heading">
+          <h2 id="config-heading">Resolved <code>widgetConfig</code></h2>
+          <p class="demo-card-lead">
+            Built by <code>buildWidgetConfig()</code> in <code>host.js</code>.
+            Override copy at runtime with <code>window.angieConfig</code> then reload.
+          </p>
+          <pre class="demo-code" aria-label="widgetConfig JSON"><code id="demo-config-json">{}</code></pre>
+          <p class="demo-hint">
+            Try in the console:
+            <code>window.angieConfig = { title: 'Custom', prompts: [{ label: 'Hi', value: 'Hello' }] }</code>
+          </p>
+        </section>
+
+        <section class="demo-card" aria-labelledby="fields-heading">
+          <h2 id="fields-heading">Common fields</h2>
+          <dl class="demo-field-list">
+            <div>
+              <dt><code>title</code> / <code>subtitle</code></dt>
+              <dd>Empty-state heading and supporting line</dd>
+            </div>
+            <div>
+              <dt><code>suggestions.items</code></dt>
+              <dd>Starter chips — <code>label</code> shown, <code>value</code> sent as prompt</dd>
+            </div>
+            <div>
+              <dt><code>featuredMcpServer</code></dt>
+              <dd>Matches <code>registerServer({ name })</code> on the host</dd>
+            </div>
+            <div>
+              <dt><code>modeSwitcher</code></dt>
+              <dd><code>enabled</code> + <code>default</code>: <code>agent</code> | <code>plan</code> | <code>ask</code></dd>
+            </div>
+            <div>
+              <dt><code>closeButton</code></dt>
+              <dd><code>collapse</code> (sidebar default) or <code>close</code> (floating chat default)</dd>
+            </div>
+            <div>
+              <dt><code>localServers.skipLoading</code></dt>
+              <dd>Register MCP servers yourself after <code>waitForReady()</code></dd>
+            </div>
+            <div>
+              <dt><code>aiContextGuidance</code></dt>
+              <dd>Show that <code>host.aiContext</code> is available (enabled in help center preset)</dd>
+            </div>
+          </dl>
+          <p>
+            <a href="https://github.com/elementor/angie-sdk/blob/master/src/load-sidebar-v2/widget-config.md">Full widgetConfig docs</a>
+          </p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="demo-app-footer">
+      <p>
+        <a href="https://github.com/elementor/angie-sdk">Angie SDK</a>
+        ·
+        <a href="../">All demos</a>
+        ·
+        <a href="https://github.com/elementor/angie-sdk/blob/master/src/load-sidebar-v2/widget-config.md">widgetConfig reference</a>
+      </p>
+    </footer>
+  </div>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>
