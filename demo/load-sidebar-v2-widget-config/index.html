@@ -46,7 +46,7 @@
         <h1>Customize the embedded Angie UI</h1>
         <p>
           <code>widgetConfig</code> controls empty-state copy, starter prompts, feature toggles,
-          close behavior, and which host MCP server Angie should feature first.
+          close behavior, which host MCP servers appear in the tools UI, and which server Angie should feature first.
           Config is sent to the iframe as <code>sdk-widget-config</code>.
         </p>
       </div>
@@ -121,8 +121,12 @@
               <dd><code>collapse</code> (sidebar default) or <code>close</code> (floating chat default)</dd>
             </div>
             <div>
-              <dt><code>localServers.skipLoading</code></dt>
-              <dd>Register MCP servers yourself after <code>waitForReady()</code></dd>
+              <dt><code>localServers</code></dt>
+              <dd>
+                <code>skipLoading: true</code> — register MCP servers after <code>waitForReady()</code>.
+                <code>includedServers</code> — optional allowlist of <code>registerServer({ name })</code> values
+                to show in the tools UI when the host registers more than one server.
+              </dd>
             </div>
             <div>
               <dt><code>aiContextGuidance</code></dt>

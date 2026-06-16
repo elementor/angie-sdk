@@ -43,7 +43,7 @@ const buildHelpCenterWidgetConfig = () => {
 		closeButton: 'collapse',
 		betaBanner: { enabled: false },
 		aiContextGuidance: { enabled: true },
-		localServers: { skipLoading: true },
+		localServers: { skipLoading: true, includedServers: [ HELP_CENTER_SERVER ] },
 		userProfileMenu: { enabled: false },
 	};
 };

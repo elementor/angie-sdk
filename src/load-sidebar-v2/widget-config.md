@@ -85,7 +85,7 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|---------|
 | `modeSwitcher` | `{ enabled?: boolean; default?: 'agent' \| 'plan' \| 'ask' }` | Show or hide Agent / Plan / Ask switcher; set the initial mode |
 | `featuredMcpServer` | `string` | Name of a **host-registered** local MCP server Angie should surface first (must match `registerServer({ name })`) |
-| `localServers` | `{ skipLoading?: boolean }` | When `skipLoading: true`, Angie does not auto-load host local servers — use when you register servers yourself after `waitForReady()` |
+| `localServers` | `{ skipLoading?: boolean; includedServers?: string[] }` | `skipLoading: true` — Angie does not auto-load host local servers (register after `waitForReady()`). `includedServers` — optional allowlist of host-registered local MCP server names to expose in the tools UI (must match `registerServer({ name })`) |
 
 ### Close behavior
 
@@ -121,7 +121,7 @@ const widgetConfig: WidgetConfig = {
   closeButton: 'collapse',
   betaBanner: { enabled: false },
   aiContextGuidance: { enabled: false },
-  localServers: { skipLoading: true },
+  localServers: { skipLoading: true, includedServers: [ HELP_CENTER_SERVER ] },
   userProfileMenu: { enabled: false },
 };
 
@@ -135,7 +135,7 @@ await sdk.waitForReady();
 sdk.registerServer({ name: HELP_CENTER_SERVER, /* ... */ });
 ```
 
-`localServers.skipLoading: true` avoids a race: register your MCP servers after `waitForReady()`, then Angie uses `featuredMcpServer` to prioritize the right one.
+`localServers.skipLoading: true` avoids a race: register your MCP servers after `waitForReady()`, then Angie uses `featuredMcpServer` to prioritize the right one. Use `includedServers` to limit which registered local servers appear in the tools panel when the host registers more than one server but only wants specific ones visible (for example `help-center`).
 
 ### Visitor floating search widget
 

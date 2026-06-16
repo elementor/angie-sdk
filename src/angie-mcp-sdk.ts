@@ -29,6 +29,7 @@ export type ModeSwitcherConfig = {
 
 export type LocalServersConfig = {
   skipLoading?: boolean;
+  includedServers?: string[];
 };
 
 export type WidgetConfig = {
