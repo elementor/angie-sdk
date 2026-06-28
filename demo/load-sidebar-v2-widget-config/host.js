@@ -106,11 +106,12 @@ const buildSandboxWidgetConfig = () => ( {
 
 // Placeholder content — the production copy, widget list, and preview images are
 // owned by Design/Product. The "Beta" badge is rendered by the embedded app, not configured here.
-const buildFirstTimeWidgetConfig = () => ( {
+// The SDK forwards these screens; the host/app decides when to render them.
+const buildGuidedScreensWidgetConfig = () => ( {
 	title: 'Welcome to Angie',
 	subtitle: 'Let Angie help you build your first widget.',
 	closeButton: 'collapse',
-	firstTimeExperience: {
+	guidedScreens: {
 		screens: [
 			{
 				type: 'welcome',
@@ -214,11 +215,11 @@ const PRESETS = {
 			},
 		},
 	},
-	firstTime: {
-		label: 'First-time experience',
-		description: 'Sidebar with a one-time onboarding: Meet Angie + widget picker.',
+	guided: {
+		label: 'Guided screens',
+		description: 'Sidebar with guided intro screens: Meet Angie + widget picker.',
 		layout: LAYOUT_SIDEBAR,
-		buildWidgetConfig: buildFirstTimeWidgetConfig,
+		buildWidgetConfig: buildGuidedScreensWidgetConfig,
 		loadOptions: {
 			container: {
 				layout: LAYOUT_SIDEBAR,

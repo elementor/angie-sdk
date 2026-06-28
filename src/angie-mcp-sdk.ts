@@ -31,7 +31,7 @@ export type LocalServersConfig = {
   skipLoading?: boolean;
 };
 
-export type FteWidgetItem = {
+export type GuidedWidgetItem = {
   id: string;
   label: string;
   prompt: string;
@@ -39,28 +39,28 @@ export type FteWidgetItem = {
   image?: string;
 };
 
-export type FteHighlight = {
+export type GuidedHighlight = {
   title: string;
   description?: string;
 };
 
-export type FteScreen =
+export type GuidedScreen =
   | {
       type: 'welcome';
       title: string;
       subtitle?: string;
-      highlights?: FteHighlight[];
+      highlights?: GuidedHighlight[];
       ctaLabel: string;
     }
   | {
       type: 'widget-picker';
       title: string;
       subtitle?: string;
-      items: FteWidgetItem[];
+      items: GuidedWidgetItem[];
     };
 
-export type FirstTimeExperienceConfig = {
-  screens: FteScreen[];
+export type GuidedScreensConfig = {
+  screens: GuidedScreen[];
 };
 
 export type WidgetConfig = {
@@ -79,7 +79,7 @@ export type WidgetConfig = {
   aiContextGuidance?: FeatureToggle;
   userProfileMenu?: FeatureToggle;
   localServers?: LocalServersConfig;
-  firstTimeExperience?: FirstTimeExperienceConfig;
+  guidedScreens?: GuidedScreensConfig;
 };
 
 export type AngieMcpSdkOptions = {

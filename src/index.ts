@@ -1,4 +1,4 @@
-export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type FirstTimeExperienceConfig, type FteHighlight, type FteScreen, type FteWidgetItem, type ModeSwitcherConfig, type WidgetConfig } from './angie-mcp-sdk';
+export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type GuidedHighlight, type GuidedScreen, type GuidedScreensConfig, type GuidedWidgetItem, type ModeSwitcherConfig, type WidgetConfig } from './angie-mcp-sdk';
 export {
 	LAYOUT_FLOATING_CHAT,
 	LAYOUT_SIDEBAR,

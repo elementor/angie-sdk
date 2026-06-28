@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import type { FirstTimeExperienceConfig } from '../angie-mcp-sdk';
+import type { GuidedScreensConfig } from '../angie-mcp-sdk';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import type { Env } from './env';
 import { resolveConfig, shouldBoot } from './resolve-config';
@@ -98,8 +98,8 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.iframe.uiTheme ).toBe( 'dark' );
 	} );
 
-	it( 'should preserve widgetConfig.firstTimeExperience', () => {
-		const firstTimeExperience: FirstTimeExperienceConfig = {
+	it( 'should preserve widgetConfig.guidedScreens', () => {
+		const guidedScreens: GuidedScreensConfig = {
 			screens: [
 				{
 					type: 'welcome',
@@ -128,11 +128,11 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 			],
 		};
 		const config = resolveConfig(
-			{ host: { appId: 'editor-lite' }, widgetConfig: { firstTimeExperience } },
+			{ host: { appId: 'editor-lite' }, widgetConfig: { guidedScreens } },
 			DEFAULT_ENV,
 		);
 
-		expect( config.widgetConfig?.firstTimeExperience ).toEqual( firstTimeExperience );
+		expect( config.widgetConfig?.guidedScreens ).toEqual( guidedScreens );
 		expect( config.widgetConfig?.closeButton ).toBe( 'collapse' );
 	} );
 

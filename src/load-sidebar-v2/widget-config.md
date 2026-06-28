@@ -93,36 +93,36 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|--------|
 | `closeButton` | `'collapse' \| 'close'` | `collapse` — hide panel, keep session; `close` — dismiss widget |
 
-### First-time experience
+### Guided screens
 
-A one-time guided onboarding shown inside the chat the first time a user opens Angie for a given host. The SDK only **forwards** this config to the embedded app — eligibility, rendering, and one-time persistence all live in the app.
+An ordered set of guided intro screens (a welcome step and a widget picker) that the host supplies as content. The SDK only **forwards** this config to the embedded app — the host/app decides *when* and *how* to render them (e.g. on first open, after install, behind a "Get started" action). Rendering and any "show once" bookkeeping live in the app, not the SDK.
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `firstTimeExperience` | `{ screens: FteScreen[] }` | Ordered onboarding screens shown before the regular chat |
+| `guidedScreens` | `{ screens: GuidedScreen[] }` | Ordered guided screens the host can have the app render |
 
 ```typescript
-type FteScreen =
+type GuidedScreen =
   | {
       type: 'welcome';
       title: string;
       subtitle?: string;
-      highlights?: FteHighlight[]; // info list (e.g. beta notes), title + optional description each
+      highlights?: GuidedHighlight[]; // info list (e.g. beta notes), title + optional description each
       ctaLabel: string;
     }
   | {
       type: 'widget-picker';
       title: string;
       subtitle?: string;
-      items: FteWidgetItem[];
+      items: GuidedWidgetItem[];
     };
 
-type FteHighlight = {
+type GuidedHighlight = {
   title: string;
   description?: string;
 };
 
-type FteWidgetItem = {
+type GuidedWidgetItem = {
   id: string;           // stable identifier
   label: string;        // card title
   prompt: string;       // injected into the chat input when picked
@@ -133,7 +133,7 @@ type FteWidgetItem = {
 
 ```typescript
 widgetConfig: {
-  firstTimeExperience: {
+  guidedScreens: {
     screens: [
       {
         type: 'welcome',
@@ -155,7 +155,7 @@ widgetConfig: {
             label: 'Hero section',
             prompt: 'Create a hero section with a headline, subtext, and a CTA button.',
             description: 'A bold above-the-fold section.',
-            image: 'https://cdn.example.com/fte/hero.png',
+            image: 'https://cdn.example.com/guided/hero.png',
           },
         ],
       },
@@ -164,11 +164,11 @@ widgetConfig: {
 }
 ```
 
-**Requires `loadSidebarV2` + `host.appId`.** The embedded app scopes one-time completion per `appId` (it tracks completed apps server-side), so FTE only functions end-to-end through `loadSidebarV2`, which carries `host.appId`. `loadSidebar` (v1) forwards the field but has no `appId` to scope completion.
+**Pair with `host.appId` via `loadSidebarV2`.** Use cases like "show these once per user" need a stable identity to track against — the app uses `host.appId` for that, which only `loadSidebarV2` carries. `loadSidebar` (v1) forwards the field but has no `appId`, so the app can't scope per-host rendering.
 
-Live demo: [`demo/load-sidebar-v2-widget-config/?preset=firstTime`](../../demo/load-sidebar-v2-widget-config/).
+Live demo: [`demo/load-sidebar-v2-widget-config/?preset=guided`](../../demo/load-sidebar-v2-widget-config/).
 
-`FirstTimeExperienceConfig`, `FteScreen`, `FteHighlight`, and `FteWidgetItem` are exported from `@elementor/angie-sdk`.
+`GuidedScreensConfig`, `GuidedScreen`, `GuidedHighlight`, and `GuidedWidgetItem` are exported from `@elementor/angie-sdk`.
 
 ## Patterns from production hosts
 
