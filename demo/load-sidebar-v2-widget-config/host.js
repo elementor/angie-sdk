@@ -104,6 +104,71 @@ const buildSandboxWidgetConfig = () => ( {
 	userProfileMenu: { enabled: true },
 } );
 
+// Placeholder content — the production copy, widget list, and preview images are
+// owned by Design/Product. The "Beta" badge is rendered by the embedded app, not configured here.
+const buildFirstTimeWidgetConfig = () => ( {
+	title: 'Welcome to Angie',
+	subtitle: 'Let Angie help you build your first widget.',
+	closeButton: 'collapse',
+	firstTimeExperience: {
+		screens: [
+			{
+				type: 'welcome',
+				title: 'Meet Angie',
+				subtitle:
+					"Angie is an active experiment. We're exploring new ways to make building and managing WordPress sites faster and more powerful.",
+				highlights: [
+					{
+						title: 'Angie is in beta',
+						description: 'Features evolve quickly, and your feedback helps shape what comes next.',
+					},
+					{
+						title: 'You stay in control',
+						description: 'Review and edit every change before publishing to your live site.',
+					},
+					{
+						title: 'Free to explore',
+						description: 'Use your beta credits freely - no payment required during beta.',
+					},
+					{ title: "AI isn't perfect", description: 'Always review results before publishing.' },
+				],
+				ctaLabel: 'I understand',
+			},
+			{
+				type: 'widget-picker',
+				title: 'Create your first widget',
+				subtitle: 'Start with an example or describe what you need.',
+				items: [
+					{
+						id: 'hero',
+						label: 'Hero section',
+						description: 'A bold above-the-fold section with a headline and CTA.',
+						prompt: 'Create a hero section with a bold headline, supporting subtext, and a call-to-action button.',
+					},
+					{
+						id: 'pricing',
+						label: 'Pricing table',
+						description: 'Compare plans side by side.',
+						prompt: 'Create a three-column pricing table with monthly and yearly options.',
+					},
+					{
+						id: 'testimonials',
+						label: 'Testimonials',
+						description: 'Social proof from happy customers.',
+						prompt: 'Create a testimonials section with three customer quotes and avatars.',
+					},
+					{
+						id: 'contact',
+						label: 'Contact form',
+						description: 'Let visitors get in touch.',
+						prompt: 'Create a contact form with name, email, and message fields.',
+					},
+				],
+			},
+		],
+	},
+} );
+
 const PRESETS = {
 	helpCenter: {
 		label: 'Help center sidebar',
@@ -137,6 +202,23 @@ const PRESETS = {
 		description: 'Sidebar with most widget toggles enabled.',
 		layout: LAYOUT_SIDEBAR,
 		buildWidgetConfig: buildSandboxWidgetConfig,
+		loadOptions: {
+			container: {
+				layout: LAYOUT_SIDEBAR,
+				persistOpenState: true,
+				resizable: true,
+				chatToggleButton: {
+					enabled: true,
+					selector: '#demo-toggle',
+				},
+			},
+		},
+	},
+	firstTime: {
+		label: 'First-time experience',
+		description: 'Sidebar with a one-time onboarding: Meet Angie + widget picker.',
+		layout: LAYOUT_SIDEBAR,
+		buildWidgetConfig: buildFirstTimeWidgetConfig,
 		loadOptions: {
 			container: {
 				layout: LAYOUT_SIDEBAR,

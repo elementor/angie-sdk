@@ -93,6 +93,83 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|--------|
 | `closeButton` | `'collapse' \| 'close'` | `collapse` — hide panel, keep session; `close` — dismiss widget |
 
+### First-time experience
+
+A one-time guided onboarding shown inside the chat the first time a user opens Angie for a given host. The SDK only **forwards** this config to the embedded app — eligibility, rendering, and one-time persistence all live in the app.
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `firstTimeExperience` | `{ screens: FteScreen[] }` | Ordered onboarding screens shown before the regular chat |
+
+```typescript
+type FteScreen =
+  | {
+      type: 'welcome';
+      title: string;
+      subtitle?: string;
+      highlights?: FteHighlight[]; // info list (e.g. beta notes), title + optional description each
+      ctaLabel: string;
+    }
+  | {
+      type: 'widget-picker';
+      title: string;
+      subtitle?: string;
+      items: FteWidgetItem[];
+    };
+
+type FteHighlight = {
+  title: string;
+  description?: string;
+};
+
+type FteWidgetItem = {
+  id: string;           // stable identifier
+  label: string;        // card title
+  prompt: string;       // injected into the chat input when picked
+  description?: string; // card body line
+  image?: string;       // preview thumbnail url
+};
+```
+
+```typescript
+widgetConfig: {
+  firstTimeExperience: {
+    screens: [
+      {
+        type: 'welcome',
+        title: 'Meet Angie',
+        subtitle: "Angie is an active experiment. We're exploring new ways to build WordPress sites.",
+        highlights: [
+          { title: 'Angie is in beta', description: 'Features evolve quickly, and your feedback helps shape what comes next.' },
+          { title: 'You stay in control', description: 'Review and edit every change before publishing to your live site.' },
+        ],
+        ctaLabel: 'I understand',
+      },
+      {
+        type: 'widget-picker',
+        title: 'Create your first widget',
+        subtitle: 'Start with an example or describe what you need.',
+        items: [
+          {
+            id: 'hero',
+            label: 'Hero section',
+            prompt: 'Create a hero section with a headline, subtext, and a CTA button.',
+            description: 'A bold above-the-fold section.',
+            image: 'https://cdn.example.com/fte/hero.png',
+          },
+        ],
+      },
+    ],
+  },
+}
+```
+
+**Requires `loadSidebarV2` + `host.appId`.** The embedded app scopes one-time completion per `appId` (it tracks completed apps server-side), so FTE only functions end-to-end through `loadSidebarV2`, which carries `host.appId`. `loadSidebar` (v1) forwards the field but has no `appId` to scope completion.
+
+Live demo: [`demo/load-sidebar-v2-widget-config/?preset=firstTime`](../../demo/load-sidebar-v2-widget-config/).
+
+`FirstTimeExperienceConfig`, `FteScreen`, `FteHighlight`, and `FteWidgetItem` are exported from `@elementor/angie-sdk`.
+
 ## Patterns from production hosts
 
 These mirror [`ai-remote-integration`](https://github.com/elementor/elementor-ai/tree/main/editor-saas-services/packages/ai-remote-integration) (Elementor my.elementor sidebar and visitor floating widget).

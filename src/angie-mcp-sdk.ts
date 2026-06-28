@@ -31,6 +31,38 @@ export type LocalServersConfig = {
   skipLoading?: boolean;
 };
 
+export type FteWidgetItem = {
+  id: string;
+  label: string;
+  prompt: string;
+  description?: string;
+  image?: string;
+};
+
+export type FteHighlight = {
+  title: string;
+  description?: string;
+};
+
+export type FteScreen =
+  | {
+      type: 'welcome';
+      title: string;
+      subtitle?: string;
+      highlights?: FteHighlight[];
+      ctaLabel: string;
+    }
+  | {
+      type: 'widget-picker';
+      title: string;
+      subtitle?: string;
+      items: FteWidgetItem[];
+    };
+
+export type FirstTimeExperienceConfig = {
+  screens: FteScreen[];
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -47,6 +79,7 @@ export type WidgetConfig = {
   aiContextGuidance?: FeatureToggle;
   userProfileMenu?: FeatureToggle;
   localServers?: LocalServersConfig;
+  firstTimeExperience?: FirstTimeExperienceConfig;
 };
 
 export type AngieMcpSdkOptions = {

@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
+import type { FirstTimeExperienceConfig } from '../angie-mcp-sdk';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import type { Env } from './env';
 import { resolveConfig, shouldBoot } from './resolve-config';
@@ -95,6 +96,44 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 
 		expect( config.iframe.isRTL ).toBe( true );
 		expect( config.iframe.uiTheme ).toBe( 'dark' );
+	} );
+
+	it( 'should preserve widgetConfig.firstTimeExperience', () => {
+		const firstTimeExperience: FirstTimeExperienceConfig = {
+			screens: [
+				{
+					type: 'welcome',
+					title: 'Meet Angie',
+					subtitle: 'An active experiment.',
+					highlights: [
+						{ title: 'Angie is in beta', description: 'Features evolve quickly.' },
+						{ title: 'You stay in control' },
+					],
+					ctaLabel: 'I understand',
+				},
+				{
+					type: 'widget-picker',
+					title: 'Create your first widget',
+					subtitle: 'Start with an example or describe what you need.',
+					items: [
+						{
+							id: 'hero',
+							label: 'Hero',
+							prompt: 'Create a hero section',
+							description: 'A bold above-the-fold section.',
+							image: 'https://example.com/hero.png',
+						},
+					],
+				},
+			],
+		};
+		const config = resolveConfig(
+			{ host: { appId: 'editor-lite' }, widgetConfig: { firstTimeExperience } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.widgetConfig?.firstTimeExperience ).toEqual( firstTimeExperience );
+		expect( config.widgetConfig?.closeButton ).toBe( 'collapse' );
 	} );
 
 	it( 'should skip boot when embedded in iframe by default', () => {
