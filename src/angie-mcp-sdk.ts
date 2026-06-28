@@ -6,6 +6,7 @@ import { ClientManager } from './client-manager';
 import { appState, DEFAULT_CONTAINER_ID } from './config';
 import { createChildLogger } from './logger';
 import { openIframe } from './iframe';
+import { handlePostConsentRedirect } from './oauth';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
@@ -92,6 +93,8 @@ export class AngieMcpSdk {
   }
 
   public async loadSidebar( options?: AngieMcpSdkOptions ): Promise<void> {
+    handlePostConsentRedirect();
+
     const { widgetConfig, ...rest } = options || {};
     const config = { ...DEFAULT_OPTIONS, ...rest };
     appState.containerId = config.containerId;

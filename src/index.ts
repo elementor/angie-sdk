@@ -28,3 +28,4 @@ export * from './types';
 export * from './angie-annotations';
 export { BrowserContextTransport } from './browser-context-transport';
 export { setReferrerRedirect, getReferrerRedirect, clearReferrerRedirect, executeReferrerRedirect, type ReferrerRedirectData } from './referrer-redirect';
+export { handlePostConsentRedirect } from './oauth';
