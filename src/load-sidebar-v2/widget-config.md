@@ -184,10 +184,11 @@ await sdk.loadSidebarV2( {
   host: { appId: 'my-app' },
   widgetConfig: { guidedScreens: { screens: [ /* ... */ ] } },
   callbacks: {
-    onGuidedWelcomeConfirm: () => track( 'guided_welcome_ack' ),
-    onGuidedWidgetSelect: ( { id, prompt } ) => {
-      track( 'guided_widget_select', { id } );
-      markGuidedScreensSeen( 'my-app' ); // your persistence
+    onGuidedWelcomeConfirm: () => {
+      // here your functionality (e.g. analytics)...
+    },
+    onGuidedWidgetSelect: ( { id, label, prompt } ) => {
+      // here your functionality (e.g. analytics, persist "already seen")...
     },
   },
 } );
