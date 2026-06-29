@@ -185,10 +185,10 @@ await sdk.loadSidebarV2( {
   widgetConfig: { guidedScreens: { screens: [ /* ... */ ] } },
   callbacks: {
     onGuidedWelcomeConfirm: () => {
-      // here your functionality (e.g. analytics)...
+      // here your functionality
     },
     onGuidedWidgetSelect: ( { id, label, prompt } ) => {
-      // here your functionality (e.g. analytics, persist "already seen")...
+      // here your functionality
     },
   },
 } );
