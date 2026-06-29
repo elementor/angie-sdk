@@ -95,7 +95,7 @@ Each toggle uses `{ enabled: boolean }`.
 
 ### Guided screens
 
-An ordered set of guided intro screens (a welcome step and a widget picker) that the host supplies as content. The SDK only **forwards** this config to the embedded app — the host/app decides *when* and *how* to render them (e.g. on first open, after install, behind a "Get started" action). Rendering and any "show once" bookkeeping live in the app, not the SDK.
+An ordered set of guided intro screens (a welcome step and a prompts picker) that the host supplies as content. The SDK only **forwards** this config to the embedded app — the host/app decides *when* and *how* to render them (e.g. on first open, after install, behind a "Get started" action). Rendering and any "show once" bookkeeping live in the app, not the SDK.
 
 | Field | Type | Purpose |
 |-------|------|---------|
@@ -111,7 +111,7 @@ type GuidedScreen =
       ctaLabel: string;
     }
   | {
-      type: 'widget-picker';
+      type: 'prompts-picker';
       title: string;
       subtitle?: string;
       items: GuidedWidgetItem[];
@@ -146,7 +146,7 @@ widgetConfig: {
         ctaLabel: 'I understand',
       },
       {
-        type: 'widget-picker',
+        type: 'prompts-picker',
         title: 'Create your first widget',
         subtitle: 'Start with an example or describe what you need.',
         items: [

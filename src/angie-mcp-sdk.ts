@@ -53,7 +53,7 @@ export type GuidedScreen =
       ctaLabel: string;
     }
   | {
-      type: 'widget-picker';
+      type: 'prompts-picker';
       title: string;
       subtitle?: string;
       items: GuidedWidgetItem[];

@@ -136,7 +136,7 @@ const buildGuidedScreensWidgetConfig = () => ( {
 				ctaLabel: 'I understand',
 			},
 			{
-				type: 'widget-picker',
+				type: 'prompts-picker',
 				title: 'Create your first widget',
 				subtitle: 'Start with an example or describe what you need.',
 				items: [
@@ -217,7 +217,7 @@ const PRESETS = {
 	},
 	guided: {
 		label: 'Guided screens',
-		description: 'Sidebar with guided intro screens: Meet Angie + widget picker.',
+		description: 'Sidebar with guided intro screens: Meet Angie + prompts picker.',
 		layout: LAYOUT_SIDEBAR,
 		buildWidgetConfig: buildGuidedScreensWidgetConfig,
 		loadOptions: {

@@ -112,7 +112,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 					ctaLabel: 'I understand',
 				},
 				{
-					type: 'widget-picker',
+					type: 'prompts-picker',
 					title: 'Create your first widget',
 					subtitle: 'Start with an example or describe what you need.',
 					items: [
