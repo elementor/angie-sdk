@@ -61,6 +61,8 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		callbacks: {
 			onClose: callbacks.onClose,
 			getExternalHeaders: callbacks.getExternalHeaders,
+			onGuidedWelcomeConfirm: callbacks.onGuidedWelcomeConfirm,
+			onGuidedWidgetSelect: callbacks.onGuidedWidgetSelect,
 		},
 		widgetConfig: resolveWidgetConfig( layout, options.widgetConfig ),
 	};

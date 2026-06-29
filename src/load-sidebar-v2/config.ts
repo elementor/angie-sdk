@@ -1,4 +1,4 @@
-import type { WidgetConfig } from '../angie-mcp-sdk';
+import type { GuidedWidgetItem, WidgetConfig } from '../angie-mcp-sdk';
 
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
@@ -50,9 +50,13 @@ export type ExternalHeadersCallback = () =>
 	| Record<string, string | undefined>
 	| Promise<Record<string, string | undefined>>;
 
+export type GuidedWidgetSelection = Pick<GuidedWidgetItem, 'id' | 'label' | 'prompt'>;
+
 export type CallbacksConfig = {
 	onClose?: () => void;
 	getExternalHeaders?: ExternalHeadersCallback;
+	onGuidedWelcomeConfirm?: () => void;
+	onGuidedWidgetSelect?: ( selection: GuidedWidgetSelection ) => void;
 };
 
 export type LoadSidebarV2Options = {

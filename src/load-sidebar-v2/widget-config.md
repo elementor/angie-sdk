@@ -170,6 +170,29 @@ Live demo: [`demo/load-sidebar-v2-widget-config/?preset=guided`](../../demo/load
 
 `GuidedScreensConfig`, `GuidedScreen`, `GuidedHighlight`, and `GuidedWidgetItem` are exported from `@elementor/angie-sdk`.
 
+#### Events
+
+To react to what the user does inside the guided screens, pass callbacks in `loadSidebarV2({ callbacks })`. The SDK invokes them when the embedded app emits the matching event; the **callback bodies run in your code** (analytics, persisting "already seen", etc.) — the SDK only forwards the event.
+
+| Callback | Fires when | Argument |
+|----------|------------|----------|
+| `onGuidedWelcomeConfirm` | User clicks the welcome CTA (e.g. "I understand") | — |
+| `onGuidedWidgetSelect` | User picks a widget / prompt suggestion (its prompt is injected into the chat) | `{ id, label, prompt }` (`GuidedWidgetSelection`) |
+
+```typescript
+await sdk.loadSidebarV2( {
+  host: { appId: 'my-app' },
+  widgetConfig: { guidedScreens: { screens: [ /* ... */ ] } },
+  callbacks: {
+    onGuidedWelcomeConfirm: () => track( 'guided_welcome_ack' ),
+    onGuidedWidgetSelect: ( { id, prompt } ) => {
+      track( 'guided_widget_select', { id } );
+      markGuidedScreensSeen( 'my-app' ); // your persistence
+    },
+  },
+} );
+```
+
 ## Patterns from production hosts
 
 These mirror [`ai-remote-integration`](https://github.com/elementor/elementor-ai/tree/main/editor-saas-services/packages/ai-remote-integration) (Elementor my.elementor sidebar and visitor floating widget).

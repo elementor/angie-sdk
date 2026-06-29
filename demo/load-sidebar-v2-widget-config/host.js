@@ -230,6 +230,14 @@ const PRESETS = {
 					selector: '#demo-toggle',
 				},
 			},
+			// The SDK invokes these when the embedded app emits the guided-screen events.
+			// Bodies run here (host) — e.g. analytics + persisting "already seen".
+			// They won't fire until the embedded app emits the events end-to-end.
+			callbacks: {
+				onGuidedWelcomeConfirm: () => console.log( '[guided] welcome confirmed' ),
+				onGuidedWidgetSelect: ( selection ) =>
+					console.log( '[guided] widget selected', selection ),
+			},
 		},
 	},
 };

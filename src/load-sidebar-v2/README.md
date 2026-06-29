@@ -57,7 +57,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
-| `callbacks` | `onClose`, `getExternalHeaders` for auth/API headers |
+| `callbacks` | `onClose`, `getExternalHeaders` for auth/API headers, `onGuidedWelcomeConfirm` / `onGuidedWidgetSelect` for [guided screen events](#guided-screens-events) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
@@ -97,6 +97,7 @@ Example: [`demo/load-sidebar-v2-full-config/demo-host.css`](../../demo/load-side
 loadSidebarV2(options)
   → resolveConfig + shouldBoot
   → initHostApiBridge (postMessage API)
+  → initGuidedScreensBridge (guided screen event callbacks)
   → ensureSidebarContainer
   → layout strategy (initShell → open iframe → afterOpen)
   → sendEmbeddedConfig / sendWidgetConfig
@@ -112,6 +113,17 @@ Entry point: [`boot-sidebar.ts`](./boot-sidebar.ts). Layout strategies: [`layout
 - `angie/context/get-website-context` — host + document metadata
 - `angie/context/get-analytics-context` — screen path + `host.analytics`
 - Host localStorage get/set (for embedded persistence)
+
+## Guided screens events
+
+[`guided-screens-bridge.ts`](./guided-screens-bridge.ts) listens (origin-checked) for fire-and-forget notifications the embedded app emits while the [`guidedScreens`](./widget-config.md#guided-screens) flow is shown, and invokes the matching `callbacks`:
+
+| Message type (iframe → host) | Callback | Payload |
+|------------------------------|----------|---------|
+| `angie/guided-screens/welcome-confirm` | `onGuidedWelcomeConfirm()` | — |
+| `angie/guided-screens/widget-select` | `onGuidedWidgetSelect(selection)` | `{ id, label, prompt }` |
+
+The SDK only forwards these; the callback bodies (analytics, persistence) run in the host. No listener is registered if neither callback is provided.
 
 ## Module map
 
@@ -132,4 +144,4 @@ Jest specs live next to modules (`*.test.ts`). Run the package test script from 
 
 ## Exports
 
-From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`.
+From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`, `GuidedWidgetSelection`.
