@@ -13,9 +13,9 @@ const mockClearReferrerRedirect = jest.fn();
 const mockExecuteReferrerRedirect = jest.fn();
 
 jest.mock( './referrer-redirect', () => ( {
-	getReferrerRedirect: mockGetReferrerRedirect,
-	clearReferrerRedirect: mockClearReferrerRedirect,
-	executeReferrerRedirect: mockExecuteReferrerRedirect,
+	getReferrerRedirect: () => mockGetReferrerRedirect(),
+	clearReferrerRedirect: () => mockClearReferrerRedirect(),
+	executeReferrerRedirect: () => mockExecuteReferrerRedirect(),
 	buildRedirectUrl: ( url: string, prompt?: string ) => prompt ? `${ url }#angie-prompt=${ encodeURIComponent( prompt ) }` : url,
 } ) );
 
@@ -34,7 +34,11 @@ jest.mock( './logger', () => ( {
 	} ),
 } ) );
 
-import { listenToOAuthFromIframe, setupOidcLoginFlowHandler } from './oauth';
+import {
+	listenToOAuthFromIframe,
+	setupOidcLoginFlowHandler,
+	shouldExecutePostConsentRedirect,
+} from './oauth';
 
 describe( 'oauth', () => {
 	beforeEach( () => {
@@ -62,6 +66,32 @@ describe( 'oauth', () => {
 		const lastIdx = mockForwardOidcLoginFlowToWindow.mock.calls.length - 1;
 		return ( mockForwardOidcLoginFlowToWindow.mock.calls[ lastIdx ][ 0 ] as any ).onSuccess;
 	}
+
+	describe( 'shouldExecutePostConsentRedirect', () => {
+		it( 'returns true on angie-app with start-oauth', () => {
+			expect(
+				shouldExecutePostConsentRedirect(
+					'http://localhost/wp-admin/admin.php?page=angie-app&start-oauth=1',
+				),
+			).toBe( true );
+		} );
+
+		it( 'returns false on the Elementor editor with start-oauth', () => {
+			expect(
+				shouldExecutePostConsentRedirect(
+					'http://localhost/wp-admin/post.php?post=123&action=elementor&start-oauth=1',
+				),
+			).toBe( false );
+		} );
+
+		it( 'returns false without start-oauth', () => {
+			expect(
+				shouldExecutePostConsentRedirect(
+					'http://localhost/wp-admin/admin.php?page=angie-app',
+				),
+			).toBe( false );
+		} );
+	} );
 
 	describe( 'listenToOAuthFromIframe', () => {
 		it( 'should setup OIDC auth parent listener', () => {

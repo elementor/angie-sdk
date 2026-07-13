@@ -15,13 +15,23 @@ declare global {
 
 const logger = createChildLogger( 'oauth' );
 
-const isPostConsentFlow = (): boolean => {
-	const urlParams = new URLSearchParams( window.location.search );
-	return urlParams.has( 'start-oauth' );
+const ANGIE_APP_PAGE_SLUG = 'angie-app';
+
+export const shouldExecutePostConsentRedirect = ( pageUrl?: string ): boolean => {
+	try {
+		const params = new URL(
+			pageUrl ?? window.location.href,
+			window.location.origin,
+		).searchParams;
+
+		return params.has( 'start-oauth' ) && params.get( 'page' ) === ANGIE_APP_PAGE_SLUG;
+	} catch {
+		return false;
+	}
 };
 
 export const handlePostConsentRedirect = (): void => {
-	if ( ! isPostConsentFlow() ) {
+	if ( ! shouldExecutePostConsentRedirect() ) {
 		return;
 	}
 

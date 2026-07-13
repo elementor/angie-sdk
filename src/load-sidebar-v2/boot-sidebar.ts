@@ -6,9 +6,12 @@ import { readEnv } from './env';
 import { initHostApiBridge } from './host-api-bridge';
 import { LAYOUT_STRATEGIES } from './layouts';
 import { openEmbeddedIframe } from './open-embedded-iframe';
+import { handlePostConsentRedirect } from '../oauth';
 import { resolveConfig, shouldBoot } from './resolve-config';
 
 export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
+	handlePostConsentRedirect();
+
 	const env = readEnv();
 	const config = resolveConfig( options, env );
 
