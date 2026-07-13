@@ -189,6 +189,46 @@ describe('AngieDetector', () => {
     });
   });
 
+  describe('waitUntilReady', () => {
+    it('should resolve when Angie is detected before timeout', async () => {
+      detector = new AngieDetector();
+
+      const promise = detector.waitUntilReady( 1000 );
+
+      if ( mockPort.onmessage ) {
+        mockPort.onmessage( {
+          data: {
+            version: '1.0.0',
+            capabilities: [ 'tool1' ],
+          },
+        } );
+      }
+      jest.runAllTimers();
+
+      const result = await promise;
+
+      expect( result ).toEqual( {
+        isReady: true,
+        version: '1.0.0',
+        capabilities: [ 'tool1' ],
+      } );
+    } );
+
+    it('should resolve with timeout result within bounded wait', async () => {
+      detector = new AngieDetector();
+
+      const promise = detector.waitUntilReady( 1000 );
+
+      jest.advanceTimersByTime( 1000 );
+
+      const result = await promise;
+
+      expect( result ).toEqual( {
+        isReady: false,
+      } );
+    } );
+  } );
+
   describe('ping mechanism', () => {
     it('should send pings at correct intervals', () => {
       // Arrange

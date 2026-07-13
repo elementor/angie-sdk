@@ -53,10 +53,21 @@ export interface ServerRegistration {
   error?: string;
 }
 
+export interface AngiePluginMarker {
+  available: boolean;
+  version?: string;
+}
+
 export interface AngieDetectionResult {
   isReady: boolean;
   version?: string;
   capabilities?: string[];
+}
+
+declare global {
+  interface Window {
+    angiePlugin?: AngiePluginMarker;
+  }
 }
 
 export interface AngieMessage<T = unknown> {
