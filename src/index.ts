@@ -21,6 +21,12 @@ export {
 	type AngieSidebarState,
 } from './sidebar';
 export { waitForDocumentReady, toggleAngieSidebar } from './utils';
+export {
+	isAngiePluginAvailable,
+	isAngiePluginActive,
+	waitForAngiePluginAvailable,
+	waitForAngiePluginActive,
+} from './angie-plugin-detection';
 export { navigateAngieIframe } from './navigation-utils';
 export { getAngieIframe } from './angie-iframe-utils';
 export { disableNavigationPrevention } from './iframe';

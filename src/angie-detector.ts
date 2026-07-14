@@ -82,4 +82,17 @@ export class AngieDetector {
   public async waitForReady(): Promise<AngieDetectionResult> {
     return this.readyPromise;
   }
+
+  public async waitUntilReady( timeoutMs: number ): Promise<AngieDetectionResult> {
+    if ( this.isAngieReady ) {
+      return this.readyPromise;
+    }
+
+    return Promise.race( [
+      this.readyPromise,
+      new Promise<AngieDetectionResult>( ( resolve ) => {
+        setTimeout( () => resolve( { isReady: false } ), timeoutMs );
+      } ),
+    ] );
+  }
 }
