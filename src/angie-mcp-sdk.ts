@@ -48,6 +48,7 @@ export type WidgetConfig = {
   aiContextGuidance?: FeatureToggle;
   userProfileMenu?: FeatureToggle;
   localServers?: LocalServersConfig;
+  planning?: FeatureToggle;
 };
 
 export type AngieMcpSdkOptions = {

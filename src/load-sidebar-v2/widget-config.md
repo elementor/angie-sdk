@@ -78,6 +78,7 @@ Each toggle uses `{ enabled: boolean }`.
 | `betaBanner` | Hide beta messaging in stable product surfaces |
 | `aiContextGuidance` | Show users that `host.aiContext` is available — pair with `host.aiContext` in `loadSidebarV2` |
 | `userProfileMenu` | Hide account/profile menu when the host owns auth UI |
+| `planning` | Opt out of Angie planning (`{ enabled: false }`). Omitted or `{ enabled: true }` keeps planning enabled when supported |
 
 ### Mode and MCP
 
