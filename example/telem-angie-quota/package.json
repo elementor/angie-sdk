@@ -1,0 +1,17 @@
+{
+  "name": "telem-angie-quota-example",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Telem-style BDD example: Angie quota service with readable scenarios",
+  "type": "module",
+  "scripts": {
+    "test": "node --import tsx/esm node_modules/@cucumber/cucumber/bin/cucumber.js",
+    "test:timed": "time npm test"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.2.0",
+    "@types/node": "^20.19.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.3.3"
+  }
+}
