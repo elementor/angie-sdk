@@ -61,7 +61,7 @@ export const listenToSDK = ( appState: AppState ) => {
 						payload: {
 							success: true,
 							...payload,
-							clientId: `dynamic-client-${ payload.serverName }-${ payload.serverVersion }-${ Date.now() }`,
+							clientId: `dynamic-client-${ payload.serverName }-${ payload.serverVersion }`,
 							requestId: event.data.payload.requestId,
 						},
 						timestamp: Date.now(),
