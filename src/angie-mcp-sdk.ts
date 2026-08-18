@@ -32,6 +32,10 @@ export type LocalServersConfig = {
   skipLoading?: boolean;
 };
 
+export type ModelsConfig = {
+  execution: string;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -49,6 +53,7 @@ export type WidgetConfig = {
   userProfileMenu?: FeatureToggle;
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
+  models?: ModelsConfig;
 };
 
 export type AngieMcpSdkOptions = {
