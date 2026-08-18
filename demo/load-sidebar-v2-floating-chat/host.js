@@ -1,9 +1,8 @@
-import { AngieMcpSdk, LAYOUT_FLOATING_CHAT, getAngieIframe, ANGIE_REQUIRED_RESOURCES } from '../../dist/index.js';
+import { AngieMcpSdk, LAYOUT_FLOATING_CHAT, getAngieIframe } from '../../dist/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
 const CONTEXT_SERVER_NAME = 'demo-field-context';
-const CONTEXT_RESOURCE_URI = 'context://current';
 
 const sdk = new AngieMcpSdk();
 
@@ -16,7 +15,7 @@ const getCurrentContext = ( textarea = activeTextarea ) => ( {
 } );
 
 const findTextarea = ( fieldName ) => {
-	if ( ! fieldName || fieldName === CONTEXT_RESOURCE_URI ) {
+	if ( ! fieldName ) {
 		return activeTextarea;
 	}
 
@@ -34,24 +33,10 @@ const createFieldServer = () => {
 		},
 		{
 			capabilities: {
-				resources: {},
 				tools: {},
 			},
-			instructions: `Use read-textarea to get the focused field, then update-textarea with the rewritten copy. ${ CONTEXT_RESOURCE_URI } is the same current-field snapshot.`,
+			instructions: 'Use read-textarea to get the focused field, then update-textarea with the rewritten copy.',
 		}
-	);
-
-	server.resource(
-		'current-context',
-		CONTEXT_RESOURCE_URI,
-		{ description: 'The text area the user opened Angie on' },
-		async ( uri ) => ( {
-			contents: [ {
-				uri: uri.href,
-				mimeType: 'application/json',
-				text: JSON.stringify( getCurrentContext() ),
-			} ],
-		} )
 	);
 
 	server.registerTool(
@@ -63,12 +48,6 @@ const createFieldServer = () => {
 			},
 			annotations: {
 				readOnlyHint: true,
-			},
-			_meta: {
-				[ ANGIE_REQUIRED_RESOURCES ]: [ {
-					uri: CONTEXT_RESOURCE_URI,
-					whenToUse: 'Always — identifies the focused field',
-				} ],
 			},
 		},
 		async ( { fieldName } = {} ) => {
@@ -97,12 +76,6 @@ const createFieldServer = () => {
 			inputSchema: {
 				fieldName: z.string().describe( 'The textarea name from read-textarea' ),
 				value: z.string().describe( 'The full replacement text for that field' ),
-			},
-			_meta: {
-				[ ANGIE_REQUIRED_RESOURCES ]: [ {
-					uri: CONTEXT_RESOURCE_URI,
-					whenToUse: 'Always — needed to know which field to update and its current value',
-				} ],
 			},
 		},
 		async ( { fieldName, value } ) => {
@@ -293,7 +266,6 @@ await sdk.registerServer( {
 	description: 'Read and rewrite the focused text area',
 	server: createFieldServer(),
 	capabilities: {
-		resources: {},
 		tools: {},
 	},
 } );
