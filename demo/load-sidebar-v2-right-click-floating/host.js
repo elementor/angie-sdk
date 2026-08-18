@@ -103,7 +103,7 @@ const createFieldServer = () => {
 
 const buildAiContext = ( textarea ) => ( {
 	whatUserSees: {
-		screen: 'Floating chat field rewrite demo',
+		screen: 'Right click floating demo',
 		fieldName: textarea?.name ?? '',
 		fieldValue: textarea?.value ?? '',
 	},
@@ -133,7 +133,7 @@ const sendFieldContext = ( textarea ) => {
 		{
 			type: 'sdk-embedded-config',
 			payload: {
-				appId: 'demo-field-rewrite',
+				appId: 'demo-right-click-floating',
 				configVersion: 2,
 				aiContext: buildAiContext( textarea ),
 			},
@@ -197,7 +197,7 @@ const openChatForTextarea = ( textarea, clientX, clientY ) => {
 
 await sdk.loadSidebarV2( {
 	host: {
-		appId: 'demo-field-rewrite',
+		appId: 'demo-right-click-floating',
 		aiContext: buildAiContext( document.querySelector( 'textarea' ) ),
 	},
 	container: {
@@ -215,6 +215,7 @@ await sdk.loadSidebarV2( {
 		},
 		closeButton: 'close',
 		planning: { enabled: false },
+		models: { execution: 'gemini-3.1-flash-lite-preview' },
 		userProfileMenu: { enabled: false },
 		promptLibrary: { enabled: false },
 		fileUpload: { enabled: false },
