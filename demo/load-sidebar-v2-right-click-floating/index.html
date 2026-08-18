@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — right click floating</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/server/mcp.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js",
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod": "../../node_modules/zod/index.js",
+      "zod/v3": "../../node_modules/zod/v3/index.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js",
+      "zod/v4-mini": "../../node_modules/zod/v4-mini/index.js",
+      "zod-to-json-schema": "../../node_modules/zod-to-json-schema/dist/esm/index.js",
+      "ajv": "./ajv-shim.js",
+      "ajv-formats": "./ajv-formats-shim.js"
+    }
+  }
+  </script>
+  <style>
+    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; max-width: 40rem; }
+    label { display: block; font-weight: 600; margin: 1rem 0 0.35rem; }
+    textarea { width: 100%; box-sizing: border-box; min-height: 6rem; padding: 0.5rem; font: inherit; }
+    .hint { color: #555; }
+  </style>
+</head>
+<body>
+  <p><a href="../">← All demos</a></p>
+  <p>Right-click floating chat that rewrites a focused text area through a host MCP server.</p>
+  <p class="hint">Right-click a text area to open Angie at the pointer. A local MCP server can read and update the focused field. Click outside to hide the chat.</p>
+
+  <label for="title">Title</label>
+  <textarea id="title" name="title">Summer sale</textarea>
+
+  <label for="description">Description</label>
+  <textarea id="description" name="description">A short promo for our seasonal collection.</textarea>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>
