@@ -40,9 +40,10 @@ jobs:
         run: |
           mkdir -p _site
           cp -R demo dist _site/
-          mkdir -p _site/node_modules/@modelcontextprotocol _site/node_modules/zod
+          mkdir -p _site/node_modules/@modelcontextprotocol _site/node_modules/zod _site/node_modules/zod-to-json-schema
           cp -R node_modules/@modelcontextprotocol/sdk _site/node_modules/@modelcontextprotocol/
           cp -R node_modules/zod _site/node_modules/
+          cp -R node_modules/zod-to-json-schema _site/node_modules/
           cat > _site/index.html <<'EOF'
           <!DOCTYPE html>
           <html lang="en">
