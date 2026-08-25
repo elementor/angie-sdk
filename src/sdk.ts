@@ -3,6 +3,7 @@ import { isTrustedIframeMessage, sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
 import { MessageEventType } from './types';
 import { AppState } from './config';
+import { shouldInstanceHandle } from './instance-registry';
 
 const sdkLogger = createChildLogger( 'sdk' );
 
@@ -32,6 +33,12 @@ export const listenToSDK = ( instance: AppState ) => {
 			return;
 		}
 
+		// Host messages share event.source, so route them by instanceId.
+		const shouldHandleMessage = shouldInstanceHandle(
+			instance,
+			event?.data?.payload?.instanceId
+		);
+
 		switch ( event?.data?.type ) {
 			case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
 				break;
@@ -47,6 +54,10 @@ export const listenToSDK = ( instance: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_REQUEST_CLIENT_CREATION: {
+				if ( ! shouldHandleMessage ) {
+					break;
+				}
+
 				const payload = event.data.payload as ClientCreationRequest;
 
 				try {
@@ -81,6 +92,9 @@ export const listenToSDK = ( instance: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_TRIGGER_ANGIE: {
+				if ( ! shouldHandleMessage ) {
+					break;
+				}
 
 				sdkLogger.log( 'SDK Trigger Angie received', event.data );
 
