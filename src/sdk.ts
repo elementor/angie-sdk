@@ -19,11 +19,11 @@ export interface ClientCreationRequest {
 	capabilities?: ServerCapabilities;
 }
 
-export const listenToSDK = ( appState: AppState ) => {
+export const listenToSDK = ( instance: AppState ) => {
 	// Access global timing instance for SDK performance tracking
 	window.addEventListener( 'message', async ( event ) => {
 		const isSameOrigin = event.origin === window.location.origin;
-		const isIframe = event.origin === appState.iframeUrlObject?.origin;
+		const isIframe = event.origin === instance.iframeUrlObject?.origin;
 		if ( ! isSameOrigin && ! isIframe ) {
 			return;
 		}
@@ -66,8 +66,8 @@ export const listenToSDK = ( appState: AppState ) => {
 						},
 						timestamp: Date.now(),
 					};
-					if ( appState.iframe ) {
-						appState.iframe.contentWindow?.postMessage( message, appState.iframeUrlObject?.origin || '', [ channel.port2 ] );
+					if ( instance.iframe ) {
+						instance.iframe.contentWindow?.postMessage( message, instance.iframeUrlObject?.origin || '', [ channel.port2 ] );
 					} else {
 						throw new Error( 'Iframe not found' );
 					}
@@ -83,8 +83,8 @@ export const listenToSDK = ( appState: AppState ) => {
 				try {
 					const { requestId, prompt, context, options } = event.data.payload;
 
-					if ( appState.iframe ) {
-						appState.iframe.contentWindow?.postMessage( {
+					if ( instance.iframe ) {
+						instance.iframe.contentWindow?.postMessage( {
 							type: MessageEventType.SDK_TRIGGER_ANGIE,
 							payload: {
 								requestId,
@@ -92,7 +92,7 @@ export const listenToSDK = ( appState: AppState ) => {
 								context,
 								options,
 							},
-						}, appState.iframeUrlObject?.origin || '' );
+						}, instance.iframeUrlObject?.origin || '' );
 					} else {
 						throw new Error( 'Iframe not found' );
 					}

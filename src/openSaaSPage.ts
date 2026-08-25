@@ -1,4 +1,5 @@
 import { HostEventType } from "./types";
+import { generateInstanceId, isTrustedIframeMessage } from "./utils";
 import type { HostEmbeddedConfigPayload } from "./load-sidebar-v2/config";
 
 type OpenSaaSPageInput = {
@@ -13,6 +14,8 @@ type OpenSaaSPageInput = {
 	uiTheme?: string;
 	isRTL?: boolean;
 	sdkVersion: string;
+	iframeElementId?: string;
+	instanceId?: string;
 };
 
 type OpenSaaSPageOutput = {
@@ -24,7 +27,8 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 	const origin = props.origin;
 	const pathUrl = new URL( props.path, origin );
 	// e.g. "text-to-elementor-vm2qhj"
-	const instanceId = pathUrl.pathname.slice( 1 ).replace( /\//, '--' ) + '-' + Math.random().toString( 36 ).substring( 7 );
+	const instanceSuffix = props.instanceId || generateInstanceId();
+	const instanceId = pathUrl.pathname.slice( 1 ).replace( /\//, '--' ) + '-' + instanceSuffix;
 
 	return new Promise( ( resolve ) => {
 		const iframeUrlObject = new URL( origin );
@@ -64,7 +68,7 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 		};
 
 		const onMessage = async ( event: MessageEvent ) => {
-			if ( event.origin !== iframeUrlObject.origin ) {
+			if ( ! isTrustedIframeMessage( event, iframeUrlObject.origin, iframe ) ) {
 				return;
 			}
 
@@ -91,7 +95,7 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 
 
 		iframe.setAttribute( 'src', iframeUrlObject.href );
-		iframe.id = 'angie-iframe';
+		iframe.id = props.iframeElementId || 'angie-iframe';
 		iframe.setAttribute( 'frameborder', '0' );
 		iframe.setAttribute( 'scrolling', 'no' );
 		iframe.setAttribute( 'style', Object.entries( css ).map( ( [ key, value ] ) => `${ key }: ${ value }` ).join( '; ' ) );
