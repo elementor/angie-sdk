@@ -6,11 +6,14 @@ import { CHAT_WIDGET_HIDDEN_CLASS } from './constants';
 import { setChatWidgetOpen } from './chat-shell';
 
 jest.mock( '../../utils', () => ( {
+	...( jest.requireActual( '../../utils' ) as object ),
 	toggleAngieSidebar: jest.fn(),
+	sendSuccessMessage: jest.fn(),
 } ) );
 
 jest.mock( '../toggle-button', () => ( {
 	syncToggleButton: jest.fn(),
+	wireToggleButton: jest.fn(),
 } ) );
 
 const CONTAINER_ID = 'angie-sidebar-container';
@@ -32,11 +35,12 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 			containerId: CONTAINER_ID,
 			toggleButtonSelector: TOGGLE_SELECTOR,
 			isOpen: false,
+			instance: appState,
 		} );
 
 		const container = document.getElementById( CONTAINER_ID )!;
 		expect( container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) ).toBe( true );
-		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, false );
+		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, false, CONTAINER_ID );
 		expect( syncToggleButton ).toHaveBeenCalledWith( TOGGLE_SELECTOR, false );
 	} );
 
@@ -48,10 +52,11 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell', () => {
 			containerId: CONTAINER_ID,
 			toggleButtonSelector: TOGGLE_SELECTOR,
 			isOpen: true,
+			instance: appState,
 		} );
 
 		expect( container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) ).toBe( false );
-		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, true );
+		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, true, CONTAINER_ID );
 		expect( syncToggleButton ).toHaveBeenCalledWith( TOGGLE_SELECTOR, true );
 	} );
 } );

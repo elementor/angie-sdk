@@ -8,6 +8,8 @@ import {
 	initHostApiBridge,
 	resetHostApiBridgeForTests,
 } from './host-api-bridge';
+import { appState } from '../config';
+import { resetInstancesForTests } from '../instance-registry';
 
 const IFRAME_ORIGIN = 'http://localhost:4000';
 
@@ -23,10 +25,11 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
 		resetHostApiBridgeForTests();
+		resetInstancesForTests();
 	} );
 
 	it( 'should respond with empty headers when no callback is provided', async () => {
-		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN } );
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance: appState } );
 
 		const port = createMockPort();
 		window.dispatchEvent( new MessageEvent( 'message', {
@@ -53,6 +56,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		initHostApiBridge( {
 			iframeOrigin: IFRAME_ORIGIN,
 			getExternalHeaders,
+			instance: appState,
 		} );
 
 		const firstPort = createMockPort();
@@ -92,6 +96,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		initHostApiBridge( {
 			iframeOrigin: IFRAME_ORIGIN,
 			getExternalHeaders,
+			instance: appState,
 		} );
 
 		const port = createMockPort();
@@ -113,6 +118,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 			getExternalHeaders: async () => {
 				throw new Error( 'Token unavailable' );
 			},
+			instance: appState,
 		} );
 
 		const port = createMockPort();
@@ -137,6 +143,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 				appId: 'test-app',
 				website: { name: 'Custom Site', wpVersion: '6.4' },
 			},
+			instance: appState,
 		} );
 
 		const port = createMockPort();
@@ -174,6 +181,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 					plugins: { elementor: true },
 				},
 			},
+			instance: appState,
 		} );
 
 		const port = createMockPort();
@@ -201,7 +209,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 	it( 'should handle localStorage GET', async () => {
 		window.localStorage.setItem( 'angie-test-key', 'stored-value' );
 
-		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN } );
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance: appState } );
 
 		const port = createMockPort();
 		window.dispatchEvent( new MessageEvent( 'message', {
@@ -218,7 +226,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 	} );
 
 	it( 'should handle localStorage SET', async () => {
-		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN } );
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance: appState } );
 
 		window.dispatchEvent( new MessageEvent( 'message', {
 			data: {

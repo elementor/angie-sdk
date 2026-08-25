@@ -12,7 +12,7 @@ import { appState } from './config';
 
 // Mock dependencies
 jest.mock('./angie-iframe-utils', () => ({
-  postMessageToAngieIframe: jest.fn(),
+  postMessageToInstance: jest.fn(),
 }));
 
 jest.mock('./iframe', () => ({

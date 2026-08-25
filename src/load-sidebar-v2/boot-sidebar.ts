@@ -1,4 +1,3 @@
-import { appState } from '../config';
 import { ensureSidebarContainer } from './container';
 import { buildHostEmbeddedConfigPayload, type LoadSidebarV2Options } from './config';
 import { sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
@@ -7,9 +6,14 @@ import { initHostApiBridge } from './host-api-bridge';
 import { LAYOUT_STRATEGIES } from './layouts';
 import { openEmbeddedIframe } from './open-embedded-iframe';
 import { handlePostConsentRedirect } from '../oauth';
+import { createAngieInstance } from '../instance-registry';
 import { resolveConfig, shouldBoot } from './resolve-config';
+import { generateInstanceId } from '../utils';
 
-export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
+export const bootSidebar = async (
+	options: LoadSidebarV2Options,
+	sdkInstanceId = ''
+): Promise<void> => {
 	handlePostConsentRedirect();
 
 	const env = readEnv();
@@ -19,36 +23,48 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		return;
 	}
 
+	const instanceId = sdkInstanceId || generateInstanceId();
+
+	const instance = createAngieInstance( {
+		containerId: config.container.id,
+		instanceId,
+		layout: config.container.layout,
+	} );
+
 	initHostApiBridge( {
 		iframeOrigin: config.iframe.origin,
 		host: config.host,
 		getExternalHeaders: config.callbacks.getExternalHeaders,
+		instance,
 	} );
-
-	appState.containerId = config.container.id;
 
 	ensureSidebarContainer( config.container.id, env.isRTL );
 
 	const strategy = LAYOUT_STRATEGIES[ config.container.layout ];
-	const bootContext = { config, env };
+	const bootContext = { config, env, instance };
 
 	strategy.initShell( bootContext );
 	strategy.beforeOpenIframe?.( bootContext );
 
 	const embeddedPayload = buildHostEmbeddedConfigPayload( config.host );
 
-	await openEmbeddedIframe( {
+	const opened = await openEmbeddedIframe( {
 		container: config.container,
 		iframe: config.iframe,
 		embeddedConfig: embeddedPayload,
+		instance,
 	} );
 
 	strategy.afterOpenIframe?.( bootContext );
 
+	if ( ! opened ) {
+		return;
+	}
+
 	// HOST_READY delivers config during iframe load; post-open message supports older embedded clients.
-	sendEmbeddedConfig( embeddedPayload );
+	sendEmbeddedConfig( embeddedPayload, instance );
 
 	if ( config.widgetConfig ) {
-		sendWidgetConfig( config.widgetConfig );
+		sendWidgetConfig( config.widgetConfig, instance );
 	}
 };
