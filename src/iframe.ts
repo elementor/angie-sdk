@@ -1,14 +1,13 @@
 import { addLocalStorageListener } from './localStorage';
-import { appState } from './config';
+import { appState, type AppState } from './config';
 import { createChildLogger } from './logger';
 import { listenToOAuthFromIframe, setupOidcLoginFlowHandler } from './oauth';
 import { listenToSDK } from './sdk';
 import { loadWidth } from './sidebar';
 import { HostEventType, MessageEventType } from './types';
-import { isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
+import { isFromIframe, isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
 import { ANGIE_SDK_VERSION } from './version';
 import { openSaaSPage } from './openSaaSPage';
-import { setAngieIframeRef } from './angie-iframe-utils';
 import type { HostEmbeddedConfigPayload } from './load-sidebar-v2/config';
 
 type OpenIframeProps = {
@@ -56,14 +55,24 @@ export const disableNavigationPrevention = async (): Promise<void> => {
 	}
 };
 
-export const openIframe = async ( props: OpenIframeProps ) => {
+export type OpenIframeResult = {
+	iframe: HTMLIFrameElement;
+	iframeOrigin: string;
+};
+
+export const openIframe = async (
+	props: OpenIframeProps,
+	instance: AppState = appState
+): Promise<OpenIframeResult | undefined> => {
 	if ( isMobile() ) {
 		iframeLogger.log( 'Mobile detected, skipping iframe injection' );
 		return;
 	}
 
+	const containerId = instance.containerId;
+
 	// Check if sidebar container exists
-	let sidebarContainer = document.getElementById( appState.containerId );
+	let sidebarContainer = document.getElementById( containerId );
 
 	if ( ! sidebarContainer ) {
 		// Use MutationObserver for more efficient DOM watching
@@ -74,7 +83,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 			// First try with shorter polling interval for immediate cases
 			let attempts = 0;
 			const quickCheck = setInterval( () => {
-				sidebarContainer = document.getElementById( appState.containerId );
+				sidebarContainer = document.getElementById( containerId );
 				attempts++;
 				if ( sidebarContainer || attempts > 20 ) { // Check for 2 seconds max with 100ms intervals
 					clearInterval( quickCheck );
@@ -95,7 +104,7 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 				}
 
 				const observer = new MutationObserver( () => {
-					sidebarContainer = document.getElementById( appState.containerId );
+					sidebarContainer = document.getElementById( containerId );
 					if ( sidebarContainer ) {
 						observer.disconnect();
 						resolve();
@@ -161,15 +170,16 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 		uiTheme: props.uiTheme,
 		isRTL: props.isRTL,
 		sdkVersion: ANGIE_SDK_VERSION,
+		iframeElementId: instance.iframeElementId,
+		instanceId: instance.instanceId,
 	} );
 
-	appState.iframe = iframe;
-	appState.iframeUrlObject = iframeUrlObject;
-	setAngieIframeRef( iframe );
+	instance.iframe = iframe;
+	instance.iframeUrlObject = iframeUrlObject;
 
-	addLocalStorageListener();
+	addLocalStorageListener( instance );
 
-	listenToSDK( appState );
+	listenToSDK( instance );
 
 	listenToOAuthFromIframe();
 	setupOidcLoginFlowHandler();
@@ -182,16 +192,20 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 			return;
 		}
 
-		if ( event?.data?.type === MessageEventType.ANGIE_CHAT_TOGGLE ) {
-			appState.open = event.data.open;
+		if ( ! isFromIframe( event, iframe ) ) {
+			return;
+		}
 
-			if ( appState.iframe ) {
-				toggleAngieSidebar( appState.iframe, appState.open );
+		if ( event?.data?.type === MessageEventType.ANGIE_CHAT_TOGGLE ) {
+			instance.open = event.data.open;
+
+			if ( instance.iframe ) {
+				toggleAngieSidebar( instance.iframe, instance.open, instance.containerId );
 			}
 		} else if ( event?.data?.type === MessageEventType.ANGIE_STUDIO_TOGGLE ) {
 			const isStudioOpen = event.data.isStudioOpen;
 
-			if ( ! appState.iframe ) {
+			if ( ! instance.iframe ) {
 				return;
 			}
 
@@ -241,4 +255,9 @@ export const openIframe = async ( props: OpenIframeProps ) => {
 		}
 
 	} );
+
+	return {
+		iframe,
+		iframeOrigin: iframeUrlObject.origin,
+	};
 };

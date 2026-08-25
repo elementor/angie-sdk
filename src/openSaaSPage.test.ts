@@ -112,6 +112,60 @@ describe('openSaaSPage', () => {
       expect(mockIframe.setAttribute).toHaveBeenCalledWith('allow', 'clipboard-write; clipboard-read');
     });
 
+    it('should build the iframe instanceId from the sdk instance id', async () => {
+      const messagePromise = openSaaSPage({
+        ...defaultProps,
+        instanceId: 'bbbbbb',
+      });
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        data: { type: HostEventType.ANGIE_READY },
+      });
+
+      const result = await messagePromise;
+      const appendSpy = result.iframeUrlObject.searchParams.append as jest.MockedFunction<any>;
+      const instanceIdCall = appendSpy.mock.calls.find((call: any[]) => call[0] === 'instanceId');
+
+      expect(instanceIdCall?.[1]).toBe('test-page-bbbbbb');
+    });
+
+    it('should ignore a ready message coming from a different iframe', async () => {
+      const ownWindow = { postMessage: jest.fn() };
+      Object.defineProperty(mockIframe, 'contentWindow', { value: ownWindow, writable: true });
+
+      let resolved = false;
+      const messagePromise = openSaaSPage(defaultProps).then((result) => {
+        resolved = true;
+        return result;
+      });
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        source: { postMessage: jest.fn() },
+        data: { type: HostEventType.ANGIE_READY },
+      });
+      await Promise.resolve();
+
+      expect(resolved).toBe(false);
+
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: { type: HostEventType.ANGIE_READY },
+      });
+      await messagePromise;
+
+      expect(resolved).toBe(true);
+    });
+
     it('should apply CSS styles correctly', async () => {
       const cssProps = {
         width: '400px',

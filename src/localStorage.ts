@@ -1,9 +1,10 @@
-import { appState } from "./config";
+import { appState, type AppState } from "./config";
 import { HostLocalStorageEventType } from "./types";
+import { isTrustedIframeMessage } from "./utils";
 
-export const addLocalStorageListener = () => {
+export const addLocalStorageListener = ( instance: AppState = appState ) => {
 	window.addEventListener( 'message', ( event: MessageEvent ) => {
-		if ( event.origin !== appState.iframeUrlObject?.origin ) {
+		if ( ! isTrustedIframeMessage( event, instance.iframeUrlObject?.origin, instance.iframe ) ) {
 			return;
 		}
 
