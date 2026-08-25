@@ -536,6 +536,29 @@ describe('AngieMcpSdk', () => {
       expect( mockBootSidebar ).toHaveBeenCalledTimes( 1 );
       expect( mockBootSidebar ).toHaveBeenCalledWith( options, expect.any( String ) );
     });
+
+    it('should adopt host.instanceId so routing matches the booted instance', async () => {
+      const mockBootSidebar = require('./load-sidebar-v2/boot-sidebar').bootSidebar as jest.MockedFunction<any>;
+      const options = {
+        host: {
+          appId: 'editor-lite',
+          instanceId: 'stable-id',
+        },
+      };
+      mockAngieDetector.isReady.mockReturnValue(true);
+
+      await sdk.loadSidebarV2( options );
+
+      expect( mockBootSidebar ).toHaveBeenCalledWith( options, 'stable-id' );
+
+      const promise = sdk.triggerAngie( { prompt: 'hi', context: {}, options: { timeout: 50 } } );
+      const call = ( window.postMessage as jest.MockedFunction<any> ).mock.calls.find(
+        ( item: any[] ) => item[ 0 ]?.type === 'sdk-trigger-angie',
+      );
+
+      expect( call?.[ 0 ].payload.instanceId ).toBe( 'stable-id' );
+      await expect( promise ).rejects.toThrow( 'timed out' );
+    });
   });
 
   describe('parseHashParams', () => {

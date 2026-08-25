@@ -53,7 +53,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 | Section | Purpose |
 |---------|---------|
-| `host` | **Required.** `appId`, optional `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
+| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
@@ -76,6 +76,51 @@ Keep it focused on what helps the agent answer screen-level questions:
 Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js) reads `#demo-host-app` into `whatUserSees` and lists allowed actions in `whatUserCanDo`.
 
 Enable `widgetConfig.aiContextGuidance: { enabled: true }` so users see that host context is available. Full reference: [widget-config.md](./widget-config.md).
+
+## Multiple instances on one page
+
+You can run more than one Angie instance on the same page. Each one keeps its own
+iframe, its own config and its own messages.
+
+Two rules:
+
+1. **Give every extra instance its own `container.id`.** The default is
+   `angie-sidebar-container` for every layout, so two instances that do not set it would
+   share one `<div>`. Booting the second one throws an error that names the id.
+2. **Only one instance may use the `sidebar` layout.** That layout paints through
+   page-wide CSS (`body.angie-sidebar-active` and `#angie-sidebar-container`), so a
+   second sidebar would have no styling and would share the first one's open state.
+   Booting a second sidebar throws. Extra instances must use `floatingChat`.
+
+```js
+const sidebarSdk = new AngieMcpSdk();
+await sidebarSdk.loadSidebarV2( {
+	host: { appId: 'my-app', instanceId: 'my-app-sidebar' },
+	container: { layout: LAYOUT_SIDEBAR },
+} );
+
+const chatSdk = new AngieMcpSdk();
+await chatSdk.loadSidebarV2( {
+	host: { appId: 'my-app-help', instanceId: 'my-app-help' },
+	container: { id: 'angie-help-container', layout: LAYOUT_FLOATING_CHAT },
+} );
+```
+
+Working example: [`demo/load-sidebar-v2-multi-instance`](../../demo/load-sidebar-v2-multi-instance/).
+
+### host.instanceId
+
+Optional. Names the instance. When you leave it out, the SDK generates a new id on every
+page load.
+
+The id names the instance's iframe (`angie-iframe-<instanceId>`), appears as the
+`instanceId` query parameter in the iframe URL, and routes MCP server registrations back
+to the right instance. Pass a stable id when you want those to stay the same across page
+loads, for example to target the iframe from your own CSS or end-to-end tests.
+
+Legacy globals (`window.toggleAngieSidebar`, `getAngieIframe()`, and similar helpers)
+still target the first booted instance. Hold the `AngieMcpSdk` object if you need a
+specific instance.
 
 ### Custom CSS (toggle + sidebar panel)
 

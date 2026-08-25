@@ -1,12 +1,23 @@
 import { ensureSidebarContainer } from './container';
-import { buildHostEmbeddedConfigPayload, type LoadSidebarV2Options } from './config';
+import {
+	buildHostEmbeddedConfigPayload,
+	LAYOUT_SIDEBAR,
+	type LoadSidebarV2Options,
+} from './config';
+import { DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR } from './defaults';
 import { sendEmbeddedConfig, sendWidgetConfig } from './embedded-handshake';
 import { readEnv } from './env';
 import { initHostApiBridge } from './host-api-bridge';
 import { LAYOUT_STRATEGIES } from './layouts';
 import { openEmbeddedIframe } from './open-embedded-iframe';
 import { handlePostConsentRedirect } from '../oauth';
-import { createAngieInstance } from '../instance-registry';
+import {
+	createAngieInstance,
+	getFirstInstance,
+	getInstanceByContainerId,
+	getInstanceById,
+	hasSidebarLayoutInstance,
+} from '../instance-registry';
 import { resolveConfig, shouldBoot } from './resolve-config';
 import { generateInstanceId } from '../utils';
 
@@ -23,7 +34,38 @@ export const bootSidebar = async (
 		return;
 	}
 
-	const instanceId = sdkInstanceId || generateInstanceId();
+	// Sidebar uses page-wide CSS and open state, so only one is supported.
+	if ( config.container.layout === LAYOUT_SIDEBAR && hasSidebarLayoutInstance() ) {
+		throw new Error(
+			'Angie SDK: only one sidebar layout instance is supported on a page. ' +
+			'Use container.layout "floatingChat" for the extra instance.'
+		);
+	}
+
+	if ( getInstanceByContainerId( config.container.id ) ) {
+		throw new Error(
+			`Angie SDK: container id "${ config.container.id }" is already used by another ` +
+			'Angie instance. Give this instance its own container.id.'
+		);
+	}
+
+	const instanceId = config.host.instanceId || sdkInstanceId || generateInstanceId();
+
+	if ( getInstanceById( instanceId ) ) {
+		throw new Error(
+			`Angie SDK: instance id "${ instanceId }" is already used by another ` +
+			'Angie instance. Give this instance its own host.instanceId.'
+		);
+	}
+
+	// Two instances would otherwise fight over the same default toggle button.
+	if (
+		getFirstInstance() &&
+		config.container.chatToggleButton.selector === DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR
+	) {
+		config.container.chatToggleButton.selector =
+			`${ DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR }-${ instanceId }`;
+	}
 
 	const instance = createAngieInstance( {
 		containerId: config.container.id,

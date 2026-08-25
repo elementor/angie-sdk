@@ -9,7 +9,7 @@ import {
 	resetHostApiBridgeForTests,
 } from './host-api-bridge';
 import { appState } from '../config';
-import { resetInstancesForTests } from '../instance-registry';
+import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
 
 const IFRAME_ORIGIN = 'http://localhost:4000';
 
@@ -26,6 +26,48 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		jest.clearAllMocks();
 		resetHostApiBridgeForTests();
 		resetInstancesForTests();
+	} );
+
+	it( 'should answer each instance with its own host config', async () => {
+		const first = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const second = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+		const secondWindow = {} as Window;
+		first.iframe = { contentWindow: {} as Window } as HTMLIFrameElement;
+		second.iframe = { contentWindow: secondWindow } as HTMLIFrameElement;
+
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: { appId: 'app-a', analytics: { screenPath: '/a' } },
+			instance: first,
+		} );
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: { appId: 'app-b', analytics: { screenPath: '/b' } },
+			instance: second,
+		} );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_ANALYTICS_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			source: secondWindow,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: { payload: expect.objectContaining( { screenPath: '/b' } ) },
+		} );
 	} );
 
 	it( 'should respond with empty headers when no callback is provided', async () => {

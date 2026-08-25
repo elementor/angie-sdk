@@ -119,6 +119,10 @@ export class AngieMcpSdk {
   }
 
   public loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
+    if ( options.host.instanceId ) {
+      this.instanceId = options.host.instanceId;
+    }
+
     this.sidebarV2BootPromise = bootSidebar( options, this.instanceId );
     return this.sidebarV2BootPromise;
   }
@@ -320,6 +324,7 @@ export class AngieMcpSdk {
         type: MessageEventType.SDK_TRIGGER_ANGIE,
         payload: {
           requestId,
+          instanceId: this.instanceId,
           prompt: request.prompt,
           options: request.options,
           context: {

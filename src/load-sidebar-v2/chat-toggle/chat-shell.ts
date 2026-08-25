@@ -1,4 +1,5 @@
 import type { AppState } from '../../config';
+import { hasSidebarLayoutInstance } from '../../instance-registry';
 import { MessageEventType } from '../../types';
 import { isTrustedIframeMessage, sendSuccessMessage, toggleAngieSidebar } from '../../utils';
 import { syncToggleButton, wireToggleButton } from '../toggle-button';
@@ -158,9 +159,12 @@ export const initChatShell = ( args: InitChatShellArgs ): void => {
 	initToggleButton( args );
 	setupChatWidgetMessageListeners( args );
 
-	window.toggleAngieSidebar = ( force?: boolean ) => {
-		handleSidebarToggleMessage( args, { force } );
-	};
+	// Preserve the sidebar's global toggle when both layouts are used.
+	if ( ! hasSidebarLayoutInstance() ) {
+		window.toggleAngieSidebar = ( force?: boolean ) => {
+			handleSidebarToggleMessage( args, { force } );
+		};
+	}
 };
 
 export const resetChatShellForTests = (): void => {
