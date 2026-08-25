@@ -1,6 +1,6 @@
-import { appState } from '../../config';
+import type { AppState } from '../../config';
 import { MessageEventType } from '../../types';
-import { sendSuccessMessage, toggleAngieSidebar } from '../../utils';
+import { isTrustedIframeMessage, sendSuccessMessage, toggleAngieSidebar } from '../../utils';
 import { syncToggleButton, wireToggleButton } from '../toggle-button';
 import { addHostMessageHandler } from '../host-message-router';
 import {
@@ -14,17 +14,19 @@ type InitChatShellArgs = {
 	iframeOrigin: string;
 	toggleButtonSelector: string;
 	onClose?: () => void;
+	instance: AppState;
 };
 
 type SetChatWidgetOpenArgs = {
 	containerId: string;
 	toggleButtonSelector: string;
 	isOpen: boolean;
+	instance: AppState;
 };
 
 const TOGGLE_ANGIE_SIDEBAR_MESSAGE = 'toggleAngieSidebar';
 
-let removeChatShellMessageHandler: ( () => void ) | null = null;
+const removeMessageHandlers = new Map<AppState, () => void>();
 
 export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 	const container = document.getElementById( args.containerId );
@@ -39,8 +41,8 @@ export const setChatWidgetOpen = ( args: SetChatWidgetOpenArgs ): void => {
 		container.classList.add( CHAT_WIDGET_HIDDEN_CLASS );
 	}
 
-	if ( appState.iframe ) {
-		toggleAngieSidebar( appState.iframe, args.isOpen );
+	if ( args.instance.iframe ) {
+		toggleAngieSidebar( args.instance.iframe, args.isOpen, args.containerId );
 	}
 
 	syncToggleButton( args.toggleButtonSelector, args.isOpen );
@@ -60,83 +62,54 @@ const setChatWidgetFullscreen = ( containerId: string, isFullscreen: boolean ): 
 	}
 };
 
+const setOpen = ( args: InitChatShellArgs, isOpen: boolean ): void => {
+	setChatWidgetOpen( {
+		containerId: args.containerId,
+		toggleButtonSelector: args.toggleButtonSelector,
+		isOpen,
+		instance: args.instance,
+	} );
+};
+
+const isWidgetOpen = ( containerId: string ): boolean => {
+	const container = document.getElementById( containerId );
+	return !! container && ! container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS );
+};
+
 const handleSidebarToggleMessage = (
 	args: InitChatShellArgs,
 	payload: { force?: boolean } | undefined,
 ): void => {
 	const force = payload?.force;
 
-	if ( force === false ) {
-		setChatWidgetOpen( {
-			containerId: args.containerId,
-			toggleButtonSelector: args.toggleButtonSelector,
-			isOpen: false,
-		} );
-		args.onClose?.();
+	if ( force !== undefined ) {
+		setOpen( args, force );
+
+		if ( ! force ) {
+			args.onClose?.();
+		}
+
 		return;
 	}
 
-	if ( force === true ) {
-		setChatWidgetOpen( {
-			containerId: args.containerId,
-			toggleButtonSelector: args.toggleButtonSelector,
-			isOpen: true,
-		} );
-		return;
-	}
+	const wasOpen = isWidgetOpen( args.containerId );
+	setOpen( args, ! wasOpen );
 
-	const container = document.getElementById( args.containerId );
-	const isCurrentlyOpen = container && ! container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS );
-	setChatWidgetOpen( {
-		containerId: args.containerId,
-		toggleButtonSelector: args.toggleButtonSelector,
-		isOpen: ! isCurrentlyOpen,
-	} );
-
-	if ( isCurrentlyOpen ) {
+	if ( wasOpen ) {
 		args.onClose?.();
 	}
 };
 
 const initToggleButton = ( args: InitChatShellArgs ): void => {
-	const toggleButton = findToggleButton( args.toggleButtonSelector );
-
-	if ( ! toggleButton ) {
-		wireToggleButton( {
-			toggleButtonSelector: args.toggleButtonSelector,
-			onClick: () => {
-				const toggleEl = findToggleButton( args.toggleButtonSelector );
-
-				if ( ! toggleEl ) {
-					return;
-				}
-
-				const isCurrentlyOpen = toggleEl.getAttribute( 'aria-expanded' ) === 'true';
-				setChatWidgetOpen( {
-					containerId: args.containerId,
-					toggleButtonSelector: args.toggleButtonSelector,
-					isOpen: ! isCurrentlyOpen,
-				} );
-
-				if ( isCurrentlyOpen ) {
-					args.onClose?.();
-				}
-			},
-		} );
-		return;
-	}
-
 	wireToggleButton( {
 		toggleButtonSelector: args.toggleButtonSelector,
 		onClick: () => {
-			const isCurrentlyOpen = toggleButton.getAttribute( 'aria-expanded' ) === 'true';
-			setChatWidgetOpen( {
-				containerId: args.containerId,
-				toggleButtonSelector: args.toggleButtonSelector,
-				isOpen: ! isCurrentlyOpen,
-			} );
+			const toggleEl = findToggleButton( args.toggleButtonSelector );
+			const wasOpen = toggleEl?.getAttribute( 'aria-expanded' ) === 'true';
 
-			if ( isCurrentlyOpen ) {
+			setOpen( args, ! wasOpen );
+
+			if ( wasOpen ) {
 				args.onClose?.();
 			}
 		},
@@ -144,9 +117,11 @@ const initToggleButton = ( args: InitChatShellArgs ): void => {
 };
 
 const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
-	removeChatShellMessageHandler?.();
-	removeChatShellMessageHandler = addHostMessageHandler( ( event: MessageEvent ) => {
-		if ( event.origin !== args.iframeOrigin ) {
+	const { instance } = args;
+
+	removeMessageHandlers.get( instance )?.();
+	removeMessageHandlers.set( instance, addHostMessageHandler( ( event: MessageEvent ) => {
+		if ( ! isTrustedIframeMessage( event, args.iframeOrigin, instance.iframe ) ) {
 			return;
 		}
 
@@ -167,11 +142,7 @@ const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
 				setChatWidgetFullscreen( args.containerId, isStudioOpen );
 
 				if ( isStudioOpen ) {
-					setChatWidgetOpen( {
-						containerId: args.containerId,
-						toggleButtonSelector: args.toggleButtonSelector,
-						isOpen: true,
-					} );
+					setOpen( args, true );
 				}
 
 				if ( port ) {
@@ -180,7 +151,7 @@ const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
 				break;
 			}
 		}
-	} );
+	} ) );
 };
 
 export const initChatShell = ( args: InitChatShellArgs ): void => {
@@ -193,6 +164,6 @@ export const initChatShell = ( args: InitChatShellArgs ): void => {
 };
 
 export const resetChatShellForTests = (): void => {
-	removeChatShellMessageHandler?.();
-	removeChatShellMessageHandler = null;
+	removeMessageHandlers.forEach( ( remove ) => remove() );
+	removeMessageHandlers.clear();
 };

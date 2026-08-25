@@ -1,6 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import { bootSidebar } from './boot-sidebar';
+import { getFirstInstance, resetInstancesForTests } from '../instance-registry';
 
 jest.mock( '../sidebar', () => ( {
 	ANGIE_SIDEBAR_STATE_CLOSED: 'closed',
@@ -13,7 +14,7 @@ jest.mock( '../sidebar', () => ( {
 } ) );
 
 jest.mock( './open-embedded-iframe', () => ( {
-	openEmbeddedIframe: jest.fn( () => Promise.resolve() ),
+	openEmbeddedIframe: jest.fn( () => Promise.resolve( true ) ),
 } ) );
 
 jest.mock( './embedded-handshake', () => ( {
@@ -52,6 +53,8 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
 		document.body.innerHTML = '';
+		document.head.innerHTML = '';
+		resetInstancesForTests();
 		mockApplyState = require( '../sidebar' ).applyState as jest.Mock;
 		mockInitAngieSidebar = require( '../sidebar' ).initAngieSidebar as jest.Mock;
 		mockLoadState = require( '../sidebar' ).loadState as jest.Mock;
@@ -77,6 +80,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		);
 		expect( mockSendEmbeddedConfig ).toHaveBeenCalledWith(
 			expect.objectContaining( { appId: 'editor-lite', configVersion: 2 } ),
+			expect.objectContaining( { instanceId: expect.any( String ) } ),
 		);
 		expect( mockLoadState ).toHaveBeenCalledWith( 'open' );
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
@@ -112,5 +116,13 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockApplyState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockLoadState ).toHaveBeenCalledWith( 'closed' );
 		expect( mockInitAngieSidebar ).toHaveBeenCalled();
+	} );
+
+	it( 'should name the instance after the sdk id', async () => {
+		await bootSidebar(
+			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a' } },
+			'sdk123',
+		);
+		expect( getFirstInstance()?.instanceId ).toBe( 'sdk123' );
 	} );
 } );
