@@ -118,11 +118,53 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockInitAngieSidebar ).toHaveBeenCalled();
 	} );
 
-	it( 'should name the instance after the sdk id', async () => {
+	it( 'should refuse a second sidebar layout instance', async () => {
+		await bootSidebar( { container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a' } } );
+
+		await expect( bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR, id: 'sidebar-b' },
+			host: { appId: 'app-b' },
+		} ) ).rejects.toThrow( /sidebar/i );
+	} );
+
+	it( 'should refuse a container id that another instance already uses', async () => {
+		await bootSidebar( {
+			container: { layout: LAYOUT_FLOATING_CHAT },
+			host: { appId: 'app-a' },
+		} );
+
+		await expect( bootSidebar( {
+			container: { layout: LAYOUT_FLOATING_CHAT },
+			host: { appId: 'app-b' },
+		} ) ).rejects.toThrow( /angie-sidebar-container/ );
+	} );
+
+	it( 'should refuse an instance id that another instance already uses', async () => {
+		await bootSidebar( {
+			container: { id: 'chat-a', layout: LAYOUT_FLOATING_CHAT },
+			host: { appId: 'app-a', instanceId: 'shared-id' },
+		} );
+
+		await expect( bootSidebar( {
+			container: { id: 'chat-b', layout: LAYOUT_FLOATING_CHAT },
+			host: { appId: 'app-b', instanceId: 'shared-id' },
+		} ) ).rejects.toThrow( /shared-id/ );
+	} );
+
+	it( 'should name the instance after the sdk id, or the host id when given', async () => {
 		await bootSidebar(
 			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a' } },
 			'sdk123',
 		);
 		expect( getFirstInstance()?.instanceId ).toBe( 'sdk123' );
+
+		resetInstancesForTests();
+		document.body.innerHTML = '';
+
+		await bootSidebar(
+			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a', instanceId: 'stable' } },
+			'sdk123',
+		);
+		expect( getFirstInstance()?.instanceId ).toBe( 'stable' );
 	} );
 } );

@@ -12,6 +12,7 @@ export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 
 export type HostConfig = {
 	appId: string;
+	instanceId?: string;
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
 	analytics?: Record<string, unknown>;
