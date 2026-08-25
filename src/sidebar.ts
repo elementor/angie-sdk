@@ -1,4 +1,4 @@
-import { postMessageToAngieIframe } from "./angie-iframe-utils";
+import { postMessageToInstance } from "./angie-iframe-utils";
 import { appState, type AppState } from "./config";
 import { MessageEventType } from "./types";
 import { createChildLogger } from "./logger";
@@ -80,7 +80,7 @@ export function getAngieSidebarSavedState(): AngieSidebarState | null {
 export function handleFocus( isOpen: boolean, delay: number, instance: AppState = appState ): void {
 	if ( isOpen ) {
 		setTimeout( function() {
-			postMessageToAngieIframe( {
+			postMessageToInstance( instance, {
 				type: 'focusInput',
 			} );
 		}, delay );
@@ -189,7 +189,7 @@ export function initializeResize( instance: AppState = appState ): void {
 			const currentWidth = parseInt( getComputedStyle( document.documentElement ).getPropertyValue( '--angie-sidebar-width' ), 10 );
 			saveWidth( currentWidth );
 
-			postMessageToAngieIframe( {
+			postMessageToInstance( instance, {
 				type: MessageEventType.ANGIE_SIDEBAR_RESIZED,
 				payload: { initialWidth: startWidth, width: currentWidth },
 			} );
@@ -254,7 +254,7 @@ export function createToggleSidebarFunction(
 		} );
 		document.dispatchEvent( event );
 
-		postMessageToAngieIframe( {
+		postMessageToInstance( instance, {
 			type: MessageEventType.ANGIE_SIDEBAR_TOGGLED,
 			payload: { state: shouldOpen ? 'opened' : 'closed' },
 		} );
