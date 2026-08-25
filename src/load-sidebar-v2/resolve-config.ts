@@ -37,6 +37,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 			appId: options.host.appId,
 			aiContext: options.host.aiContext,
 			website: options.host.website,
+			analytics: options.host.analytics,
 		},
 		boot: {
 			allowInIframe: boot.allowInIframe ?? DEFAULTS.boot.allowInIframe,

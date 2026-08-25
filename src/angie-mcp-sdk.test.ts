@@ -534,7 +534,7 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebarV2( options );
 
       expect( mockBootSidebar ).toHaveBeenCalledTimes( 1 );
-      expect( mockBootSidebar ).toHaveBeenCalledWith( options );
+      expect( mockBootSidebar ).toHaveBeenCalledWith( options, expect.any( String ) );
     });
   });
 

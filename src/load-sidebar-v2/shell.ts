@@ -7,6 +7,7 @@ import {
 	initializeResize,
 	loadState,
 } from '../sidebar';
+import { appState, type AppState } from '../config';
 import type { ContainerConfig, ResolvedConfigV2 } from './config';
 import {
 	syncToggleButton,
@@ -17,12 +18,14 @@ import { injectStyleThemeCss } from './inject-style-theme';
 export const initSidebarShell = (
 	container: ContainerConfig,
 	callbacks: ResolvedConfigV2['callbacks'],
+	instance: AppState = appState,
 ): void => {
 	const toggleButtonSelector = container.chatToggleButton.enabled
 		? container.chatToggleButton.selector
 		: undefined;
 
 	initAngieSidebar( {
+		instance,
 		onToggle: ( isOpen ) => {
 			if ( toggleButtonSelector ) {
 				syncToggleButton( toggleButtonSelector, isOpen );
@@ -66,6 +69,7 @@ export const applyInitialSidebarShellState = (
 
 export const finalizeSidebarShellState = (
 	container: ContainerConfig,
+	instance: AppState = appState,
 ): void => {
 	if ( container.persistOpenState ) {
 		loadState(
@@ -76,6 +80,6 @@ export const finalizeSidebarShellState = (
 	}
 
 	if ( container.resizable ) {
-		initializeResize();
+		initializeResize( instance );
 	}
 };
