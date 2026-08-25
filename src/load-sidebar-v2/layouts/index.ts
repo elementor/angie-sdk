@@ -1,5 +1,6 @@
 import { initFloatingChatLayout } from '../chat-toggle/init-floating-chat-layout';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR, type LoadSidebarV2Layout, type ResolvedConfigV2 } from '../config';
+import type { AppState } from '../../config';
 import type { Env } from '../env';
 import {
 	applyInitialSidebarShellState,
@@ -10,6 +11,7 @@ import {
 export type LayoutBootContext = {
 	config: ResolvedConfigV2;
 	env: Env;
+	instance: AppState;
 };
 
 export type LayoutStrategy = {
@@ -19,19 +21,19 @@ export type LayoutStrategy = {
 };
 
 const sidebarStrategy: LayoutStrategy = {
-	initShell: ( { config } ) => {
-		initSidebarShell( config.container, config.callbacks );
+	initShell: ( { config, instance } ) => {
+		initSidebarShell( config.container, config.callbacks, instance );
 	},
 	beforeOpenIframe: ( { config } ) => {
 		applyInitialSidebarShellState( config.container );
 	},
-	afterOpenIframe: ( { config } ) => {
-		finalizeSidebarShellState( config.container );
+	afterOpenIframe: ( { config, instance } ) => {
+		finalizeSidebarShellState( config.container, instance );
 	},
 };
 
 const floatingChatStrategy: LayoutStrategy = {
-	initShell: ( { config } ) => {
+	initShell: ( { config, instance } ) => {
 		const { chatToggleButton } = config.container;
 
 		initFloatingChatLayout( {
@@ -40,6 +42,7 @@ const floatingChatStrategy: LayoutStrategy = {
 			onClose: config.callbacks.onClose,
 			toggleButtonSelector: chatToggleButton.selector,
 			injectToggleButton: chatToggleButton.enabled,
+			instance,
 		} );
 	},
 };

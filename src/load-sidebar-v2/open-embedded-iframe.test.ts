@@ -3,7 +3,10 @@ import { appState } from '../config';
 import { openEmbeddedIframe } from './open-embedded-iframe';
 
 jest.mock( '../iframe', () => ( {
-	openIframe: jest.fn( () => Promise.resolve() ),
+	openIframe: jest.fn( () => Promise.resolve( {
+		iframe: {} as HTMLIFrameElement,
+		iframeOrigin: 'https://angie.elementor.com',
+	} ) ),
 } ) );
 
 jest.mock( '../utils', () => ( {
@@ -48,7 +51,7 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 			},
 		} );
 
-		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, false );
+		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, false, appState.containerId );
 		expect( syncToggleButton ).toHaveBeenCalledWith( '#demo-sidebar-toggle', false );
 	} );
 } );

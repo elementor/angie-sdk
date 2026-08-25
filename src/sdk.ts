@@ -3,6 +3,7 @@ import { sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
 import { MessageEventType } from './types';
 import { AppState } from './config';
+import { shouldInstanceHandle } from './instance-registry';
 
 const sdkLogger = createChildLogger( 'sdk' );
 
@@ -20,13 +21,18 @@ export interface ClientCreationRequest {
 }
 
 export const listenToSDK = ( appState: AppState ) => {
-	// Access global timing instance for SDK performance tracking
 	window.addEventListener( 'message', async ( event ) => {
 		const isSameOrigin = event.origin === window.location.origin;
 		const isIframe = event.origin === appState.iframeUrlObject?.origin;
 		if ( ! isSameOrigin && ! isIframe ) {
 			return;
 		}
+
+		// Host messages share event.source, so route them by instanceId.
+		const shouldHandleMessage = shouldInstanceHandle(
+			appState,
+			event?.data?.payload?.instanceId
+		);
 
 		switch ( event?.data?.type ) {
 			case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
@@ -43,6 +49,10 @@ export const listenToSDK = ( appState: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_REQUEST_CLIENT_CREATION: {
+				if ( ! shouldHandleMessage ) {
+					break;
+				}
+
 				const payload = event.data.payload as ClientCreationRequest;
 
 				try {
@@ -77,6 +87,9 @@ export const listenToSDK = ( appState: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_TRIGGER_ANGIE: {
+				if ( ! shouldHandleMessage ) {
+					break;
+				}
 
 				sdkLogger.log( 'SDK Trigger Angie received', event.data );
 
