@@ -30,6 +30,17 @@ describe('utils', () => {
       expect(mockSidebarContainer.getAttribute('aria-hidden')).toBe('true');
       expect(mockIframe.getAttribute('tabindex')).toBe('-1');
     });
+
+    it('should target the given container instead of the shared default', () => {
+      const otherContainer = document.createElement('div');
+      otherContainer.id = 'container-b';
+      document.body.appendChild(otherContainer);
+
+      toggleAngieSidebar(mockIframe, false, 'container-b');
+
+      expect(otherContainer.getAttribute('aria-hidden')).toBe('true');
+      expect(mockSidebarContainer.hasAttribute('aria-hidden')).toBe(false);
+    });
   });
 
   describe('isMobile', () => {

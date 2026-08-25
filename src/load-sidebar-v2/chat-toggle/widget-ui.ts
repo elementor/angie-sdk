@@ -6,6 +6,7 @@ import {
 	CHAT_WIDGET_HIDDEN_CLASS,
 	CHAT_WIDGET_STYLES_ID,
 } from './constants';
+import { DEFAULT_CONTAINER_ID } from '../../config';
 import { applySelectorToToggleButton, findToggleButton } from './toggle-button-element';
 
 const ANGIE_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="none">
@@ -130,13 +131,24 @@ export const injectChatToggleButtonStyles = (): void => {
 	document.head.appendChild( style );
 };
 
+/**
+ * The CSS is written against one container id, so every container needs its own tag.
+ * The default container keeps the original id, leaving single-instance pages unchanged.
+ */
+const styleIdForContainer = ( containerId: string ): string =>
+	containerId === DEFAULT_CONTAINER_ID
+		? CHAT_WIDGET_STYLES_ID
+		: `${ CHAT_WIDGET_STYLES_ID }-${ containerId }`;
+
 export const injectChatWidgetStyles = ( containerId: string ): void => {
-	if ( document.getElementById( CHAT_WIDGET_STYLES_ID ) ) {
+	const styleId = styleIdForContainer( containerId );
+
+	if ( document.getElementById( styleId ) ) {
 		return;
 	}
 
 	const style = document.createElement( 'style' );
-	style.id = CHAT_WIDGET_STYLES_ID;
+	style.id = styleId;
 	style.textContent = buildWidgetCss( containerId );
 	document.head.appendChild( style );
 };

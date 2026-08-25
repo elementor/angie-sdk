@@ -1,3 +1,4 @@
+import type { AppState } from '../../config';
 import { initChatShell } from './chat-shell';
 import {
 	injectChatToggleButton,
@@ -11,6 +12,7 @@ type InitFloatingChatLayoutArgs = {
 	toggleButtonSelector: string;
 	injectToggleButton: boolean;
 	onClose?: () => void;
+	instance: AppState;
 };
 
 export const initFloatingChatLayout = ( args: InitFloatingChatLayoutArgs ): void => {
@@ -26,5 +28,6 @@ export const initFloatingChatLayout = ( args: InitFloatingChatLayoutArgs ): void
 		iframeOrigin: args.iframeOrigin,
 		onClose: args.onClose,
 		toggleButtonSelector: args.toggleButtonSelector,
+		instance: args.instance,
 	} );
 };

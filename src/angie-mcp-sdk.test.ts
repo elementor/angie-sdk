@@ -9,9 +9,6 @@ jest.mock('./angie-detector');
 jest.mock('./registration-queue');
 jest.mock('./client-manager');
 jest.mock('./browser-context-transport');
-jest.mock('./angie-iframe-utils', () => ({
-  postMessageToAngieIframe: jest.fn(),
-}));
 jest.mock('./sidebar', () => ({
   initAngieSidebar: jest.fn(),
 }));
@@ -34,7 +31,6 @@ describe('AngieMcpSdk', () => {
   let mockBrowserContextTransport: any;
   let mockInitAngieSidebar: any;
   let mockOpenIframe: any;
-  let mockPostMessageToAngieIframe: any;
   let addEventListenerSpy: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
@@ -67,7 +63,6 @@ describe('AngieMcpSdk', () => {
     mockInitAngieSidebar = require('./sidebar').initAngieSidebar as jest.MockedFunction<any>;
     mockOpenIframe = require('./iframe').openIframe as jest.MockedFunction<any>;
     mockOpenIframe.mockResolvedValue(undefined);
-    mockPostMessageToAngieIframe = require('./angie-iframe-utils').postMessageToAngieIframe as jest.MockedFunction<any>;
 
     // Mock the constructors
     (require('./angie-detector') as any).AngieDetector.mockImplementation(() => mockAngieDetector);
@@ -158,8 +153,6 @@ describe('AngieMcpSdk', () => {
         'Server instance is required'
       );
     });
-
-
 
     it('should handle registration errors', async () => {
       // Arrange
@@ -303,8 +296,6 @@ describe('AngieMcpSdk', () => {
       expect(mockServer.connect).toHaveBeenCalled();
     });
 
-
-
     it('should handle server init request with non-existent server', () => {
       // Arrange
       mockRegistrationQueue.getAll.mockReturnValue([]);
@@ -326,8 +317,6 @@ describe('AngieMcpSdk', () => {
       // Assert
       expect(mockBrowserContextTransport).not.toHaveBeenCalled();
     });
-
-
 
     it('should handle server init request with server connection error', () => {
       // Arrange
@@ -505,51 +494,31 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should send widget config via postMessage when provided', async () => {
-      // Arrange
-      const widgetConfig = {
-        title: 'Custom Title',
-        subtitle: 'Custom Subtitle',
-        promptLibrary: { enabled: false },
-        fileUpload: { enabled: false },
-        feedback: { enabled: false },
-        featuredMcpServer: 'wp-search',
-        suggestions: { items: [{ label: 'Search', value: 'search for' }] },
-      };
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
+      const widgetConfig = { title: 'Custom Title' };
 
-      // Act
       await sdk.loadSidebar({ widgetConfig });
 
-      // Assert
-      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
-        type: 'sdk-widget-config',
-        payload: widgetConfig,
-      });
-    });
-
-    it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
-      // Arrange
-      const widgetConfig = {
-        title: 'Custom Title',
-        modeSwitcher: { enabled: true, default: 'plan' as const },
-        closeButton: 'collapse' as const,
-      };
-
-      // Act
-      await sdk.loadSidebar({ widgetConfig });
-
-      // Assert
-      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
-        type: 'sdk-widget-config',
-        payload: widgetConfig,
-      });
+      expect(iframePostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://angie.elementor.com',
+      );
     });
 
     it('should not send widget config when not provided', async () => {
-      // Act
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
+
       await sdk.loadSidebar();
 
-      // Assert
-      expect(mockPostMessageToAngieIframe).not.toHaveBeenCalled();
+      expect(iframePostMessage).not.toHaveBeenCalled();
     });
   });
 
@@ -565,7 +534,30 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebarV2( options );
 
       expect( mockBootSidebar ).toHaveBeenCalledTimes( 1 );
-      expect( mockBootSidebar ).toHaveBeenCalledWith( options );
+      expect( mockBootSidebar ).toHaveBeenCalledWith( options, expect.any( String ) );
+    });
+
+    it('should adopt host.instanceId so routing matches the booted instance', async () => {
+      const mockBootSidebar = require('./load-sidebar-v2/boot-sidebar').bootSidebar as jest.MockedFunction<any>;
+      const options = {
+        host: {
+          appId: 'editor-lite',
+          instanceId: 'stable-id',
+        },
+      };
+      mockAngieDetector.isReady.mockReturnValue(true);
+
+      await sdk.loadSidebarV2( options );
+
+      expect( mockBootSidebar ).toHaveBeenCalledWith( options, 'stable-id' );
+
+      const promise = sdk.triggerAngie( { prompt: 'hi', context: {}, options: { timeout: 50 } } );
+      const call = ( window.postMessage as jest.MockedFunction<any> ).mock.calls.find(
+        ( item: any[] ) => item[ 0 ]?.type === 'sdk-trigger-angie',
+      );
+
+      expect( call?.[ 0 ].payload.instanceId ).toBe( 'stable-id' );
+      await expect( promise ).rejects.toThrow( 'timed out' );
     });
   });
 
