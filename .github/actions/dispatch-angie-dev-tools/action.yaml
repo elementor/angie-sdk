@@ -1,0 +1,67 @@
+name: 'Dispatch angie-dev-tools workflow'
+description: 'Trigger a private angie-dev-tools workflow with the current PR context'
+
+inputs:
+  workflow:
+    description: 'Workflow filename in elementor/angie-dev-tools'
+    required: true
+  token:
+    description: 'Bot token that can dispatch workflows on angie-dev-tools'
+    required: true
+  dry_run:
+    description: 'Optional dry_run input for the approver workflow'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Dispatch workflow
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        WORKFLOW: ${{ inputs.workflow }}
+        DRY_RUN: ${{ inputs.dry_run }}
+        PR_INPUT: ${{ github.event.pull_request.html_url || github.event.inputs.pr_input }}
+        PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
+        PR_DRAFT: ${{ github.event.pull_request.draft }}
+        REPOSITORY: ${{ github.repository }}
+        EVENT_NAME: ${{ github.event_name }}
+      run: |
+        if [ -z "$GH_TOKEN" ]; then
+          echo "ANGIE_DEV_TOOLS_BOT_TOKEN is required to dispatch private angie-dev-tools workflows." >&2
+          exit 1
+        fi
+        if [ -z "$PR_INPUT" ]; then
+          echo "PR URL or number is required." >&2
+          exit 1
+        fi
+
+        if [ "$EVENT_NAME" = "pull_request" ]; then
+          SOURCE_EVENT="pull_request"
+          DRAFT="${PR_DRAFT:-false}"
+        else
+          SOURCE_EVENT="workflow_dispatch"
+          DRAFT="false"
+        fi
+
+        ARGS=(
+          -f "pr_input=${PR_INPUT}"
+          -f "target_repository=${REPOSITORY}"
+          -f "github_login=${PR_AUTHOR}"
+          -f "is_fork=false"
+          -f "source_event=${SOURCE_EVENT}"
+        )
+        if [ "$WORKFLOW" = "pr-ci-reviewers.yml" ]; then
+          ARGS+=(-f "pr_draft=${DRAFT}")
+        fi
+        if [ -n "$DRY_RUN" ] && [ "$WORKFLOW" = "pr-ci-approver.yml" ]; then
+          ARGS+=(-f "dry_run=${DRY_RUN}")
+        fi
+
+        gh workflow run "$WORKFLOW" \
+          --repo elementor/angie-dev-tools \
+          --ref master \
+          "${ARGS[@]}"
+
+        echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}"
