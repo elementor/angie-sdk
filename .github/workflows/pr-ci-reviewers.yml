@@ -22,7 +22,7 @@ jobs:
         contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
       )
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,7 +37,7 @@ jobs:
   approver:
     needs: reviewers
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
