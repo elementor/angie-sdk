@@ -1,0 +1,26 @@
+name: PR CI Approver
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, synchronize]
+  workflow_dispatch:
+    inputs:
+      pr_input:
+        description: 'PR number or URL (e.g., "123" or "https://github.com/owner/repo/pull/123")'
+        required: true
+        type: string
+      dry_run:
+        description: 'Log verdict without posting a PR comment'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: read
+
+jobs:
+  approver:
+    uses: elementor/angie-ci/.github/workflows/pr-ci-approver.yml@master
+    secrets: inherit

@@ -1,0 +1,22 @@
+name: PR CI Reviewers
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_input:
+        description: 'PR number or URL (e.g., "123" or "https://github.com/owner/repo/pull/123")'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+  issues: write
+
+jobs:
+  reviewers:
+    uses: elementor/angie-ci/.github/workflows/pr-ci-reviewers.yml@master
+    secrets: inherit
