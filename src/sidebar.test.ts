@@ -227,5 +227,4 @@ describe('sidebar', () => {
       expect( sendSuccessMessage ).toHaveBeenCalledWith( port );
     } );
   } );
-
 });
