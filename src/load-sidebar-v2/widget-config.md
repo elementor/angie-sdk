@@ -94,6 +94,14 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|--------|
 | `closeButton` | `'collapse' \| 'close'` | `collapse` — hide panel, keep session; `close` — dismiss widget |
 
+### Header
+
+Control the embedded app header (the top bar that contains the title and the built-in close button).
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `header` | `{ enabled?: boolean; showCloseButton?: boolean }` | `enabled: false` hides the whole header. `showCloseButton` only applies when the header is hidden: it toggles a minimal close-only header bar so the user can still close/collapse |
+
 ## Patterns from production hosts
 
 These mirror [`ai-remote-integration`](https://github.com/elementor/elementor-ai/tree/main/editor-saas-services/packages/ai-remote-integration) (Elementor my.elementor sidebar and visitor floating widget).

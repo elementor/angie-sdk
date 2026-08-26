@@ -36,6 +36,11 @@ export type ModelsConfig = {
   execution: string;
 };
 
+export type HeaderConfig = {
+  enabled?: boolean;
+  showCloseButton?: boolean;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -54,6 +59,7 @@ export type WidgetConfig = {
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
   models?: ModelsConfig;
+  header?: HeaderConfig;
 };
 
 export type AngieMcpSdkOptions = {

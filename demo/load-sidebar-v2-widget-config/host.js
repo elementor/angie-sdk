@@ -102,6 +102,7 @@ const buildSandboxWidgetConfig = () => ( {
 	betaBanner: { enabled: true },
 	aiContextGuidance: { enabled: true },
 	userProfileMenu: { enabled: true },
+	header: { enabled: false, showCloseButton: true },
 } );
 
 const PRESETS = {
