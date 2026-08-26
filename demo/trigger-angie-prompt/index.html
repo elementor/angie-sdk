@@ -87,12 +87,15 @@ await sdk.triggerAngie({
             same screen, or open in a new tab when linking from emails, docs, or another page.
             Add <code>&amp;angie-new-chat=true</code> to start a fresh chat.
           </p>
+          <p class="demo-card-lead">
+            <code>loadSidebarV2()</code> watches the hash on its own: it sends the prompt, then
+            clears the hash. This page has no hash-handling code of its own.
+          </p>
 
           <h3 class="demo-hash-group-title">In this page</h3>
           <ul class="demo-hash-links">
             <li>
               <a
-                class="demo-hash-link--in-page"
                 href="#angie-prompt=What%20should%20I%20change%20before%20publishing%3F"
               >
                 Pre-publish review
@@ -100,7 +103,6 @@ await sdk.triggerAngie({
             </li>
             <li>
               <a
-                class="demo-hash-link--in-page"
                 href="#angie-prompt=Suggest%20a%20clearer%20call%20to%20action%20for%20this%20screen."
               >
                 Better CTA
@@ -147,7 +149,10 @@ await sdk.triggerAngie({
 
         <section class="demo-card" aria-labelledby="status-heading">
           <h2 id="status-heading">3. Status</h2>
-          <p class="demo-card-lead">Last trigger result from the host page.</p>
+          <p class="demo-card-lead">
+            Last result from the controls above. Hash links are handled inside the SDK, so they do
+            not report here.
+          </p>
           <div class="demo-status" id="demo-status" role="status" aria-live="polite">
             Loading Angie sidebar…
           </div>

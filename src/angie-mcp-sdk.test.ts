@@ -89,6 +89,12 @@ describe('AngieMcpSdk', () => {
   });
 
   afterEach(() => {
+    // Detach every listener this test registered, otherwise SDK instances keep
+    // reacting to events (hashchange in particular) during later tests.
+    for ( const [ type, listener ] of addEventListenerSpy.mock.calls as [ string, EventListener ][] ) {
+      window.removeEventListener( type, listener );
+    }
+
     jest.restoreAllMocks();
     addEventListenerSpy.mockRestore();
   });
@@ -671,6 +677,21 @@ describe('AngieMcpSdk', () => {
               newChat: false,
             }),
           }),
+        }),
+        expect.anything()
+      );
+    });
+
+    it('should trigger from the hash after loadSidebarV2', async () => {
+      window.location.hash = '#angie-prompt=Fix%20error';
+
+      await sdk.loadSidebarV2( { host: { appId: 'editor-lite' } } );
+      await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+      expect(postMessageSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'sdk-trigger-angie',
+          payload: expect.objectContaining({ prompt: 'Fix error' }),
         }),
         expect.anything()
       );
