@@ -1,5 +1,5 @@
 name: 'Dispatch angie-dev-tools workflow'
-description: 'Trigger a private angie-dev-tools workflow with the current PR context'
+description: 'Trigger a private angie-dev-tools workflow with the current PR context and wait for it to finish'
 
 inputs:
   workflow:
@@ -62,9 +62,17 @@ runs:
           ARGS+=(-f "dry_run=${DRY_RUN}")
         fi
 
-        gh workflow run "$WORKFLOW" \
+        RUN_URL="$(gh workflow run "$WORKFLOW" \
           --repo elementor/angie-dev-tools \
           --ref master \
-          "${ARGS[@]}"
+          "${ARGS[@]}")"
 
-        echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}"
+        echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}: ${RUN_URL}"
+
+        if [[ ! "$RUN_URL" =~ /actions/runs/([0-9]+) ]]; then
+          echo "gh workflow run did not return a run URL." >&2
+          exit 1
+        fi
+
+        RUN_ID="${BASH_REMATCH[1]}"
+        gh run watch "$RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10
