@@ -1,5 +1,5 @@
 name: 'Dispatch angie-dev-tools workflow'
-description: 'Trigger a private angie-dev-tools workflow with the current PR context'
+description: 'Trigger a private angie-dev-tools workflow with the current PR context and wait for it to finish'
 
 inputs:
   workflow:
@@ -62,9 +62,53 @@ runs:
           ARGS+=(-f "dry_run=${DRY_RUN}")
         fi
 
+        mapfile -t EXISTING_IDS < <(gh run list \
+          --repo elementor/angie-dev-tools \
+          --workflow "$WORKFLOW" \
+          --limit 50 \
+          --json databaseId \
+          --jq '.[].databaseId')
+
         gh workflow run "$WORKFLOW" \
           --repo elementor/angie-dev-tools \
           --ref master \
           "${ARGS[@]}"
 
         echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}"
+
+        RUN_ID=""
+        for _ in $(seq 1 30); do
+          mapfile -t CANDIDATE_IDS < <(gh run list \
+            --repo elementor/angie-dev-tools \
+            --workflow "$WORKFLOW" \
+            --event workflow_dispatch \
+            --limit 20 \
+            --json databaseId,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[].databaseId')
+          for id in "${CANDIDATE_IDS[@]}"; do
+            already_seen=0
+            for existing in "${EXISTING_IDS[@]}"; do
+              if [ "$id" = "$existing" ]; then
+                already_seen=1
+                break
+              fi
+            done
+            if [ "$already_seen" -eq 0 ]; then
+              RUN_ID="$id"
+              break
+            fi
+          done
+          if [ -n "$RUN_ID" ]; then
+            break
+          fi
+          sleep 2
+        done
+
+        if [ -z "$RUN_ID" ]; then
+          echo "Timed out waiting for dispatched ${WORKFLOW} run to appear." >&2
+          exit 1
+        fi
+
+        RUN_URL="$(gh run view "$RUN_ID" --repo elementor/angie-dev-tools --json url --jq .url)"
+        echo "Waiting for ${WORKFLOW} run ${RUN_ID}: ${RUN_URL}"
+        gh run watch "$RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10

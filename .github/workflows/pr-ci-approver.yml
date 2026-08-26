@@ -1,8 +1,6 @@
 name: PR CI Approver
 
 on:
-  pull_request:
-    types: [opened, ready_for_review, synchronize]
   workflow_dispatch:
     inputs:
       pr_input:
@@ -20,18 +18,13 @@ permissions:
 
 jobs:
   dispatch:
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
-      )
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          ref: ${{ github.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
