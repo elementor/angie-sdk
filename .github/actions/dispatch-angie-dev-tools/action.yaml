@@ -62,35 +62,17 @@ runs:
           ARGS+=(-f "dry_run=${DRY_RUN}")
         fi
 
-        SINCE="$(date -u -d '5 seconds ago' +%Y-%m-%dT%H:%M:%SZ)"
-
-        gh workflow run "$WORKFLOW" \
+        RUN_URL="$(gh workflow run "$WORKFLOW" \
           --repo elementor/angie-dev-tools \
           --ref master \
-          "${ARGS[@]}"
+          "${ARGS[@]}")"
 
-        echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}"
+        echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}: ${RUN_URL}"
 
-        RUN_ID=""
-        for _ in $(seq 1 30); do
-          RUN_ID="$(gh run list \
-            --repo elementor/angie-dev-tools \
-            --workflow "$WORKFLOW" \
-            --event workflow_dispatch \
-            --limit 10 \
-            --json databaseId,createdAt \
-            --jq --arg since "$SINCE" \
-              '[.[] | select(.createdAt >= $since)] | first | .databaseId // empty')"
-          if [ -n "$RUN_ID" ]; then
-            break
-          fi
-          sleep 2
-        done
-
-        if [ -z "$RUN_ID" ]; then
-          echo "Timed out waiting for dispatched ${WORKFLOW} run to appear." >&2
+        if [[ ! "$RUN_URL" =~ /actions/runs/([0-9]+) ]]; then
+          echo "gh workflow run did not return a run URL." >&2
           exit 1
         fi
 
-        echo "Waiting for ${WORKFLOW} run ${RUN_ID}"
+        RUN_ID="${BASH_REMATCH[1]}"
         gh run watch "$RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10
