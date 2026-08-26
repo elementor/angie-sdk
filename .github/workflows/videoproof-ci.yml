@@ -1,0 +1,72 @@
+name: Videoproof-CI
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  videoproof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Start demo
+        run: |
+          npx --yes serve . -l 8080 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/demo/ >/dev/null; then
+              echo "Demo is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Demo server did not start" >&2
+          exit 1
+
+      - name: Install Cursor CLI
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+
+      - name: Prove the demo POC
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          if [ -z "$CURSOR_API_KEY" ]; then
+            echo "CURSOR_API_KEY secret is required for Videoproof-CI." >&2
+            exit 1
+          fi
+          npx --yes agex prove \
+            "Open the Angie SDK demos, open the loadSidebarV2 full example, and show the product editor POC with Ask Angie." \
+            --url http://127.0.0.1:8080/demo/ \
+            --agent cursor \
+            --output ./prove-results \
+            --viewport 1280x800
+
+      - name: Upload videoproof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: videoproof
+          path: prove-results/
+          if-no-files-found: ignore
+          retention-days: 14
