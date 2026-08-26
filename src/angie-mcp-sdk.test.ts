@@ -499,7 +499,35 @@ describe('AngieMcpSdk', () => {
         iframe: { contentWindow: { postMessage: iframePostMessage } },
         iframeOrigin: 'https://angie.elementor.com',
       });
-      const widgetConfig = { title: 'Custom Title' };
+      const widgetConfig = {
+        title: 'Custom Title',
+        subtitle: 'Custom Subtitle',
+        promptLibrary: { enabled: false },
+        fileUpload: { enabled: false },
+        feedback: { enabled: false },
+        featuredMcpServer: 'wp-search',
+        suggestions: { items: [{ label: 'Search', value: 'search for' }] },
+      };
+
+      await sdk.loadSidebar({ widgetConfig });
+
+      expect(iframePostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://angie.elementor.com',
+      );
+    });
+
+    it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
+      const widgetConfig = {
+        title: 'Custom Title',
+        modeSwitcher: { enabled: true, default: 'plan' as const },
+        closeButton: 'collapse' as const,
+      };
 
       await sdk.loadSidebar({ widgetConfig });
 

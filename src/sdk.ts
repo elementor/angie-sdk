@@ -1,5 +1,5 @@
 import { createChildLogger } from './logger';
-import { sendSuccessMessage } from './utils';
+import { isTrustedIframeMessage, sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
 import { MessageEventType } from './types';
 import { AppState } from './config';
@@ -23,7 +23,11 @@ export const listenToSDK = ( instance: AppState ) => {
 	// Access global timing instance for SDK performance tracking
 	window.addEventListener( 'message', async ( event ) => {
 		const isSameOrigin = event.origin === window.location.origin;
-		const isIframe = event.origin === instance.iframeUrlObject?.origin;
+		const isIframe = isTrustedIframeMessage(
+			event,
+			instance.iframeUrlObject?.origin,
+			instance.iframe,
+		);
 		if ( ! isSameOrigin && ! isIframe ) {
 			return;
 		}

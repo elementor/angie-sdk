@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
-import { toggleAngieSidebar, isMobile, sendSuccessMessage, sendErrorMessage, waitForDocumentReady, isSafeUrl } from './utils';
+import { toggleAngieSidebar, isMobile, sendSuccessMessage, sendErrorMessage, waitForDocumentReady, isSafeUrl, isFromIframe, isTrustedIframeMessage } from './utils';
 
 describe('utils', () => {
   let mockIframe: HTMLIFrameElement;
@@ -99,6 +99,68 @@ describe('utils', () => {
       });
 
       await expect(waitForDocumentReady()).resolves.toBeNull();
+    });
+  });
+
+  describe('isFromIframe', () => {
+    it('should return true when event.source is the iframe contentWindow', () => {
+      const fakeWindow = {} as Window;
+      const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
+      const event = { source: fakeWindow } as MessageEvent;
+
+      expect(isFromIframe(event, iframe)).toBe(true);
+    });
+
+    it('should return false when event.source is a different window', () => {
+      const fakeWindow = {} as Window;
+      const otherWindow = {} as Window;
+      const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
+      const event = { source: otherWindow } as MessageEvent;
+
+      expect(isFromIframe(event, iframe)).toBe(false);
+    });
+
+    it('should return true when iframe is null (backward-compat fallback)', () => {
+      const event = { source: {} as Window } as MessageEvent;
+
+      expect(isFromIframe(event, null)).toBe(true);
+    });
+
+    it('should return true when event.source is missing/null', () => {
+      const fakeWindow = {} as Window;
+      const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
+      const event = { source: null } as MessageEvent;
+
+      expect(isFromIframe(event, iframe)).toBe(true);
+    });
+  });
+
+  describe('isTrustedIframeMessage', () => {
+    const iframeOrigin = 'https://angie.elementor.com';
+
+    it('should return true when origin matches and source is the iframe window', () => {
+      const fakeWindow = {} as Window;
+      const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
+      const event = { origin: iframeOrigin, source: fakeWindow } as MessageEvent;
+
+      expect(isTrustedIframeMessage(event, iframeOrigin, iframe)).toBe(true);
+    });
+
+    it('should return false when origin mismatches even if source matches', () => {
+      const fakeWindow = {} as Window;
+      const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
+      const event = { origin: 'https://evil.com', source: fakeWindow } as MessageEvent;
+
+      expect(isTrustedIframeMessage(event, iframeOrigin, iframe)).toBe(false);
+    });
+
+    it('should return false when origin matches but source is a different window', () => {
+      const fakeWindow = {} as Window;
+      const otherWindow = {} as Window;
+      const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
+      const event = { origin: iframeOrigin, source: otherWindow } as MessageEvent;
+
+      expect(isTrustedIframeMessage(event, iframeOrigin, iframe)).toBe(false);
     });
   });
 
