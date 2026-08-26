@@ -12,8 +12,6 @@ on:
 
 permissions:
   contents: read
-  checks: read
-  statuses: read
 
 jobs:
   reviewers:
@@ -29,6 +27,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
@@ -37,21 +36,15 @@ jobs:
 
   approver:
     needs: reviewers
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
-      )
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
         with:
           workflow: pr-ci-approver.yml
-          wait_for_other_checks: 'true'

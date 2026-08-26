@@ -9,66 +9,10 @@ inputs:
     description: 'Optional dry_run input for the approver workflow'
     required: false
     default: ''
-  wait_for_other_checks:
-    description: 'Wait for other PR checks to leave IN_PROGRESS before dispatching'
-    required: false
-    default: 'false'
 
 runs:
   using: 'composite'
   steps:
-    - name: Wait for other PR checks
-      if: inputs.wait_for_other_checks == 'true'
-      shell: bash
-      env:
-        PR_INPUT: ${{ github.event.pull_request.html_url || github.event.inputs.pr_input }}
-        REPOSITORY: ${{ github.repository }}
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        set -euo pipefail
-
-        if [ -z "$PR_INPUT" ]; then
-          echo "PR URL or number is required to wait for checks." >&2
-          exit 1
-        fi
-
-        deadline=$((SECONDS + 2700))
-        seen_checks=0
-
-        while (( SECONDS < deadline )); do
-          json="$(gh pr checks "$PR_INPUT" --repo "$REPOSITORY" --json name,state,workflow 2>/dev/null || true)"
-          if [ -z "$json" ] || [ "$json" = "[]" ]; then
-            echo "No PR checks reported yet; waiting..."
-            sleep 15
-            continue
-          fi
-          seen_checks=1
-
-          pending="$(jq -r '
-            .[]
-            | select(.workflow != "PR CI Reviewers" and .workflow != "PR CI Approver" and .workflow != "PR Slack Ready for Review")
-            | select((.name // "") | test("gitStream|gitstream") | not)
-            | select(.state == "IN_PROGRESS" or .state == "QUEUED" or .state == "PENDING")
-            | "\(.name) [\(.workflow // "unknown")] \(.state)"
-          ' <<<"$json")"
-
-          if [ -z "$pending" ]; then
-            echo "All other PR checks have finished."
-            exit 0
-          fi
-
-          echo "Waiting for other PR checks to finish:"
-          echo "$pending"
-          sleep 15
-        done
-
-        if [ "$seen_checks" -eq 0 ]; then
-          echo "Timed out waiting for PR checks to appear." >&2
-        else
-          echo "Timed out waiting for other PR checks to finish." >&2
-        fi
-        exit 1
-
     - name: Dispatch workflow
       shell: bash
       env:
@@ -118,20 +62,7 @@ runs:
           ARGS+=(-f "dry_run=${DRY_RUN}")
         fi
 
-        PR_NUM=""
-        if [[ "$PR_INPUT" =~ /pull/([0-9]+) ]]; then
-          PR_NUM="${BASH_REMATCH[1]}"
-        elif [[ "$PR_INPUT" =~ ^[0-9]+$ ]]; then
-          PR_NUM="$PR_INPUT"
-        fi
-
-        EXISTING_JSON="$(gh run list \
-          --repo elementor/angie-dev-tools \
-          --workflow "$WORKFLOW" \
-          --limit 50 \
-          --json databaseId \
-          --jq '[.[].databaseId]')"
-        DISPATCH_START="$(date -u -d '5 seconds ago' +%Y-%m-%dT%H:%M:%SZ)"
+        SINCE="$(date -u -d '5 seconds ago' +%Y-%m-%dT%H:%M:%SZ)"
 
         gh workflow run "$WORKFLOW" \
           --repo elementor/angie-dev-tools \
@@ -140,47 +71,16 @@ runs:
 
         echo "Dispatched ${WORKFLOW} on elementor/angie-dev-tools for ${PR_INPUT}"
 
-        run_mentions_pr() {
-          local id="$1"
-          local details logs
-          details="$(gh run view "$id" --repo elementor/angie-dev-tools --json displayTitle,name,url,jobs 2>/dev/null || true)"
-          if [ -n "$details" ] && echo "$details" | grep -F -q -- "$PR_INPUT"; then
-            return 0
-          fi
-          if [ -n "$PR_NUM" ] && [ -n "$details" ] && echo "$details" | grep -E -q -- "/pull/${PR_NUM}([^0-9]|$)|#${PR_NUM}([^0-9]|$)"; then
-            return 0
-          fi
-          logs="$(gh run view "$id" --repo elementor/angie-dev-tools --log 2>/dev/null | head -c 200000 || true)"
-          if [ -n "$logs" ] && echo "$logs" | grep -F -q -- "$PR_INPUT"; then
-            return 0
-          fi
-          return 1
-        }
-
         RUN_ID=""
-        for attempt in $(seq 1 30); do
-          CANDIDATES="$(gh run list \
+        for _ in $(seq 1 30); do
+          RUN_ID="$(gh run list \
             --repo elementor/angie-dev-tools \
             --workflow "$WORKFLOW" \
             --event workflow_dispatch \
-            --limit 30 \
-            --json databaseId,createdAt,displayTitle,name,url \
-            --jq --arg since "$DISPATCH_START" --argjson existing "$EXISTING_JSON" \
-              '[.[] | select(.createdAt >= $since and (($existing | index(.databaseId)) | not))] | sort_by(.createdAt) | reverse')"
-
-          CANDIDATES="${CANDIDATES:-[]}"
-          mapfile -t CANDIDATE_IDS < <(jq -r '.[].databaseId // empty' <<<"$CANDIDATES")
-          for id in "${CANDIDATE_IDS[@]}"; do
-            if [ -n "$id" ] && run_mentions_pr "$id"; then
-              RUN_ID="$id"
-              break
-            fi
-          done
-
-          if [ -z "$RUN_ID" ] && [ "$attempt" -ge 8 ] && [ "${#CANDIDATE_IDS[@]}" -eq 1 ] && [ -n "${CANDIDATE_IDS[0]}" ]; then
-            RUN_ID="${CANDIDATE_IDS[0]}"
-          fi
-
+            --limit 10 \
+            --json databaseId,createdAt \
+            --jq --arg since "$SINCE" \
+              '[.[] | select(.createdAt >= $since)] | first | .databaseId // empty')"
           if [ -n "$RUN_ID" ]; then
             break
           fi
@@ -192,14 +92,5 @@ runs:
           exit 1
         fi
 
-        echo "REMOTE_RUN_ID=${RUN_ID}" >> "$GITHUB_ENV"
-
-    - name: Wait for remote workflow
-      if: env.REMOTE_RUN_ID != ''
-      shell: bash
-      env:
-        WORKFLOW: ${{ inputs.workflow }}
-      run: |
-        RUN_URL="$(gh run view "$REMOTE_RUN_ID" --repo elementor/angie-dev-tools --json url --jq .url)"
-        echo "Waiting for ${WORKFLOW} run ${REMOTE_RUN_ID}: ${RUN_URL}"
-        gh run watch "$REMOTE_RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10
+        echo "Waiting for ${WORKFLOW} run ${RUN_ID}"
+        gh run watch "$RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10
