@@ -54,4 +54,41 @@ describe( 'sdk', () => {
 		);
 		expect( secondPostMessage ).not.toHaveBeenCalled();
 	} );
+
+	it( 'should forward a client creation request only to the addressed instance', () => {
+		const first = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const second = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+		const firstPostMessage = attachIframe( first );
+		const secondPostMessage = attachIframe( second );
+
+		listenToSDK( first );
+		listenToSDK( second );
+		emitHostMessage( {
+			type: MessageEventType.SDK_REQUEST_CLIENT_CREATION,
+			payload: {
+				instanceId: 'aaaaaa',
+				requestId: 'req-1',
+				serverId: 'server-1',
+				serverName: 'Test Server',
+				description: 'A test server',
+				serverVersion: '1.0.0',
+				transport: 'postMessage',
+			},
+		} );
+
+		expect( firstPostMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( { type: MessageEventType.SDK_REQUEST_CLIENT_CREATION } ),
+			ANGIE_ORIGIN,
+			expect.any( Array ),
+		);
+		expect( secondPostMessage ).not.toHaveBeenCalled();
+	} );
 } );
