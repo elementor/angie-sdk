@@ -9,10 +9,15 @@ permissions:
 
 jobs:
   dispatch:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: |
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
         with:
           workflow: pr-ci-slack-ready.yml

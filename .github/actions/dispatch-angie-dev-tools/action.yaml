@@ -23,10 +23,9 @@ runs:
         WORKFLOW: ${{ inputs.workflow }}
         DRY_RUN: ${{ inputs.dry_run }}
         PR_INPUT: ${{ github.event.pull_request.html_url || github.event.inputs.pr_input }}
-        PR_AUTHOR: ${{ github.event.pull_request.user.login || github.actor }}
-        PR_DRAFT: ${{ github.event.pull_request.draft }}
         REPOSITORY: ${{ github.repository }}
         EVENT_NAME: ${{ github.event_name }}
+        PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
       run: |
         if [ -z "$GH_TOKEN" ]; then
           echo "ANGIE_DEV_TOOLS_BOT_TOKEN is required to dispatch private angie-dev-tools workflows." >&2
@@ -38,23 +37,25 @@ runs:
         fi
 
         if [ "$EVENT_NAME" = "pull_request" ]; then
-          SOURCE_EVENT="pull_request"
-          DRAFT="${PR_DRAFT:-false}"
+          if [ "$PR_HEAD_REPO" != "$REPOSITORY" ]; then
+            echo "Skipping fork PR dispatch."
+            exit 0
+          fi
+        elif [[ "$PR_INPUT" =~ github.com/([^/]+)/([^/]+)/pull/[0-9]+ ]]; then
+          URL_REPO="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+          if [ "$URL_REPO" != "$REPOSITORY" ]; then
+            echo "Refusing to dispatch a PR from another repository: $URL_REPO" >&2
+            exit 1
+          fi
         else
-          SOURCE_EVENT="workflow_dispatch"
-          DRAFT="false"
+          echo "workflow_dispatch requires a full PR URL on this repository." >&2
+          exit 1
         fi
 
         ARGS=(
           -f "pr_input=${PR_INPUT}"
           -f "target_repository=${REPOSITORY}"
-          -f "github_login=${PR_AUTHOR}"
-          -f "is_fork=false"
-          -f "source_event=${SOURCE_EVENT}"
         )
-        if [ "$WORKFLOW" = "pr-ci-reviewers.yml" ]; then
-          ARGS+=(-f "pr_draft=${DRAFT}")
-        fi
         if [ -n "$DRY_RUN" ] && [ "$WORKFLOW" = "pr-ci-approver.yml" ]; then
           ARGS+=(-f "dry_run=${DRY_RUN}")
         fi
