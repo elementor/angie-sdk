@@ -1,0 +1,21 @@
+SPEED: Start UI work in under 20 seconds. Do not read AGENTS.md, skills, --help, or command source. Do not debug playwright-cli.
+
+This playwright-cli does not support: snapshot -i, video-stop --filename.
+Use only these commands: ab-open, sleep, ab-screenshot, ab-record-start, ab-click, ab-close, ab-verdict.
+Never run playwright-cli video-stop yourself. ab-close stops the video.
+
+Run this script exactly, then stop:
+
+ab-open "http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/"
+sleep 2
+ab-screenshot 01-before.png
+ab-record-start
+ab-click "#demo-toggle"
+sleep 2
+ab-screenshot 02-after-click.png
+ab-screenshot 03-sidebar.png
+ab-close
+ab-verdict H1 pass "Clicked Ask Angie and the sidebar opened" 01-before.png 02-after-click.png 03-sidebar.png
+ab-verdict complete
+
+#demo-toggle is the Ask Angie button. Pass if the right-hand Angie sidebar is visible, including a Sign in to Angie screen.
