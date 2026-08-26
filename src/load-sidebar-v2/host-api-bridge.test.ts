@@ -9,7 +9,7 @@ import {
 	resetHostApiBridgeForTests,
 } from './host-api-bridge';
 import { appState } from '../config';
-import { resetInstancesForTests } from '../instance-registry';
+import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
 
 const IFRAME_ORIGIN = 'http://localhost:4000';
 
@@ -88,6 +88,68 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 			status: 'success',
 			payload: { 'X-Custom-Token': 'second' },
 		} );
+	} );
+
+	it( 'should route messages to the matching instance when several share an origin', async () => {
+		const windowA = {} as Window;
+		const windowB = {} as Window;
+		const instanceA = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const instanceB = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'sidebar',
+		} );
+		instanceA.iframe = { contentWindow: windowA } as HTMLIFrameElement;
+		instanceB.iframe = { contentWindow: windowB } as HTMLIFrameElement;
+
+		const headersA = jest.fn( async () => ( { 'X-Instance': 'a' } ) ) as jest.MockedFunction<ExternalHeadersCallback>;
+		const headersB = jest.fn( async () => ( { 'X-Instance': 'b' } ) ) as jest.MockedFunction<ExternalHeadersCallback>;
+
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			getExternalHeaders: headersA,
+			instance: instanceA,
+		} );
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			getExternalHeaders: headersB,
+			instance: instanceB,
+		} );
+
+		const portA = createMockPort();
+		window.dispatchEvent( Object.assign( new Event( 'message' ), {
+			data: { type: GET_EXTERNAL_HEADERS_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			source: windowA,
+			ports: [ portA as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( headersA ).toHaveBeenCalledTimes( 1 );
+		expect( headersB ).not.toHaveBeenCalled();
+		expect( portA.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: { 'X-Instance': 'a' },
+		} );
+
+		const portUnknown = createMockPort();
+		window.dispatchEvent( Object.assign( new Event( 'message' ), {
+			data: { type: GET_EXTERNAL_HEADERS_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			source: {} as Window,
+			ports: [ portUnknown as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( headersA ).toHaveBeenCalledTimes( 1 );
+		expect( headersB ).not.toHaveBeenCalled();
+		expect( portUnknown.postMessage ).not.toHaveBeenCalled();
 	} );
 
 	it( 'should ignore messages from other origins', async () => {

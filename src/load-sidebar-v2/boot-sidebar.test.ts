@@ -14,7 +14,7 @@ jest.mock( '../sidebar', () => ( {
 } ) );
 
 jest.mock( './open-embedded-iframe', () => ( {
-	openEmbeddedIframe: jest.fn( () => Promise.resolve( true ) ),
+	openEmbeddedIframe: jest.fn( (): Promise<boolean> => Promise.resolve( true ) ),
 } ) );
 
 jest.mock( './embedded-handshake', () => ( {
@@ -124,5 +124,25 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 			'sdk123',
 		);
 		expect( getFirstInstance()?.instanceId ).toBe( 'sdk123' );
+	} );
+
+	it( 'should skip embedded config when iframe fails to open', async () => {
+		mockOpenEmbeddedIframe.mockImplementationOnce( () => Promise.resolve( false ) );
+		await bootSidebar( { container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a' } } );
+		expect( mockSendEmbeddedConfig ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should inject per-container widget styles for a custom container id', async () => {
+		await bootSidebar( {
+			container: {
+				layout: LAYOUT_FLOATING_CHAT,
+				id: 'help-center',
+				chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
+			},
+			host: { appId: 'app-a' },
+		} );
+
+		expect( document.getElementById( 'angie-chat-widget-styles-help-center' ) ).not.toBeNull();
+		expect( document.getElementById( 'angie-chat-widget-styles' ) ).toBeNull();
 	} );
 } );
