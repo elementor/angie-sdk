@@ -15,19 +15,21 @@ on:
 
 permissions:
   contents: read
+  checks: read
+  statuses: read
 
 jobs:
   dispatch:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
         with:
           workflow: pr-ci-approver.yml
           dry_run: ${{ github.event.inputs.dry_run }}
+          wait_for_other_checks: 'true'

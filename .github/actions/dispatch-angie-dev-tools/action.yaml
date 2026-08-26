@@ -9,10 +9,66 @@ inputs:
     description: 'Optional dry_run input for the approver workflow'
     required: false
     default: ''
+  wait_for_other_checks:
+    description: 'Wait for other PR checks to leave IN_PROGRESS before dispatching'
+    required: false
+    default: 'false'
 
 runs:
   using: 'composite'
   steps:
+    - name: Wait for other PR checks
+      if: inputs.wait_for_other_checks == 'true'
+      shell: bash
+      env:
+        PR_INPUT: ${{ github.event.pull_request.html_url || github.event.inputs.pr_input }}
+        REPOSITORY: ${{ github.repository }}
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+
+        if [ -z "$PR_INPUT" ]; then
+          echo "PR URL or number is required to wait for checks." >&2
+          exit 1
+        fi
+
+        deadline=$((SECONDS + 2700))
+        seen_checks=0
+
+        while (( SECONDS < deadline )); do
+          json="$(gh pr checks "$PR_INPUT" --repo "$REPOSITORY" --json name,state,workflow 2>/dev/null || true)"
+          if [ -z "$json" ] || [ "$json" = "[]" ]; then
+            echo "No PR checks reported yet; waiting..."
+            sleep 15
+            continue
+          fi
+          seen_checks=1
+
+          pending="$(jq -r '
+            .[]
+            | select(.workflow != "PR CI Reviewers" and .workflow != "PR CI Approver" and .workflow != "PR Slack Ready for Review")
+            | select((.name // "") | test("gitStream|gitstream") | not)
+            | select(.state == "IN_PROGRESS" or .state == "QUEUED" or .state == "PENDING")
+            | "\(.name) [\(.workflow // "unknown")] \(.state)"
+          ' <<<"$json")"
+
+          if [ -z "$pending" ]; then
+            echo "All other PR checks have finished."
+            exit 0
+          fi
+
+          echo "Waiting for other PR checks to finish:"
+          echo "$pending"
+          sleep 15
+        done
+
+        if [ "$seen_checks" -eq 0 ]; then
+          echo "Timed out waiting for PR checks to appear." >&2
+        else
+          echo "Timed out waiting for other PR checks to finish." >&2
+        fi
+        exit 1
+
     - name: Dispatch workflow
       shell: bash
       env:
@@ -109,6 +165,14 @@ runs:
           exit 1
         fi
 
-        RUN_URL="$(gh run view "$RUN_ID" --repo elementor/angie-dev-tools --json url --jq .url)"
-        echo "Waiting for ${WORKFLOW} run ${RUN_ID}: ${RUN_URL}"
-        gh run watch "$RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10
+        echo "REMOTE_RUN_ID=${RUN_ID}" >> "$GITHUB_ENV"
+
+    - name: Wait for remote workflow
+      if: env.REMOTE_RUN_ID != ''
+      shell: bash
+      env:
+        WORKFLOW: ${{ inputs.workflow }}
+      run: |
+        RUN_URL="$(gh run view "$REMOTE_RUN_ID" --repo elementor/angie-dev-tools --json url --jq .url)"
+        echo "Waiting for ${WORKFLOW} run ${REMOTE_RUN_ID}: ${RUN_URL}"
+        gh run watch "$REMOTE_RUN_ID" --repo elementor/angie-dev-tools --exit-status --interval 10
