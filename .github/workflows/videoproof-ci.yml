@@ -47,7 +47,7 @@ jobs:
       - name: Clone videoproof kit
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
-          VIDEO_PROOF_KIT_REF: ${{ vars.VIDEO_PROOF_KIT_REF || 'cursor/videoproof-runner' }}
+          VIDEO_PROOF_KIT_REF: ${{ vars.VIDEO_PROOF_KIT_REF || 'master' }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "ANGIE_DEV_TOOLS_BOT_TOKEN is required to clone elementor/angie-dev-tools." >&2
