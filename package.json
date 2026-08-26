@@ -23,7 +23,7 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "demo": "npm run build && npx --yes serve . -l 8080",
-    "videoproof": "agex prove \"This page is the loadSidebarV2 full-example POC. Prove the Acme Store Builder product editor is visible with Wireless Headphones and an Ask Angie button. Use playwright-cli snapshot without -i. Click Ask Angie if the sidebar is closed.\" --url http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/ --agent cursor --output ./prove-results --viewport 1280x800"
+    "videoproof": "agex prove \"Open this loadSidebarV2 full-example POC. You MUST click the Ask Angie button to open the sidebar. Take three screenshots: 1) product editor before the click, 2) clicking Ask Angie, 3) sidebar open next to Wireless Headphones. Use playwright-cli snapshot without -i. Fail if the sidebar does not open after the click.\" --url http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/ --agent cursor --output ./prove-results --viewport 1280x800"
   },
   "keywords": [
     "mcp",

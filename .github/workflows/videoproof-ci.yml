@@ -6,12 +6,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
+  actions: read
 
 jobs:
   videoproof:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout
@@ -64,11 +67,36 @@ jobs:
           command -v agent
           npm run videoproof
 
+      - name: Collect three screenshots
+        if: always()
+        run: |
+          mkdir -p proof-artifacts/screenshots
+          i=0
+          while IFS= read -r file; do
+            i=$((i + 1))
+            cp "$file" "proof-artifacts/screenshots/$(printf '%02d' "$i").png"
+            if [ "$i" -eq 3 ]; then
+              break
+            fi
+          done < <(find prove-results -type f -name '*.png' | sort)
+          echo "Collected $i screenshot(s)"
+
       - name: Upload videoproof
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: videoproof
-          path: prove-results/
+          path: |
+            prove-results/
+            proof-artifacts/
           if-no-files-found: ignore
           retention-days: 14
+
+      - name: Comment PR with screenshots
+        if: always() && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH_NAME: ${{ github.head_ref }}
+          ARTIFACTS_DIR: proof-artifacts
+        run: bash .github/scripts/post-video-proof-comment.sh
