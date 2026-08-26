@@ -1,7 +1,7 @@
 name: PR CI Approver
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, ready_for_review, synchronize]
   workflow_dispatch:
     inputs:
@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   dispatch:
@@ -33,7 +34,8 @@ jobs:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.sha || github.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
+        env:
+          GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
         with:
           workflow: pr-ci-approver.yml
-          token: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
           dry_run: ${{ github.event.inputs.dry_run }}
