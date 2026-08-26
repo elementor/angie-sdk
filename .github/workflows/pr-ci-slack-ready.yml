@@ -9,5 +9,5 @@ permissions:
 
 jobs:
   notify:
-    uses: elementor/angie-ci/.github/workflows/pr-ci-slack-ready.yml@master
+    uses: elementor/angie-dev-tools/.github/workflows/pr-ci-slack-ready.yml@master
     secrets: inherit

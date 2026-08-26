@@ -18,5 +18,5 @@ permissions:
 
 jobs:
   reviewers:
-    uses: elementor/angie-ci/.github/workflows/pr-ci-reviewers.yml@master
+    uses: elementor/angie-dev-tools/.github/workflows/pr-ci-reviewers.yml@master
     secrets: inherit

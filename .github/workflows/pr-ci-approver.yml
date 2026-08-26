@@ -22,5 +22,5 @@ permissions:
 
 jobs:
   approver:
-    uses: elementor/angie-ci/.github/workflows/pr-ci-approver.yml@master
+    uses: elementor/angie-dev-tools/.github/workflows/pr-ci-approver.yml@master
     secrets: inherit
