@@ -18,18 +18,12 @@ export const toggleAngieSidebar = (
 	}
 };
 
-/**
- * Two instances on a page usually share one iframe origin, so `event.origin` cannot tell
- * their iframes apart. The source window can.
- *
- * Returns true when there is nothing to compare against, so single-instance hosts behave
- * exactly as before.
- */
+/** Same origin is not enough for two iframes. Fail closed if source or contentWindow is missing. */
 export const isFromIframe = ( event: MessageEvent, iframe: HTMLIFrameElement | null ) => {
 	const ownWindow = iframe?.contentWindow;
 
 	if ( ! ownWindow || ! event.source ) {
-		return true;
+		return false;
 	}
 
 	return event.source === ownWindow;

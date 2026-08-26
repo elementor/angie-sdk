@@ -120,18 +120,18 @@ describe('utils', () => {
       expect(isFromIframe(event, iframe)).toBe(false);
     });
 
-    it('should return true when iframe is null (backward-compat fallback)', () => {
+    it('should return false when iframe is null', () => {
       const event = { source: {} as Window } as MessageEvent;
 
-      expect(isFromIframe(event, null)).toBe(true);
+      expect(isFromIframe(event, null)).toBe(false);
     });
 
-    it('should return true when event.source is missing/null', () => {
+    it('should return false when event.source is missing/null', () => {
       const fakeWindow = {} as Window;
       const iframe = { contentWindow: fakeWindow } as HTMLIFrameElement;
       const event = { source: null } as MessageEvent;
 
-      expect(isFromIframe(event, iframe)).toBe(true);
+      expect(isFromIframe(event, iframe)).toBe(false);
     });
   });
 

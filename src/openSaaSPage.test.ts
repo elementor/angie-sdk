@@ -60,6 +60,7 @@ describe('openSaaSPage', () => {
       setAttribute: jest.fn(),
       id: '',
       getAttribute: jest.fn(),
+      contentWindow: { postMessage: jest.fn() },
     } as any;
 
     mockDocument = {
@@ -101,6 +102,7 @@ describe('openSaaSPage', () => {
       
       messageListener({
         origin: 'https://angie.elementor.com',
+        source: mockIframe.contentWindow,
         data: { type: HostEventType.ANGIE_READY },
       });
 
@@ -123,6 +125,7 @@ describe('openSaaSPage', () => {
       )?.[1];
       messageListener({
         origin: 'https://angie.elementor.com',
+        source: mockIframe.contentWindow,
         data: { type: HostEventType.ANGIE_READY },
       });
 
@@ -182,6 +185,7 @@ describe('openSaaSPage', () => {
       )?.[1];
       messageListener({
         origin: 'https://angie.elementor.com',
+        source: mockIframe.contentWindow,
         data: { type: HostEventType.ANGIE_READY },
       });
 
