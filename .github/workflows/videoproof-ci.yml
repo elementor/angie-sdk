@@ -55,12 +55,7 @@ jobs:
             echo "CURSOR_API_KEY secret is required for Videoproof-CI." >&2
             exit 1
           fi
-          npx --yes agex prove \
-            "Open the Angie SDK demos, open the loadSidebarV2 full example, and show the product editor POC with Ask Angie." \
-            --url http://127.0.0.1:8080/demo/ \
-            --agent cursor \
-            --output ./prove-results \
-            --viewport 1280x800
+          npm run videoproof
 
       - name: Upload videoproof
         if: always()
