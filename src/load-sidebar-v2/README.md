@@ -37,6 +37,7 @@ Local demos:
 - [`demo/load-sidebar-v2-floating-chat/`](../../demo/load-sidebar-v2-floating-chat/) — minimal floating chat
 - [`demo/load-sidebar-v2-full-config/`](../../demo/load-sidebar-v2-full-config/) — full example (`aiContext`, custom CSS)
 - [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/) — `widgetConfig` presets (help center, visitor widget, sandbox)
+- [`demo/trigger-angie-prompt/`](../../demo/trigger-angie-prompt/) — `triggerAngie()` and `#angie-prompt=` deep links
 
 ## Layouts
 
@@ -103,6 +104,18 @@ loadSidebarV2(options)
 ```
 
 Entry point: [`boot-sidebar.ts`](./boot-sidebar.ts). Layout strategies: [`layouts/index.ts`](./layouts/index.ts).
+
+## Prompt deep links
+
+`loadSidebarV2()` watches the URL hash for `angie-prompt` (plus optional `angie-new-chat=true`), on
+load and on every later `hashchange`:
+
+```
+https://example.com/pricing#angie-prompt=Which%20plan%20fits%20me%3F
+```
+
+It waits for Angie, sends the prompt, then clears the hash. Hosts need no hash code of their own.
+Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 
 ## Host API bridge
 

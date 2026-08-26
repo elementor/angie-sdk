@@ -232,6 +232,8 @@ window.location.hash = 'angie-prompt=' + encodeURIComponent('Fix this error') + 
 - `angie-prompt`: The prompt text to populate in the input field
 - `angie-new-chat`: When set to `true`, clears the current conversation and opens a fresh chat with the prompt pre-filled in the input
 
+Both `loadSidebar()` and `loadSidebarV2()` watch the hash, on page load and on every later hash change. You do not need any hash code of your own.
+
 **Note:** Always call `await sdk.waitForReady()` before triggering Angie.
 
 ---

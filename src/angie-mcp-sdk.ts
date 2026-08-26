@@ -116,6 +116,7 @@ export class AngieMcpSdk {
 
   public loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
     this.sidebarV2BootPromise = bootSidebar( options );
+    this.setupPromptHashDetection();
     return this.sidebarV2BootPromise;
   }
 
