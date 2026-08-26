@@ -35,7 +35,7 @@ jobs:
         run: |
           npx --yes serve . -l 8080 &
           for i in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8080/demo/ >/dev/null; then
+            if curl -fsS http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/ >/dev/null; then
               echo "Demo is up"
               exit 0
             fi
@@ -44,42 +44,28 @@ jobs:
           echo "Demo server did not start" >&2
           exit 1
 
-      - name: Install Cursor CLI
-        run: |
-          curl https://cursor.com/install -fsS | bash
-          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
-          mkdir -p "$HOME/.cursor/bin"
-          # agex invokes `cursor agent --print ...`; the official installer only provides `agent`.
-          install -m 0755 .github/scripts/cursor-for-agex.sh "$HOME/.cursor/bin/cursor"
-          command -v agent
-          "$HOME/.cursor/bin/cursor" --help >/dev/null
-
-      - name: Prove the demo POC
+      - name: Clone videoproof kit
         env:
-          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
+          VIDEO_PROOF_KIT_REF: ${{ vars.VIDEO_PROOF_KIT_REF || 'cursor/videoproof-runner' }}
         run: |
-          if [ -z "$CURSOR_API_KEY" ]; then
-            echo "CURSOR_API_KEY secret is required for Videoproof-CI." >&2
+          if [ -z "$GH_TOKEN" ]; then
+            echo "ANGIE_DEV_TOOLS_BOT_TOKEN is required to clone elementor/angie-dev-tools." >&2
             exit 1
           fi
-          export PATH="$HOME/.cursor/bin:$PATH"
-          command -v cursor
-          command -v agent
-          npm run videoproof
+          gh repo clone elementor/angie-dev-tools "$RUNNER_TEMP/angie-dev-tools" -- --depth 1 --branch "$VIDEO_PROOF_KIT_REF"
 
-      - name: Collect three screenshots
-        if: always()
-        run: |
-          mkdir -p proof-artifacts/screenshots
-          i=0
-          while IFS= read -r file; do
-            i=$((i + 1))
-            cp "$file" "proof-artifacts/screenshots/$(printf '%02d' "$i").png"
-            if [ "$i" -eq 3 ]; then
-              break
-            fi
-          done < <(find prove-results -type f -name '*.png' | sort)
-          echo "Collected $i screenshot(s)"
+      - name: Run videoproof
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH_NAME: ${{ github.head_ref }}
+          VIDEO_PROOF_URL: http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/
+          VIDEO_PROOF_TASK_FILE: ${{ github.workspace }}/.github/videoproof-task.txt
+          VIDEO_PROOF_NOTE: Clicked **Ask Angie** to open the loadSidebarV2 sidebar on the product editor POC.
+          VIDEO_PROOF_POST_COMMENT: ${{ github.event_name == 'pull_request' }}
+        run: bash "$RUNNER_TEMP/angie-dev-tools/videoproof/run.sh"
 
       - name: Upload videoproof
         if: always()
@@ -91,12 +77,3 @@ jobs:
             proof-artifacts/
           if-no-files-found: ignore
           retention-days: 14
-
-      - name: Comment PR with screenshots
-        if: always() && github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          BRANCH_NAME: ${{ github.head_ref }}
-          ARTIFACTS_DIR: proof-artifacts
-        run: bash .github/scripts/post-video-proof-comment.sh
