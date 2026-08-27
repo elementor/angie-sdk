@@ -1,4 +1,4 @@
-export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type ModelsConfig, type WidgetConfig } from './angie-mcp-sdk';
+export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type LocalServersConfig, type ModeSwitcherConfig, type ModelsConfig, type WidgetConfig } from './angie-mcp-sdk';
 export {
 	LAYOUT_FLOATING_CHAT,
 	LAYOUT_SIDEBAR,

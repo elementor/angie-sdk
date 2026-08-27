@@ -29,6 +29,20 @@ export type ModeSwitcherConfig = {
 };
 
 export type LocalServersConfig = {
+  /**
+   * Allowlist of built-in iframe MCP servers to load. When present, only the
+   * listed servers are constructed and connected; `exclude` is ignored.
+   */
+  include?: string[];
+  /**
+   * Blocklist of built-in iframe MCP servers. Only applied when `include` is
+   * absent: all built-ins except the listed ones load.
+   */
+  exclude?: string[];
+  /**
+   * @deprecated Use `include: []` instead. When `true`, Angie does not
+   * auto-load the built-in local MCP servers.
+   */
   skipLoading?: boolean;
 };
 

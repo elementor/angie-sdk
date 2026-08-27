@@ -86,7 +86,19 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|---------|
 | `modeSwitcher` | `{ enabled?: boolean; default?: 'agent' \| 'plan' \| 'ask' }` | Show or hide Agent / Plan / Ask switcher; set the initial mode |
 | `featuredMcpServer` | `string` | Name of a **host-registered** local MCP server Angie should surface first (must match `registerServer({ name })`) |
-| `localServers` | `{ skipLoading?: boolean }` | When `skipLoading: true`, Angie does not auto-load host local servers — use when you register servers yourself after `waitForReady()` |
+| `localServers` | `{ include?: string[]; exclude?: string[]; skipLoading?: boolean }` | Control which built-in iframe MCP servers load. See [Built-in local MCP servers](#built-in-local-mcp-servers) |
+
+### Built-in local MCP servers
+
+`localServers` governs only the iframe's **built-in** MCP servers, not servers you register via `registerServer()` on the host page.
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `include` | `string[]` | Allowlist: only the listed built-in servers load. Takes precedence — `exclude` is ignored when `include` is present |
+| `exclude` | `string[]` | Blocklist: all built-ins except the listed ones load. Only applied when `include` is absent |
+| `skipLoading` | `boolean` | **Deprecated** — equivalent to `include: []`. When `true`, no built-in servers load |
+
+Precedence: `include` wins if present; otherwise `exclude` applies; omitting both loads the full default set. Unknown names are ignored with a warning.
 
 ### Close behavior
 
@@ -136,7 +148,7 @@ await sdk.waitForReady();
 sdk.registerServer({ name: HELP_CENTER_SERVER, /* ... */ });
 ```
 
-`localServers.skipLoading: true` avoids a race: register your MCP servers after `waitForReady()`, then Angie uses `featuredMcpServer` to prioritize the right one.
+`localServers.skipLoading: true` (deprecated — prefer `include: []`) avoids a race: register your MCP servers after `waitForReady()`, then Angie uses `featuredMcpServer` to prioritize the right one.
 
 ### Visitor floating search widget
 
