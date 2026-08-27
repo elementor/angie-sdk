@@ -5,10 +5,6 @@ inputs:
   workflow:
     description: 'Workflow filename in elementor/angie-dev-tools'
     required: true
-  dry_run:
-    description: 'Optional dry_run input for the approver workflow'
-    required: false
-    default: ''
 
 runs:
   using: 'composite'
@@ -17,7 +13,6 @@ runs:
       shell: bash
       env:
         WORKFLOW: ${{ inputs.workflow }}
-        DRY_RUN: ${{ inputs.dry_run }}
         PR_INPUT: ${{ github.event.pull_request.html_url || github.event.inputs.pr_input }}
         REPOSITORY: ${{ github.repository }}
         EVENT_NAME: ${{ github.event_name }}
@@ -58,9 +53,6 @@ runs:
           -f "pr_input=${PR_INPUT}"
           -f "target_repository=${REPOSITORY}"
         )
-        if [ -n "$DRY_RUN" ] && [ "$WORKFLOW" = "pr-ci-approver.yml" ]; then
-          ARGS+=(-f "dry_run=${DRY_RUN}")
-        fi
 
         RUN_URL="$(gh workflow run "$WORKFLOW" \
           --repo elementor/angie-dev-tools \
