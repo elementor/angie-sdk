@@ -158,14 +158,22 @@ describe('sidebar', () => {
 
   describe('setupMessageListener', () => {
     const trustedOrigin = 'https://angie.example.com';
+    let ownWindow: Window;
 
     beforeEach(() => {
       const sidebarContainer = document.createElement('div');
       sidebarContainer.id = 'angie-sidebar-container';
       document.body.appendChild(sidebarContainer);
+      ownWindow = {} as Window;
       appState.iframeUrlObject = new URL( 'https://angie.example.com/angie/embedded' );
+      appState.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
       initAngieSidebar();
       ( global.window as any ).toggleAngieSidebar = jest.fn();
+    });
+
+    afterEach(() => {
+      appState.iframe = null;
+      appState.iframeUrlObject = null;
     });
 
     it( 'should ignore toggleAngieSidebar messages from untrusted origins', () => {
@@ -184,6 +192,7 @@ describe('sidebar', () => {
 
       window.dispatchEvent( new MessageEvent( 'message', {
         origin: trustedOrigin,
+        source: ownWindow,
         data: { type: 'toggleAngieSidebar', payload: { force: true } },
       } ) );
 
@@ -220,6 +229,7 @@ describe('sidebar', () => {
 
       window.dispatchEvent( new MessageEvent( 'message', {
         origin: trustedOrigin,
+        source: ownWindow,
         data: { type: 'toggleAngieSidebar', payload: { force: false } },
         ports: [ port ],
       } ) );
