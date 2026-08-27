@@ -54,6 +54,7 @@ export type WidgetConfig = {
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
   models?: ModelsConfig;
+  topBar?: FeatureToggle;
 };
 
 export type AngieMcpSdkOptions = {

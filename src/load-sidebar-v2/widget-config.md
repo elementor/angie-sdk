@@ -94,6 +94,14 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|--------|
 | `closeButton` | `'collapse' \| 'close'` | `collapse` — hide panel, keep session; `close` — dismiss widget |
 
+### Top bar
+
+Control the embedded app top bar (the bar containing new chat, history, and the user menu).
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `topBar` | `{ enabled: boolean }` | `enabled: false` hides the whole top bar (new chat, history, and user menu) |
+
 ## Patterns from production hosts
 
 These mirror [`ai-remote-integration`](https://github.com/elementor/elementor-ai/tree/main/editor-saas-services/packages/ai-remote-integration) (Elementor my.elementor sidebar and visitor floating widget).

@@ -67,6 +67,21 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		} );
 	} );
 
+	it( 'should merge widgetConfig.topBar with layout defaults', () => {
+		const config = resolveConfig(
+			{
+				host: { appId: 'editor-lite' },
+				widgetConfig: { topBar: { enabled: false } },
+			},
+			DEFAULT_ENV,
+		);
+
+		expect( config.widgetConfig ).toEqual( {
+			closeButton: 'collapse',
+			topBar: { enabled: false },
+		} );
+	} );
+
 	it( 'should preserve callbacks.onClose', () => {
 		const onClose = jest.fn();
 		const config = resolveConfig(
