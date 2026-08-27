@@ -67,18 +67,18 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		} );
 	} );
 
-	it( 'should merge widgetConfig.header with layout defaults', () => {
+	it( 'should merge widgetConfig.topBar with layout defaults', () => {
 		const config = resolveConfig(
 			{
 				host: { appId: 'editor-lite' },
-				widgetConfig: { header: { enabled: false, showCloseButton: false } },
+				widgetConfig: { topBar: { enabled: false } },
 			},
 			DEFAULT_ENV,
 		);
 
 		expect( config.widgetConfig ).toEqual( {
 			closeButton: 'collapse',
-			header: { enabled: false, showCloseButton: false },
+			topBar: { enabled: false },
 		} );
 	} );
 

@@ -94,13 +94,13 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|--------|
 | `closeButton` | `'collapse' \| 'close'` | `collapse` — hide panel, keep session; `close` — dismiss widget |
 
-### Header
+### Top bar
 
-Control the embedded app header (the top bar that contains the title and the built-in close button).
+Control the embedded app top bar (the bar containing new chat, navigation, and the user menu).
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `header` | `{ enabled?: boolean; showCloseButton?: boolean }` | `enabled: false` hides the whole header. `showCloseButton` only applies when the header is hidden: it toggles a minimal close-only header bar so the user can still close/collapse |
+| `topBar` | `{ enabled: boolean }` | `enabled: false` hides the whole top bar (new chat, navigation, and user menu) |
 
 ## Patterns from production hosts
 
