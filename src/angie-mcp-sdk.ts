@@ -1,5 +1,4 @@
 import type { Logger } from '@elementor/angie-logger';
-import { postMessageToAngieIframe } from './angie-iframe-utils';
 import { AngieDetector } from './angie-detector';
 import { BrowserContextTransport } from './browser-context-transport';
 import { ClientManager } from './client-manager';
@@ -9,6 +8,7 @@ import { openIframe } from './iframe';
 import { handlePostConsentRedirect } from './oauth';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
+import { generateInstanceId } from './utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
 import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
@@ -91,7 +91,7 @@ export class AngieMcpSdk {
   private sidebarV2BootPromise: Promise<void> | null = null;
 
   constructor() {
-    this.instanceId = Math.random().toString(36).substring(2, 8);
+    this.instanceId = generateInstanceId();
     this.logger = createChildLogger({ instanceId: this.instanceId });
     this.logger.log('Constructor called - initializing SDK');
     this.angieDetector = new AngieDetector();
@@ -110,18 +110,26 @@ export class AngieMcpSdk {
     const { widgetConfig, ...rest } = options || {};
     const config = { ...DEFAULT_OPTIONS, ...rest };
     appState.containerId = config.containerId;
+    appState.instanceId = this.instanceId;
     initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
-    await openIframe( config );
+    const opened = await openIframe( config );
 
-    if ( widgetConfig ) {
-      postMessageToAngieIframe( { type: 'sdk-widget-config', payload: widgetConfig } );
+    if ( opened && widgetConfig ) {
+      opened.iframe.contentWindow?.postMessage(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        opened.iframeOrigin,
+      );
     }
 
     this.setupPromptHashDetection();
   }
 
   public loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
-    this.sidebarV2BootPromise = bootSidebar( options );
+    if ( options.host.instanceId ) {
+      this.instanceId = options.host.instanceId;
+    }
+
+    this.sidebarV2BootPromise = bootSidebar( options, this.instanceId );
     this.setupPromptHashDetection();
     return this.sidebarV2BootPromise;
   }
@@ -323,6 +331,7 @@ export class AngieMcpSdk {
         type: MessageEventType.SDK_TRIGGER_ANGIE,
         payload: {
           requestId,
+          instanceId: this.instanceId,
           prompt: request.prompt,
           options: request.options,
           context: {

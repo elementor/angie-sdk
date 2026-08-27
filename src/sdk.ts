@@ -1,8 +1,9 @@
 import { createChildLogger } from './logger';
-import { sendSuccessMessage } from './utils';
+import { isTrustedIframeMessage, sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
 import { MessageEventType } from './types';
 import { AppState } from './config';
+import { shouldInstanceHandle } from './instance-registry';
 
 const sdkLogger = createChildLogger( 'sdk' );
 
@@ -19,14 +20,24 @@ export interface ClientCreationRequest {
 	capabilities?: ServerCapabilities;
 }
 
-export const listenToSDK = ( appState: AppState ) => {
+export const listenToSDK = ( instance: AppState ) => {
 	// Access global timing instance for SDK performance tracking
 	window.addEventListener( 'message', async ( event ) => {
 		const isSameOrigin = event.origin === window.location.origin;
-		const isIframe = event.origin === appState.iframeUrlObject?.origin;
+		const isIframe = isTrustedIframeMessage(
+			event,
+			instance.iframeUrlObject?.origin,
+			instance.iframe,
+		);
 		if ( ! isSameOrigin && ! isIframe ) {
 			return;
 		}
+
+		// Host messages share event.source, so route them by instanceId.
+		const shouldHandleMessage = shouldInstanceHandle(
+			instance,
+			event?.data?.payload?.instanceId
+		);
 
 		switch ( event?.data?.type ) {
 			case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
@@ -43,6 +54,10 @@ export const listenToSDK = ( appState: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_REQUEST_CLIENT_CREATION: {
+				if ( ! shouldHandleMessage ) {
+					break;
+				}
+
 				const payload = event.data.payload as ClientCreationRequest;
 
 				try {
@@ -66,8 +81,8 @@ export const listenToSDK = ( appState: AppState ) => {
 						},
 						timestamp: Date.now(),
 					};
-					if ( appState.iframe ) {
-						appState.iframe.contentWindow?.postMessage( message, appState.iframeUrlObject?.origin || '', [ channel.port2 ] );
+					if ( instance.iframe ) {
+						instance.iframe.contentWindow?.postMessage( message, instance.iframeUrlObject?.origin || '', [ channel.port2 ] );
 					} else {
 						throw new Error( 'Iframe not found' );
 					}
@@ -77,14 +92,17 @@ export const listenToSDK = ( appState: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_TRIGGER_ANGIE: {
+				if ( ! shouldHandleMessage ) {
+					break;
+				}
 
 				sdkLogger.log( 'SDK Trigger Angie received', event.data );
 
 				try {
 					const { requestId, prompt, context, options } = event.data.payload;
 
-					if ( appState.iframe ) {
-						appState.iframe.contentWindow?.postMessage( {
+					if ( instance.iframe ) {
+						instance.iframe.contentWindow?.postMessage( {
 							type: MessageEventType.SDK_TRIGGER_ANGIE,
 							payload: {
 								requestId,
@@ -92,7 +110,7 @@ export const listenToSDK = ( appState: AppState ) => {
 								context,
 								options,
 							},
-						}, appState.iframeUrlObject?.origin || '' );
+						}, instance.iframeUrlObject?.origin || '' );
 					} else {
 						throw new Error( 'Iframe not found' );
 					}

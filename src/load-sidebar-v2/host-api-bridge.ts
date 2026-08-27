@@ -1,5 +1,6 @@
 import { sendErrorMessage, sendSuccessMessage } from '../utils';
 import { HostLocalStorageEventType } from '../types';
+import type { AppState } from '../config';
 import type { ExternalHeadersCallback, HostConfig } from './config';
 
 export const GET_EXTERNAL_HEADERS_MESSAGE_TYPE = 'GET_EXTERNAL_HEADERS';
@@ -12,10 +13,26 @@ type InitHostApiBridgeArgs = {
 	iframeOrigin: string;
 	host?: HostConfig;
 	getExternalHeaders?: ExternalHeadersCallback;
+	instance: AppState;
 };
 
-let bridgeConfig: InitHostApiBridgeArgs | null = null;
+const bridges = new Map<AppState, InitHostApiBridgeArgs>();
 let bridgeListenerRegistered = false;
+
+// Disambiguate by event.source when several instances share one origin; see isFromIframe.
+const findBridge = ( event: MessageEvent ): InitHostApiBridgeArgs | null => {
+	const matching = [ ...bridges.values() ].filter(
+		( bridge ) => bridge.iframeOrigin === event.origin,
+	);
+
+	if ( matching.length <= 1 ) {
+		return matching[ 0 ] ?? null;
+	}
+
+	return matching.find(
+		( bridge ) => bridge.instance.iframe?.contentWindow === event.source,
+	) ?? null;
+};
 
 const filterDefinedHeaders = (
 	headers: Record<string, string | undefined>,
@@ -83,7 +100,9 @@ const handleHostLocalStorageSet = ( key: string, value: string ): void => {
 };
 
 const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
-	if ( ! bridgeConfig || event.origin !== bridgeConfig.iframeOrigin ) {
+	const bridgeConfig = findBridge( event );
+
+	if ( ! bridgeConfig ) {
 		return;
 	}
 
@@ -131,7 +150,7 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 };
 
 export const initHostApiBridge = ( args: InitHostApiBridgeArgs ): void => {
-	bridgeConfig = args;
+	bridges.set( args.instance, args );
 
 	if ( bridgeListenerRegistered ) {
 		return;
@@ -144,5 +163,5 @@ export const initHostApiBridge = ( args: InitHostApiBridgeArgs ): void => {
 };
 
 export const resetHostApiBridgeForTests = (): void => {
-	bridgeConfig = null;
+	bridges.clear();
 };

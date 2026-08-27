@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — three instances</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js"
+    }
+  }
+  </script>
+  <style>
+    body { margin: 0; padding: 1rem 1rem 8rem; font-family: system-ui, sans-serif; }
+    h2 { margin-block: 1.5rem 0.5rem; font-size: 1rem; }
+    code { background: #f2f2f2; padding: 0.1em 0.35em; border-radius: 3px; }
+    ul { line-height: 1.7; }
+
+    /* Move the second chat aside so both floating widgets stay visible.
+       `body #id.class` outranks the SDK's `#id.class` rules whatever the order. */
+    body #angie-chat-container-2.angie-widget-container {
+      inset-inline-end: 440px !important;
+    }
+    body #angie-widget-toggle-demo-chat-2 {
+      inset-inline-end: 96px !important;
+      background: #6366f1 !important;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="../">← All demos</a></p>
+
+  <h2>Three Angie instances on one page</h2>
+  <p>
+    One <code>sidebar</code> and two <code>floatingChat</code> instances. Each has its own
+    container, iframe, and widget config.
+  </p>
+
+  <ul>
+    <li><strong>Sidebar</strong> — <code>demo-sidebar</code>, opens with the button below.</li>
+    <li><strong>Chat A</strong> — <code>demo-chat</code>, pink toggle at the bottom right.</li>
+    <li><strong>Chat B</strong> — <code>demo-chat-2</code>, indigo toggle beside it.</li>
+  </ul>
+
+  <p>
+    <button type="button" id="sidebar-toggle">Open the sidebar instance</button>
+  </p>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <div id="angie-chat-container" aria-hidden="true"></div>
+  <div id="angie-chat-container-2" aria-hidden="true"></div>
+
+  <script type="module" src="./host.js"></script>
+</body>
+</html>
