@@ -96,11 +96,11 @@ Each toggle uses `{ enabled: boolean }`.
 
 ### Top bar
 
-Control the embedded app top bar (the bar containing new chat, navigation, and the user menu).
+Control the embedded app top bar (the bar containing new chat, history, and the user menu).
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `topBar` | `{ enabled: boolean }` | `enabled: false` hides the whole top bar (new chat, navigation, and user menu) |
+| `topBar` | `{ enabled: boolean }` | `enabled: false` hides the whole top bar (new chat, history, and user menu) |
 
 ## Patterns from production hosts
 
