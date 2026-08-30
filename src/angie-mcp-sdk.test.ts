@@ -48,8 +48,10 @@ describe('AngieMcpSdk', () => {
     mockRegistrationQueue = {
       add: jest.fn(),
       getAll: jest.fn(),
+      getPending: jest.fn(),
       processQueue: jest.fn(),
       updateStatus: jest.fn(),
+      resetAllToPending: jest.fn(),
       clear: jest.fn(),
     };
 
@@ -74,6 +76,8 @@ describe('AngieMcpSdk', () => {
     mockAngieDetector.waitForReady.mockResolvedValue({ isReady: false });
     mockAngieDetector.isReady.mockReturnValue(false);
     mockRegistrationQueue.getAll.mockReturnValue([]);
+    mockRegistrationQueue.getPending.mockReturnValue([]);
+    mockRegistrationQueue.resetAllToPending.mockReturnValue(true);
     mockRegistrationQueue.processQueue.mockResolvedValue(undefined);
     mockClientManager.requestClientCreation.mockResolvedValue({
       success: true,
@@ -86,7 +90,7 @@ describe('AngieMcpSdk', () => {
   afterEach(() => {
     // Detach every listener this test registered, otherwise SDK instances keep
     // reacting to events (hashchange in particular) during later tests.
-    for ( const [ type, listener ] of addEventListenerSpy.mock.calls as [ string, EventListener ][] ) {
+    for ( const [ type, listener ] of addEventListenerSpy.mock.calls as [ string, ( event: Event ) => void ][] ) {
       window.removeEventListener( type, listener );
     }
 
@@ -98,6 +102,15 @@ describe('AngieMcpSdk', () => {
     it('should set up message event listeners', () => {
       // Assert
       expect(global.window.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
+    });
+
+    it('should pass instance id getter to AngieDetector', () => {
+      const AngieDetectorMock = (require('./angie-detector') as any).AngieDetector;
+
+      expect(AngieDetectorMock).toHaveBeenCalledWith(expect.any(Function));
+
+      const getInstanceId = AngieDetectorMock.mock.calls[0][0];
+      expect(getInstanceId()).toBe((sdk as any).instanceId);
     });
   });
 
@@ -244,17 +257,19 @@ describe('AngieMcpSdk', () => {
 
   describe('message handling', () => {
     let messageHandler: (event: MessageEvent<any>) => void;
+    let refreshPingHandler: (event: MessageEvent<any>) => void;
 
     beforeEach(() => {
       // Extract the message handler that was registered
       const calls = addEventListenerSpy.mock.calls;
-      
+      const messageCalls = calls.filter((call: any[]) => call[0] === 'message');
+
       // Find the message event handler from the SDK constructor call
-      const messageCall = calls.find((call: any[]) => call[0] === 'message');
-      messageHandler = messageCall?.[1] as (event: MessageEvent<any>) => void;
-      
+      messageHandler = messageCalls[0]?.[1] as (event: MessageEvent<any>) => void;
+      refreshPingHandler = messageCalls[1]?.[1] as (event: MessageEvent<any>) => void;
+
       // Ensure we have a valid message handler
-      if (!messageHandler) {
+      if (!messageHandler || !refreshPingHandler) {
         throw new Error('Message handler not found in addEventListener calls');
       }
     });
@@ -383,6 +398,48 @@ describe('AngieMcpSdk', () => {
 
       // Assert
       expect(mockBrowserContextTransport).not.toHaveBeenCalled();
+    });
+
+    it('should not reset queue on refresh ping for a different instance', () => {
+      const event = {
+        data: {
+          type: 'sdk-angie-refresh-ping',
+          payload: {
+            instanceId: 'other-instance-id',
+          },
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should reset queue on refresh ping for its own instanceId', () => {
+      const event = {
+        data: {
+          type: 'sdk-angie-refresh-ping',
+          payload: {
+            instanceId: (sdk as any).instanceId,
+          },
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
+    });
+
+    it('should reset queue on refresh ping with no instanceId', () => {
+      const event = {
+        data: {
+          type: 'sdk-angie-refresh-ping',
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
     });
   });
 

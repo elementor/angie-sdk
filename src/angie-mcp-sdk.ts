@@ -94,7 +94,7 @@ export class AngieMcpSdk {
     this.instanceId = generateInstanceId();
     this.logger = createChildLogger({ instanceId: this.instanceId });
     this.logger.log('Constructor called - initializing SDK');
-    this.angieDetector = new AngieDetector();
+    this.angieDetector = new AngieDetector(() => this.instanceId);
     this.registrationQueue = new RegistrationQueue();
     this.clientManager = new ClientManager();
     this.logger.log('Setting up event handlers');
@@ -139,6 +139,13 @@ export class AngieMcpSdk {
   private setupReRegistrationHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_ANGIE_REFRESH_PING) {
+        const pingInstanceId = event.data?.payload?.instanceId;
+        // Embedded Angie does not send instanceId yet; absent id keeps legacy behavior.
+        if (pingInstanceId && pingInstanceId !== this.instanceId) {
+          this.logger.log(`Ignoring refresh ping for different instance. Ping instanceId: ${pingInstanceId}, this instanceId: ${this.instanceId}`);
+          return;
+        }
+
         this.logger.log('Angie refresh ping received');
         
         // Use the safe reset method that checks for concurrent processing
@@ -386,7 +393,7 @@ export class AngieMcpSdk {
       const registration = this.registrationQueue.getAll().find(reg => reg.id === serverId);
       
       if (!registration) {
-        this.logger.error(`No registration found for serverId: ${serverId}`);
+        this.logger.log(`No registration found for serverId: ${serverId} (likely belongs to another instance)`);
         return;
       }
 

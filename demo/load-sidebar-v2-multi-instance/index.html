@@ -3,12 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>loadSidebarV2 — three instances</title>
+  <title>loadSidebarV2 — multi instances</title>
   <script type="importmap">
   {
     "imports": {
+      "@modelcontextprotocol/sdk/server/mcp.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js",
       "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
-      "zod/v4": "../../node_modules/zod/v4/index.js"
+      "zod": "../../node_modules/zod/index.js",
+      "zod/v3": "../../node_modules/zod/v3/index.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js",
+      "zod/v4-mini": "../../node_modules/zod/v4-mini/index.js",
+      "zod-to-json-schema": "../../node_modules/zod-to-json-schema/dist/esm/index.js",
+      "ajv": "./ajv-shim.js",
+      "ajv-formats": "./ajv-formats-shim.js"
     }
   }
   </script>
@@ -32,17 +39,21 @@
 <body>
   <p><a href="../">← All demos</a></p>
 
-  <h2>Three Angie instances on one page</h2>
+  <h2>Multi Angie instances on one page</h2>
   <p>
-    One <code>sidebar</code> and two <code>floatingChat</code> instances. Each has its own
-    container, iframe, and widget config.
+    One <code>sidebar</code> and two <code>floatingChat</code> instances. Each boots concurrently,
+    registers its own local MCP server, and keeps its own container, iframe, and widget config.
   </p>
 
   <ul>
-    <li><strong>Sidebar</strong> — <code>demo-sidebar</code>, opens with the button below.</li>
-    <li><strong>Chat A</strong> — <code>demo-chat</code>, pink toggle at the bottom right.</li>
-    <li><strong>Chat B</strong> — <code>demo-chat-2</code>, indigo toggle beside it.</li>
+    <li><strong>Sidebar</strong> — <code>demo-sidebar</code>, server <code>demo-wordpress-tools</code> (WordPress tools). Opens with the button below.</li>
+    <li><strong>Chat A</strong> — <code>demo-chat</code>, server <code>demo-help-center</code> (Help Center). Pink toggle at the bottom right.</li>
+    <li><strong>Chat B</strong> — <code>demo-chat-2</code>, server <code>demo-billing</code> (Billing). Indigo toggle beside it.</li>
   </ul>
+
+  <p>
+    Open each instance and ask what tools it has. Each should list only its own server — never a sibling's.
+  </p>
 
   <p>
     <button type="button" id="sidebar-toggle">Open the sidebar instance</button>

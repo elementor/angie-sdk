@@ -42,13 +42,23 @@ describe( 'instance-registry host-to-host routing', () => {
 		expect( shouldInstanceHandle( first, 'bbbbbb' ) ).toBe( false );
 	} );
 
-	it( 'should let the first iframe owner answer for an instance that owns no iframe', () => {
+	it( 'should not let another instance answer for a registered instance still booting', () => {
 		const first = createAngieInstance( SIDEBAR_ARGS );
 		createAngieInstance( CHAT_ARGS );
 		first.iframe = fakeIframe();
 
-		expect( shouldInstanceHandle( first, 'bbbbbb' ) ).toBe( true );
+		expect( shouldInstanceHandle( first, 'bbbbbb' ) ).toBe( false );
 		expect( shouldInstanceHandle( first, 'unknown-editor-id' ) ).toBe( true );
+	} );
+
+	it( 'should let exactly one iframe owner handle an unaddressed message', () => {
+		const first = createAngieInstance( SIDEBAR_ARGS );
+		const second = createAngieInstance( CHAT_ARGS );
+		first.iframe = fakeIframe();
+		second.iframe = fakeIframe();
+
+		expect( shouldInstanceHandle( first, undefined ) ).toBe( true );
+		expect( shouldInstanceHandle( second, undefined ) ).toBe( false );
 	} );
 
 	it( 'should not let a later iframe owner answer for an unknown instance', () => {

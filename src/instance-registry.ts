@@ -47,21 +47,29 @@ export const hasSidebarLayoutInstance = (): boolean =>
 
 /**
  * Decides whether `instance` should act on a host-to-host message.
- *
- * The Elementor editor loads its own SDK bundle. It registers MCP servers but never
- * opens an iframe, and relies on the Angie plugin's listener to pass its messages on.
- * So a message addressed elsewhere is only ignored when that instance owns an iframe of
- * its own. Otherwise the first iframe owner answers for it.
  */
 export const shouldInstanceHandle = ( instance: AppState, instanceId?: string ): boolean => {
-	if ( ! instanceId || instanceId === instance.instanceId ) {
+	if ( instanceId && instanceId === instance.instanceId ) {
 		return true;
 	}
 
-	if ( getInstanceById( instanceId )?.iframe ) {
+	// An unaddressed message cannot be attributed to an instance. Older SDK bundles
+	// on the page still send these, so somebody has to answer -- but only one
+	// instance may, or the server is created in every iframe.
+	if ( ! instanceId ) {
+		return getFirstIframeInstance() === instance;
+	}
+
+	// The addressed instance is on this page, so it answers for itself and nobody
+	// else may answer for it. Its listener buffers the message until its iframe
+	// exists, so a boot still in progress is not a reason to hand the message over.
+	if ( getInstanceById( instanceId ) ) {
 		return false;
 	}
 
+	// The id is unknown. The Elementor editor loads its own SDK bundle: it registers
+	// MCP servers but never opens an iframe, and relies on the Angie plugin's
+	// listener to pass its messages on. The first iframe owner answers for it.
 	return getFirstIframeInstance() === instance;
 };
 

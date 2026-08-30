@@ -19,6 +19,7 @@ import {
 	hasSidebarLayoutInstance,
 } from '../instance-registry';
 import { resolveConfig, shouldBoot } from './resolve-config';
+import { listenToSDK } from '../sdk';
 import { generateInstanceId } from '../utils';
 
 export const bootSidebar = async (
@@ -72,6 +73,8 @@ export const bootSidebar = async (
 		instanceId,
 		layout: config.container.layout,
 	} );
+
+	listenToSDK( instance );
 
 	initHostApiBridge( {
 		iframeOrigin: config.iframe.origin,

@@ -2,7 +2,7 @@ import { addLocalStorageListener } from './localStorage';
 import { appState, type AppState } from './config';
 import { createChildLogger } from './logger';
 import { listenToOAuthFromIframe, setupOidcLoginFlowHandler } from './oauth';
-import { listenToSDK } from './sdk';
+import { flushPendingSdkMessages, listenToSDK } from './sdk';
 import { loadWidth } from './sidebar';
 import { HostEventType, MessageEventType } from './types';
 import { isFromIframe, isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
@@ -176,6 +176,8 @@ export const openIframe = async (
 
 	instance.iframe = iframe;
 	instance.iframeUrlObject = iframeUrlObject;
+
+	flushPendingSdkMessages( instance );
 
 	addLocalStorageListener( instance );
 
