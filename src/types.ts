@@ -98,11 +98,17 @@ export interface ClientCreationResponse {
   error?: string;
 }
 
+export interface MessageContext {
+  label: string;
+  content: string;
+}
+
 export interface AngieTriggerRequest {
   prompt?: string;
-  context:{
+  context?: {
     source?: string;
-  }& Record<string, any>;
+  } & Record<string, unknown>;
+  messageContext?: MessageContext;
   options?: {
     timeout?: number;
     newChat?: boolean;
