@@ -55,6 +55,20 @@
     Open each instance and ask what tools it has. Each should list only its own server — never a sibling's.
   </p>
 
+  <h2>Scoped host storage (devtools)</h2>
+  <p>
+    Each instance passes <code>host.instanceId</code>, so chat restore keys are scoped per widget
+    (<code>angie_active_chat_id::__angie::demo-chat</code>, etc.). In the console:
+  </p>
+  <ul>
+    <li><code>angieDemo.seedScopedStorage()</code> — write a distinct value per instance</li>
+    <li><code>angieDemo.scopedStorage()</code> — read scoped values by instance id</li>
+    <li><code>angieDemo.storage()</code> — all <code>angie*</code> host keys (includes scoped keys)</li>
+  </ul>
+  <p>
+    After chatting in one widget, reload and confirm the other widgets do not pick up that chat id.
+  </p>
+
   <p>
     <button type="button" id="sidebar-toggle">Open the sidebar instance</button>
   </p>

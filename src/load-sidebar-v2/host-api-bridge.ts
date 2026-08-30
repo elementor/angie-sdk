@@ -82,18 +82,38 @@ const handleGetExternalHeaders = async (
 	}
 };
 
-const handleHostLocalStorageGet = ( port: MessagePort, key: string ): void => {
+// When `host.instanceId` is set, iframe logical keys become `key::__angie::instanceId`.
+// GET falls back to the unprefixed key once for single-widget hosts upgrading in place.
+const SCOPED_STORAGE_DELIMITER = '::__angie::';
+
+const scopedStorageKey = ( logicalKey: string, instanceId?: string ): string =>
+	logicalKey && instanceId
+		? `${ logicalKey }${ SCOPED_STORAGE_DELIMITER }${ instanceId }`
+		: logicalKey;
+
+const getScopedHostStorage = ( logicalKey: string, instanceId?: string ): string | null => {
+	const storageKey = scopedStorageKey( logicalKey, instanceId );
+
 	try {
-		const value = window.localStorage?.getItem( key ) ?? null;
-		port.postMessage( { value } );
+		const value = window.localStorage.getItem( storageKey );
+
+		if ( value !== null ) {
+			return value;
+		}
+
+		return storageKey === logicalKey ? null : window.localStorage.getItem( logicalKey );
 	} catch {
-		port.postMessage( { value: null } );
+		return null;
 	}
 };
 
-const handleHostLocalStorageSet = ( key: string, value: string ): void => {
+const setScopedHostStorage = (
+	logicalKey: string,
+	value: string,
+	instanceId?: string,
+): void => {
 	try {
-		window.localStorage?.setItem( key, value );
+		window.localStorage.setItem( scopedStorageKey( logicalKey, instanceId ), value );
 	} catch {
 		// localStorage unavailable (e.g. private browsing mode)
 	}
@@ -138,12 +158,21 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 			if ( ! port ) {
 				return;
 			}
-			handleHostLocalStorageGet( port, event.data.key );
+			port.postMessage( {
+				value: getScopedHostStorage(
+					event.data.key,
+					bridgeConfig.host?.instanceId,
+				),
+			} );
 			break;
 		}
 
 		case HostLocalStorageEventType.SET: {
-			handleHostLocalStorageSet( event.data.key, event.data.value );
+			setScopedHostStorage(
+				event.data.key,
+				event.data.value,
+				bridgeConfig.host?.instanceId,
+			);
 			break;
 		}
 	}

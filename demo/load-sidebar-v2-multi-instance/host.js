@@ -182,6 +182,27 @@ const openContainers = () => [ ...document.querySelectorAll( 'div[id^="angie-"]'
 
 const styleTags = () => [ ...document.querySelectorAll( 'style[id]' ) ].map( ( tag ) => tag.id );
 
+const SCOPED_STORAGE_DELIMITER = '::__angie::';
+const ACTIVE_CHAT_STORAGE_KEY = 'angie_active_chat_id';
+const DEMO_INSTANCE_IDS = [ 'demo-sidebar', 'demo-chat', 'demo-chat-2' ];
+
+const scopedStorageKey = ( instanceId ) =>
+	`${ ACTIVE_CHAT_STORAGE_KEY }${ SCOPED_STORAGE_DELIMITER }${ instanceId }`;
+
+const scopedStorage = () => Object.fromEntries(
+	DEMO_INSTANCE_IDS.map( ( instanceId ) => [
+		instanceId,
+		localStorage.getItem( scopedStorageKey( instanceId ) ),
+	] ),
+);
+
+const seedScopedStorage = () => {
+	DEMO_INSTANCE_IDS.forEach( ( instanceId, index ) => {
+		localStorage.setItem( scopedStorageKey( instanceId ), `demo-seed-${ index + 1 }` );
+	} );
+	return scopedStorage();
+};
+
 const storage = () => Object.fromEntries(
 	Object.keys( localStorage )
 		.filter( ( key ) => key.startsWith( 'angie' ) )
@@ -200,4 +221,7 @@ window.angieDemo = {
 	openContainers,
 	styleTags,
 	storage,
+	scopedStorage,
+	seedScopedStorage,
+	scopedStorageKey,
 };

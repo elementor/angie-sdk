@@ -207,7 +207,7 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
 - `angie/context/get-website-context` — host + document metadata
 - `angie/context/get-analytics-context` — screen path + `host.analytics`
-- Host localStorage get/set (for embedded persistence on **loadSidebarV2** only; V1 uses [`localStorage.ts`](../localStorage.ts))
+- Host localStorage get/set (V2 only; V1 uses [`localStorage.ts`](../localStorage.ts)). With `host.instanceId`, keys are scoped per widget (`logicalKey::__angie::<id>`); omit it for legacy unprefixed keys on a single widget.
 
 ## Module map
 
