@@ -2,9 +2,29 @@ import { appState, type AppState } from "./config";
 import { HostLocalStorageEventType } from "./types";
 import { isTrustedIframeMessage } from "./utils";
 
-export const addLocalStorageListener = ( instance: AppState = appState ) => {
-	window.addEventListener( 'message', ( event: MessageEvent ) => {
-		if ( ! isTrustedIframeMessage( event, instance.iframeUrlObject?.origin, instance.iframe ) ) {
+const localStorageInstances: AppState[] = [];
+let localStorageListener: ( ( event: MessageEvent ) => void ) | null = null;
+
+const resolveLocalStorageInstance = ( event: MessageEvent ): AppState | null =>
+	localStorageInstances.find( ( instance ) => isTrustedIframeMessage(
+		event,
+		instance.iframeUrlObject?.origin,
+		instance.iframe,
+	) ) ?? null;
+
+export const addLocalStorageListener = ( instance: AppState = appState ): void => {
+	if ( ! localStorageInstances.includes( instance ) ) {
+		localStorageInstances.push( instance );
+	}
+
+	if ( localStorageListener ) {
+		return;
+	}
+
+	localStorageListener = ( event: MessageEvent ) => {
+		const target = resolveLocalStorageInstance( event );
+
+		if ( ! target ) {
 			return;
 		}
 
@@ -22,5 +42,16 @@ export const addLocalStorageListener = ( instance: AppState = appState ) => {
 				break;
 			}
 		}
-	} );
+	};
+
+	window.addEventListener( 'message', localStorageListener );
+};
+
+export const resetLocalStorageListenersForTests = (): void => {
+	if ( localStorageListener ) {
+		window.removeEventListener( 'message', localStorageListener );
+		localStorageListener = null;
+	}
+
+	localStorageInstances.length = 0;
 };

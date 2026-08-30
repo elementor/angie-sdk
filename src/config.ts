@@ -1,3 +1,5 @@
+import type { LoadSidebarV2Layout } from './load-sidebar-v2/config';
+
 export const DEFAULT_CONTAINER_ID = 'angie-sidebar-container';
 
 export const DEFAULT_IFRAME_ELEMENT_ID = 'angie-iframe';
@@ -8,7 +10,7 @@ export type AppState = {
 	iframeUrlObject: URL | null;
 	containerId: string;
 	instanceId: string;
-	layout: string;
+	layout: LoadSidebarV2Layout | '';
 	iframeElementId: string;
 };
 

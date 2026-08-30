@@ -15,8 +15,8 @@ const createFakeIframe = ( path: string ) => {
 	return { iframe, postMessage };
 };
 
-const SIDEBAR_ARGS = { containerId: 'container-a', instanceId: 'aaaaaa', layout: 'sidebar' };
-const CHAT_ARGS = { containerId: 'container-b', instanceId: 'bbbbbb', layout: 'floatingChat' };
+const SIDEBAR_ARGS = { containerId: 'container-a', instanceId: 'aaaaaa', layout: 'sidebar' as const };
+const CHAT_ARGS = { containerId: 'container-b', instanceId: 'bbbbbb', layout: 'floatingChat' as const };
 
 describe( 'angie-iframe-utils', () => {
 	beforeEach( () => {

@@ -4,9 +4,11 @@ import {
 	DEFAULT_IFRAME_ELEMENT_ID,
 	type AppState,
 } from './config';
-import { LAYOUT_SIDEBAR } from './load-sidebar-v2/config';
+import { LAYOUT_SIDEBAR, type LoadSidebarV2Layout } from './load-sidebar-v2/config';
 
-export type CreateAngieInstanceArgs = Pick<AppState, 'containerId' | 'instanceId' | 'layout'>;
+export type CreateAngieInstanceArgs = Pick<AppState, 'containerId' | 'instanceId'> & {
+	layout: LoadSidebarV2Layout;
+};
 
 const instances: AppState[] = [];
 

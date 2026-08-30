@@ -18,9 +18,18 @@ type OpenIframeProps = {
 	embeddedConfig?: HostEmbeddedConfigPayload;
 }
 
+type IframeHostHandler = {
+	instance: AppState;
+	iframe: HTMLIFrameElement;
+	trustedOrigins: string[];
+};
+
 const iframeLogger = createChildLogger( 'iframe' );
 
 const DEFAULT_PATH = 'angie/wp-admin';
+
+const iframeHostHandlers: IframeHostHandler[] = [];
+let iframeHostMessageListener: ( ( event: MessageEvent ) => void ) | null = null;
 
 export const isValidPath = ( path: string ): boolean => {
 	if ( path.includes( '://' ) || path.startsWith( '//' ) ) {
@@ -36,23 +45,117 @@ export const isValidPath = ( path: string ): boolean => {
 	}
 };
 
-export const disableNavigationPrevention = async (): Promise<void> => {
-	if ( ! appState.iframe?.contentWindow || ! appState.iframeUrlObject ) {
+export const disableNavigationPrevention = async ( instance: AppState = appState ): Promise<void> => {
+	if ( ! instance.iframe?.contentWindow || ! instance.iframeUrlObject ) {
 		iframeLogger.warn( 'Cannot disable navigation prevention: iframe or origin not available' );
 		return;
 	}
 
 	try {
 		iframeLogger.log( 'Disabling navigation prevention in Angie iframe' );
-		appState.iframe.contentWindow.postMessage(
+		instance.iframe.contentWindow.postMessage(
 			{ type: MessageEventType.ANGIE_DISABLE_NAVIGATION_PREVENTION },
-			appState.iframeUrlObject.origin
+			instance.iframeUrlObject.origin
 		);
 		await new Promise( resolve => setTimeout( resolve, 100 ) );
 	} catch ( error ) {
 		iframeLogger.error( 'Failed to disable navigation prevention:', error );
 		throw error;
 	}
+};
+
+const handleIframeHostMessage = async (
+	event: MessageEvent,
+	instance: AppState,
+): Promise<void> => {
+	if ( event?.data?.type === MessageEventType.ANGIE_CHAT_TOGGLE ) {
+		instance.open = event.data.open;
+
+		if ( instance.iframe ) {
+			toggleAngieSidebar( instance.iframe, instance.open, instance.containerId );
+		}
+	} else if ( event?.data?.type === MessageEventType.ANGIE_STUDIO_TOGGLE ) {
+		const isStudioOpen = event.data.isStudioOpen;
+
+		if ( ! instance.iframe ) {
+			return;
+		}
+
+		if ( ! isStudioOpen ) {
+			const savedWidth = loadWidth();
+			document.documentElement.style.setProperty( '--angie-sidebar-width', `${ savedWidth }px` );
+			document.documentElement.classList.remove( 'angie-studio-active' );
+		} else {
+			document.documentElement.classList.add( 'angie-studio-active' );
+		}
+	} else if ( event?.data?.type === MessageEventType.ANGIE_NAVIGATE_TO_URL ) {
+		const { url = '', confirmed = false } = event.data.payload || {};
+
+		if ( ! confirmed ) {
+			iframeLogger.log( 'Navigation requires user confirmation' );
+			return;
+		}
+
+		if ( isSafeUrl( url ) ) {
+			await disableNavigationPrevention( instance );
+			window.location.assign( url );
+		} else {
+			iframeLogger.error( 'Navigation blocked: Invalid or unsafe URL', { url } );
+		}
+	} else if ( event?.data?.type === MessageEventType.ANGIE_PAGE_RELOAD ) {
+		const { confirmed = false } = event.data.payload || {};
+
+		if ( ! confirmed ) {
+			iframeLogger.log( 'Page reload requires user confirmation' );
+			return;
+		}
+
+		iframeLogger.log( 'Page reload confirmed - disabling navigation prevention and reloading' );
+
+		await disableNavigationPrevention( instance );
+
+		setTimeout( () => {
+			window.location.reload();
+		}, 50 );
+	} else if ( event?.data?.type === HostEventType.RESET_HASH ) {
+		window.location.hash = '';
+
+		sendSuccessMessage( event.ports[ 0 ], {
+			message: 'Hash reset successfully',
+		} );
+	}
+};
+
+const ensureIframeHostMessageListener = (): void => {
+	if ( iframeHostMessageListener ) {
+		return;
+	}
+
+	iframeHostMessageListener = ( event: MessageEvent ) => {
+		const match = iframeHostHandlers.find( ( handler ) => isFromIframe( event, handler.iframe ) );
+
+		if ( ! match || ! match.trustedOrigins.includes( event.origin ) ) {
+			return;
+		}
+
+		void handleIframeHostMessage( event, match.instance );
+	};
+
+	window.addEventListener( 'message', iframeHostMessageListener );
+};
+
+export const registerIframeHostHandler = ( handler: IframeHostHandler ): void => {
+	iframeHostHandlers.push( handler );
+	ensureIframeHostMessageListener();
+};
+
+export const resetIframeHostHandlersForTests = (): void => {
+	if ( iframeHostMessageListener ) {
+		window.removeEventListener( 'message', iframeHostMessageListener );
+		iframeHostMessageListener = null;
+	}
+
+	iframeHostHandlers.length = 0;
 };
 
 export type OpenIframeResult = {
@@ -183,79 +286,13 @@ export const openIframe = async (
 
 	listenToSDK( instance );
 
-	listenToOAuthFromIframe();
-	setupOidcLoginFlowHandler();
+	listenToOAuthFromIframe( instance );
+	setupOidcLoginFlowHandler( instance );
 
-	window.addEventListener( 'message', async ( event ) => {
-
-		const trustedOrigins = [ window.location.origin, props.origin || 'https://angie.elementor.com' ];
-
-		if ( ! trustedOrigins.includes( event.origin ) ) {
-			return;
-		}
-
-		if ( ! isFromIframe( event, iframe ) ) {
-			return;
-		}
-
-		if ( event?.data?.type === MessageEventType.ANGIE_CHAT_TOGGLE ) {
-			instance.open = event.data.open;
-
-			if ( instance.iframe ) {
-				toggleAngieSidebar( instance.iframe, instance.open, instance.containerId );
-			}
-		} else if ( event?.data?.type === MessageEventType.ANGIE_STUDIO_TOGGLE ) {
-			const isStudioOpen = event.data.isStudioOpen;
-
-			if ( ! instance.iframe ) {
-				return;
-			}
-
-			if ( ! isStudioOpen ) {
-				const savedWidth = loadWidth();
-				document.documentElement.style.setProperty( '--angie-sidebar-width', `${ savedWidth }px` );
-				document.documentElement.classList.remove( 'angie-studio-active' );
-			} else {
-				document.documentElement.classList.add( 'angie-studio-active' );
-			}
-		} else if ( event?.data?.type === MessageEventType.ANGIE_NAVIGATE_TO_URL ) {
-			const { url = '', confirmed = false } = event.data.payload || {};
-
-			if ( ! confirmed ) {
-				iframeLogger.log( 'Navigation requires user confirmation' );
-				return;
-			}
-
-			if ( isSafeUrl( url ) ) {
-				await disableNavigationPrevention();
-				window.location.assign( url );
-			} else {
-				iframeLogger.error( 'Navigation blocked: Invalid or unsafe URL', { url } );
-				return;
-			}
-		} else if ( event?.data?.type === MessageEventType.ANGIE_PAGE_RELOAD ) {
-			const { confirmed = false } = event.data.payload || {};
-
-			if ( ! confirmed ) {
-				iframeLogger.log( 'Page reload requires user confirmation' );
-				return;
-			}
-
-			iframeLogger.log( 'Page reload confirmed - disabling navigation prevention and reloading' );
-
-			await disableNavigationPrevention();
-
-			setTimeout( () => {
-				window.location.reload();
-			}, 50 );
-		} else if ( event?.data?.type === HostEventType.RESET_HASH ) {
-			window.location.hash = '';
-
-			sendSuccessMessage( event.ports[ 0 ], {
-				message: 'Hash reset successfully',
-			} );
-		}
-
+	registerIframeHostHandler( {
+		instance,
+		iframe,
+		trustedOrigins: [ window.location.origin, props.origin || 'https://angie.elementor.com' ],
 	} );
 
 	return {

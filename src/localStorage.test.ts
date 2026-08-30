@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { addLocalStorageListener } from './localStorage';
+import { addLocalStorageListener, resetLocalStorageListenersForTests } from './localStorage';
 import { createAngieInstance, resetInstancesForTests } from './instance-registry';
 import { HostLocalStorageEventType } from './types';
 
@@ -12,6 +12,7 @@ const emitMessage = ( event: Partial<MessageEvent> ): void => {
 describe( 'localStorage', () => {
 	beforeEach( () => {
 		resetInstancesForTests();
+		resetLocalStorageListenersForTests();
 		window.localStorage.clear();
 		jest.clearAllMocks();
 	} );
@@ -53,5 +54,36 @@ describe( 'localStorage', () => {
 		} );
 
 		expect( window.localStorage.getItem( 'angie_test' ) ).toBeNull();
+	} );
+
+	it( 'should route messages to the correct instance when multiple listeners are registered', () => {
+		const first = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const second = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+		const firstWindow = {} as Window;
+		const secondWindow = {} as Window;
+
+		first.iframeUrlObject = new URL( `${ ANGIE_ORIGIN }/angie/embedded` );
+		first.iframe = { contentWindow: firstWindow } as HTMLIFrameElement;
+		second.iframeUrlObject = new URL( `${ ANGIE_ORIGIN }/angie/embedded` );
+		second.iframe = { contentWindow: secondWindow } as HTMLIFrameElement;
+
+		addLocalStorageListener( first );
+		addLocalStorageListener( second );
+
+		emitMessage( {
+			origin: ANGIE_ORIGIN,
+			source: secondWindow,
+			data: { type: HostLocalStorageEventType.SET, key: 'angie_chat', value: 'open' },
+		} );
+
+		expect( window.localStorage.getItem( 'angie_chat' ) ).toBe( 'open' );
 	} );
 } );
