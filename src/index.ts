@@ -1,4 +1,4 @@
-export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type ModelsConfig, type WidgetConfig } from './angie-mcp-sdk';
+export { AngieMcpSdk, DEFAULT_CONTAINER_ID, type AngieMcpSdkOptions, type ModeSwitcherConfig, type ModelsConfig, type QuotaErrorConfig, type WidgetConfig } from './angie-mcp-sdk';
 export {
 	LAYOUT_FLOATING_CHAT,
 	LAYOUT_SIDEBAR,
@@ -28,7 +28,7 @@ export {
 	waitForAngiePluginActive,
 } from './angie-plugin-detection';
 export { navigateAngieIframe } from './navigation-utils';
-export { setAngieInteractionMode, openAngieInAskMode, type AngieInteractionMode, type SetAngieInteractionModeOptions } from './interaction-mode-utils';
+export { setAngieInteractionMode, type AngieInteractionMode, type SetAngieInteractionModeOptions } from './interaction-mode-utils';
 export { getAngieIframe } from './angie-iframe-utils';
 export { disableNavigationPrevention } from './iframe';
 export * from './types';

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
-import { setAngieInteractionMode, openAngieInAskMode } from './interaction-mode-utils';
+import { setAngieInteractionMode } from './interaction-mode-utils';
 import { MessageEventType } from './types';
 
 jest.mock( './angie-iframe-utils', () => ( {
@@ -52,11 +52,11 @@ describe( 'interaction-mode-utils', () => {
 		expect( window.location.hash ).toBe( '#angie-prompt=Help%20me%20with%20' );
 	} );
 
-	it( 'openAngieInAskMode defaults to ask mode with sidebar open', () => {
+	it( 'opens ask mode with sidebar when isOpen is true', () => {
 		const toggleAngieSidebar = jest.fn();
 		window.toggleAngieSidebar = toggleAngieSidebar;
 
-		openAngieInAskMode( { source: 'help-center', prompt: 'Need help' } );
+		setAngieInteractionMode( 'ask', { isOpen: true, source: 'help-center', prompt: 'Need help' } );
 
 		expect( toggleAngieSidebar ).toHaveBeenCalledWith( true );
 		expect( mockPostMessageToAngieIframe ).toHaveBeenCalledWith( {

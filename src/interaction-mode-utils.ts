@@ -45,7 +45,3 @@ export const setAngieInteractionMode = (
 
 	return true;
 };
-
-export const openAngieInAskMode = (
-	options: SetAngieInteractionModeOptions = {},
-): boolean => setAngieInteractionMode( 'ask', { isOpen: true, ...options } );
