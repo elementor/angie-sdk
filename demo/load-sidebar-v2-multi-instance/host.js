@@ -81,20 +81,20 @@ await Promise.all( [
 			widgetConfig: { title: 'Sidebar instance' },
 		},
 		{
-			name: 'demo-wordpress-tools',
+			name: 'demo-product-catalog',
 			version: '1.0.0',
-			title: 'WordPress tools',
-			description: 'WordPress post listing (demo)',
-			instructions: 'Use list-wordpress-posts to fetch recent post titles.',
+			title: 'Product catalog',
+			description: 'Product listing (demo)',
+			instructions: 'Use list-catalog-items to fetch recent product titles.',
 		},
 		[
 			{
-				name: 'list-wordpress-posts',
-				description: 'List recent WordPress post titles.',
+				name: 'list-catalog-items',
+				description: 'List recent product titles.',
 				handler: async () => ( {
 					content: [ {
 						type: 'text',
-						text: '[demo-wordpress-tools] demo-sidebar — Summer sale, New product launch, Team update',
+						text: '[demo-product-catalog] demo-sidebar — Summer sale, New product launch, Team update',
 					} ],
 				} ),
 			},
