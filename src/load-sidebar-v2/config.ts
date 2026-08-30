@@ -63,6 +63,7 @@ export type LoadSidebarV2Options = {
 	iframe?: IframeOptions;
 	callbacks?: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
+	sdkInstanceId?: string;
 };
 
 export type ResolvedConfigV2 = {

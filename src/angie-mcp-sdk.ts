@@ -143,7 +143,7 @@ export class AngieMcpSdk {
       this.instanceId = options.host.instanceId;
     }
 
-    this.sidebarV2BootPromise = bootSidebar( options, this.instanceId );
+    this.sidebarV2BootPromise = bootSidebar( { ...options, sdkInstanceId: this.instanceId } );
     this.setupPromptHashDetection();
     return this.sidebarV2BootPromise;
   }

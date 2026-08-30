@@ -19,13 +19,10 @@ import {
 	hasSidebarLayoutInstance,
 } from '../instance-registry';
 import { resolveConfig, shouldBoot } from './resolve-config';
-import { listenToSDK } from '../sdk';
+import { registerSdkInstance, startSdkMessageRouting } from '../sdk';
 import { generateInstanceId } from '../utils';
 
-export const bootSidebar = async (
-	options: LoadSidebarV2Options,
-	sdkInstanceId = ''
-): Promise<void> => {
+export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
 	handlePostConsentRedirect();
 
 	const env = readEnv();
@@ -50,7 +47,7 @@ export const bootSidebar = async (
 		);
 	}
 
-	const instanceId = config.host.instanceId || sdkInstanceId || generateInstanceId();
+	const instanceId = config.host.instanceId || options.sdkInstanceId || generateInstanceId();
 
 	if ( getInstanceById( instanceId ) ) {
 		throw new Error(
@@ -74,7 +71,8 @@ export const bootSidebar = async (
 		layout: config.container.layout,
 	} );
 
-	listenToSDK( instance );
+	registerSdkInstance( instance );
+	startSdkMessageRouting();
 
 	initHostApiBridge( {
 		iframeOrigin: config.iframe.origin,

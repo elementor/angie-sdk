@@ -152,19 +152,21 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	} );
 
 	it( 'should name the instance after the sdk id, or the host id when given', async () => {
-		await bootSidebar(
-			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a' } },
-			'sdk123',
-		);
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a' },
+			sdkInstanceId: 'sdk123',
+		} );
 		expect( getFirstInstance()?.instanceId ).toBe( 'sdk123' );
 
 		resetInstancesForTests();
 		document.body.innerHTML = '';
 
-		await bootSidebar(
-			{ container: { layout: LAYOUT_SIDEBAR }, host: { appId: 'app-a', instanceId: 'stable' } },
-			'sdk123',
-		);
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a', instanceId: 'stable' },
+			sdkInstanceId: 'sdk123',
+		} );
 		expect( getFirstInstance()?.instanceId ).toBe( 'stable' );
 	} );
 } );

@@ -1,7 +1,7 @@
 import { appState, type AppState } from './config';
 import { createChildLogger } from './logger';
 import { listenToOAuthFromIframe, setupOidcLoginFlowHandler } from './oauth';
-import { flushPendingSdkMessages, listenToSDK } from './sdk';
+import { flushPendingSdkMessages, registerSdkInstance, startSdkMessageRouting } from './sdk';
 import { loadWidth } from './sidebar';
 import { HostEventType, MessageEventType } from './types';
 import { isFromIframe, isMobile, isSafeUrl, sendSuccessMessage, toggleAngieSidebar } from './utils';
@@ -280,7 +280,8 @@ export const openIframe = async (
 
 	flushPendingSdkMessages( instance );
 
-	listenToSDK( instance );
+	registerSdkInstance( instance );
+	startSdkMessageRouting();
 
 	listenToOAuthFromIframe( instance );
 	setupOidcLoginFlowHandler( instance );

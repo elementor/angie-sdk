@@ -26,6 +26,8 @@ const routingInstances: AppState[] = [];
 let routingListener: ( ( event: MessageEvent ) => void ) | null = null;
 
 export const flushPendingSdkMessages = ( instance: AppState ): void => {
+	startSdkMessageRouting();
+
 	const queued = pendingMessages.get( instance );
 
 	if ( ! queued?.length ) {
@@ -36,14 +38,19 @@ export const flushPendingSdkMessages = ( instance: AppState ): void => {
 	queued.forEach( ( send ) => send() );
 };
 
-export const resetSdkListenersForTests = (): void => {
-	if ( routingListener ) {
+export const unregisterSdkInstance = ( instance: AppState ): void => {
+	const index = routingInstances.indexOf( instance );
+
+	if ( index !== -1 ) {
+		routingInstances.splice( index, 1 );
+	}
+
+	pendingMessages.delete( instance );
+
+	if ( routingInstances.length === 0 && routingListener ) {
 		window.removeEventListener( 'message', routingListener );
 		routingListener = null;
 	}
-
-	routingInstances.length = 0;
-	pendingMessages.clear();
 };
 
 const queueOrRun = ( instance: AppState, send: () => void ): void => {
@@ -84,12 +91,8 @@ const resolveTarget = ( event: MessageEvent ): AppState | null => {
 	return instance;
 };
 
-export const listenToSDK = ( instance: AppState ) => {
-	if ( ! routingInstances.includes( instance ) ) {
-		routingInstances.push( instance );
-	}
-
-	if ( routingListener ) {
+export const startSdkMessageRouting = (): void => {
+	if ( routingInstances.length === 0 || routingListener ) {
 		return;
 	}
 
@@ -195,4 +198,12 @@ export const listenToSDK = ( instance: AppState ) => {
 	};
 
 	window.addEventListener( 'message', routingListener );
+};
+
+export const registerSdkInstance = ( instance: AppState ): void => {
+	if ( routingInstances.includes( instance ) ) {
+		return;
+	}
+
+	routingInstances.push( instance );
 };

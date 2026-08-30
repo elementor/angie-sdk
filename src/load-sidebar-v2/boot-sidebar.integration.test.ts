@@ -5,46 +5,11 @@ import { CHAT_WIDGET_HIDDEN_CLASS } from './chat-toggle/constants';
 import { resetHostApiBridgeForTests } from './host-api-bridge';
 import { resetHostMessageRouterForTests } from './host-message-router';
 import { resetChatShellForTests } from './chat-toggle/chat-shell';
-import { resetInstancesForTests } from '../instance-registry';
+import { getInstanceByContainerId, resetInstancesForTests } from '../instance-registry';
 
 jest.mock( '../openSaaSPage', () => ( { openSaaSPage: jest.fn() } ) );
 
 const ANGIE_ORIGIN = 'https://angie.elementor.com';
-
-type FakeIframe = {
-	iframe: HTMLIFrameElement;
-	postMessage: jest.Mock;
-	contentWindow: Window;
-};
-
-const openedIframes: FakeIframe[] = [];
-
-const iframeOf = ( containerId: string ): FakeIframe => {
-	const container = document.getElementById( containerId )!;
-	const found = openedIframes.find( ( item ) => container.contains( item.iframe ) );
-
-	if ( ! found ) {
-		throw new Error( `no iframe was mounted into #${ containerId }` );
-	}
-
-	return found;
-};
-
-const sentPayload = ( target: FakeIframe, type: string ): unknown =>
-	( target.postMessage.mock.calls.find(
-		( call: unknown[] ) => ( call[ 0 ] as { type: string } ).type === type,
-	)?.[ 0 ] as { payload: unknown } | undefined )?.payload;
-
-const sentTypes = ( target: FakeIframe ): string[] =>
-	target.postMessage.mock.calls.map( ( call: unknown[] ) => ( call[ 0 ] as { type: string } ).type );
-
-const emitFromIframe = ( target: FakeIframe, data: unknown ): void => {
-	window.dispatchEvent( Object.assign( new Event( 'message' ), {
-		origin: ANGIE_ORIGIN,
-		source: target.contentWindow,
-		data,
-	} ) );
-};
 
 describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 	beforeAll( () => {
@@ -65,7 +30,6 @@ describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 		document.body.innerHTML = '';
 		document.head.innerHTML = '';
 		document.body.className = '';
-		openedIframes.length = 0;
 		resetInstancesForTests();
 		resetHostApiBridgeForTests();
 		resetHostMessageRouterForTests();
@@ -75,13 +39,11 @@ describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 			async ( props: any ) => {
 				const iframe = document.createElement( 'iframe' );
 				const postMessage = jest.fn();
-				const contentWindow = { postMessage } as unknown as Window;
 
-				Object.defineProperty( iframe, 'contentWindow', { value: contentWindow } );
+				Object.defineProperty( iframe, 'contentWindow', { value: { postMessage } } );
 				iframe.id = props.iframeElementId;
 				iframe.setAttribute( 'src', `${ props.origin }/${ props.path }` );
 				props.insertCallback?.( iframe );
-				openedIframes.push( { iframe, postMessage, contentWindow } );
 
 				return { iframe, iframeUrlObject: new URL( ANGIE_ORIGIN ) };
 			},
@@ -104,22 +66,38 @@ describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 			widgetConfig: { title: 'Widget B' },
 		} );
 
-		const sidebarIframe = iframeOf( 'angie-sidebar-container' );
-		const chatIframe = iframeOf( 'chat-b' );
+		const sidebarInstance = getInstanceByContainerId( 'angie-sidebar-container' );
+		const chatInstance = getInstanceByContainerId( 'chat-b' );
+		const sidebarPostMessage = sidebarInstance!.iframe!.contentWindow!.postMessage as jest.Mock;
+		const chatPostMessage = chatInstance!.iframe!.contentWindow!.postMessage as jest.Mock;
 
-		expect( sentPayload( sidebarIframe, 'sdk-widget-config' ) )
-			.toEqual( expect.objectContaining( { title: 'Sidebar' } ) );
-		expect( sentPayload( chatIframe, 'sdk-widget-config' ) )
-			.toEqual( expect.objectContaining( { title: 'Widget B' } ) );
+		expect( sidebarPostMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( {
+				type: 'sdk-widget-config',
+				payload: expect.objectContaining( { title: 'Sidebar' } ),
+			} ),
+			ANGIE_ORIGIN,
+		);
+		expect( chatPostMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( {
+				type: 'sdk-widget-config',
+				payload: expect.objectContaining( { title: 'Widget B' } ),
+			} ),
+			ANGIE_ORIGIN,
+		);
 
 		const sidebarWasActive = document.body.classList.contains( 'angie-sidebar-active' );
-		const sidebarMessagesBefore = sentTypes( sidebarIframe ).length;
+		const sidebarMessagesBefore = sidebarPostMessage.mock.calls.length;
 
-		emitFromIframe( chatIframe, { type: 'toggleAngieSidebar', payload: { force: true } } );
+		window.dispatchEvent( new MessageEvent( 'message', {
+			origin: ANGIE_ORIGIN,
+			source: chatInstance!.iframe!.contentWindow!,
+			data: { type: 'toggleAngieSidebar', payload: { force: true } },
+		} ) );
 
 		expect( document.getElementById( 'chat-b' )!.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) )
 			.toBe( false );
 		expect( document.body.classList.contains( 'angie-sidebar-active' ) ).toBe( sidebarWasActive );
-		expect( sentTypes( sidebarIframe ) ).toHaveLength( sidebarMessagesBefore );
+		expect( sidebarPostMessage.mock.calls ).toHaveLength( sidebarMessagesBefore );
 	} );
 } );

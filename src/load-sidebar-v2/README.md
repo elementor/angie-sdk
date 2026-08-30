@@ -174,7 +174,7 @@ Example: [`demo/load-sidebar-v2-full-config/demo-host.css`](../../demo/load-side
 loadSidebarV2(options)
   → resolveConfig + shouldBoot
   → boot guards (unique container.id / instanceId, one sidebar layout)
-  → createAngieInstance + listenToSDK (buffers MCP until iframe exists)
+  → createAngieInstance + registerSdkInstance + startSdkMessageRouting (buffers MCP until iframe exists)
   → initHostApiBridge (postMessage API + V2 localStorage)
   → ensureSidebarContainer
   → layout strategy (initShell → open iframe → afterOpen)

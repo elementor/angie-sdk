@@ -3,9 +3,9 @@ import { appState } from './config';
 export const toggleAngieSidebar = (
 	iframe: HTMLIFrameElement,
 	isOpen: boolean,
-	containerId: string = appState.containerId
+	containerId?: string,
 ) => {
-	const sidebarContainer = document.getElementById( containerId );
+	const sidebarContainer = document.getElementById( containerId ?? appState.containerId );
 	if ( sidebarContainer ) {
 		sidebarContainer.setAttribute( 'aria-hidden', isOpen ? 'false' : 'true' );
 	}
