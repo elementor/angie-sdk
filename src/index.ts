@@ -28,6 +28,7 @@ export {
 	waitForAngiePluginActive,
 } from './angie-plugin-detection';
 export { navigateAngieIframe } from './navigation-utils';
+export { setAngieInteractionMode, openAngieInAskMode, type AngieInteractionMode, type SetAngieInteractionModeOptions } from './interaction-mode-utils';
 export { getAngieIframe } from './angie-iframe-utils';
 export { disableNavigationPrevention } from './iframe';
 export * from './types';

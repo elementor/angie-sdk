@@ -134,6 +134,7 @@ export enum MessageEventType {
   ANGIE_PAGE_RELOAD = 'angie/page-reload',
   ANGIE_DISABLE_NAVIGATION_PREVENTION = 'angie/disable-navigation-prevention',
   ANGIE_NAVIGATE_AFTER_RESPONSE = 'angie/navigate-after-response',
+  ANGIE_SET_INTERACTION_MODE = 'angie/set-interaction-mode',
 }
 
 
