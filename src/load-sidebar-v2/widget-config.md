@@ -30,7 +30,6 @@ await sdk.loadSidebarV2({
       ],
     },
     closeButton: 'collapse',
-    aiContextGuidance: { enabled: true },
   },
 });
 ```
@@ -75,8 +74,7 @@ Each toggle uses `{ enabled: boolean }`.
 | `feedback` | Turn off thumbs up/down when you handle feedback elsewhere |
 | `commands` | Hide slash commands |
 | `testMode` | Hide internal test tooling in production embeds |
-| `betaBanner` | Hide beta messaging in stable product surfaces |
-| `aiContextGuidance` | Show users that `host.aiContext` is available — pair with `host.aiContext` in `loadSidebarV2` |
+| `statusBanner` | **Opt in** to Angie ops/incident status messages — off by default; pass `{ enabled: true }` to surface outage notices driven by Angie's status channel |
 | `userProfileMenu` | Hide account/profile menu when the host owns auth UI |
 | `planning` | Opt out of Angie planning (`{ enabled: false }`). Omitted or `{ enabled: true }` keeps planning enabled when supported |
 
@@ -101,6 +99,12 @@ Control the embedded app top bar (the bar containing new chat, history, and the 
 | Field | Type | Purpose |
 |-------|------|---------|
 | `topBar` | `{ enabled: boolean }` | `enabled: false` hides the whole top bar (new chat, history, and user menu) |
+
+### Quota error banner
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `quotaError` | `{ enabled: boolean; customMessage?: string }` | **Opt in** to the usage/quota-blocked banner — off by default. Pass `{ enabled: true }` to show it; `customMessage` overrides the default blocking copy. Hiding it (the default) means a quota-blocked chat stops responding without an in-chat explanation, so only leave it off if the host surfaces the block elsewhere. |
 
 ## Patterns from production hosts
 
@@ -128,8 +132,6 @@ const widgetConfig: WidgetConfig = {
   featuredMcpServer: HELP_CENTER_SERVER,
   modeSwitcher: { enabled: false, default: 'agent' },
   closeButton: 'collapse',
-  betaBanner: { enabled: false },
-  aiContextGuidance: { enabled: false },
   localServers: { skipLoading: true },
   userProfileMenu: { enabled: false },
 };
@@ -192,18 +194,6 @@ Hosts can inject copy from PHP or a build step without recompiling the integrati
 ```
 
 Read `window.angieConfig` inside a `buildWidgetConfig()` helper and merge with your defaults (see demo [`host.js`](../../demo/load-sidebar-v2-widget-config/host.js)).
-
-## Pairing with `host.aiContext`
-
-When the host passes screen context via `loadSidebarV2({ host: { aiContext } })`, enable the guidance affordance:
-
-```typescript
-widgetConfig: {
-  aiContextGuidance: { enabled: true },
-}
-```
-
-Example with full host context: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js).
 
 ## loadSidebar (v1) vs loadSidebarV2
 

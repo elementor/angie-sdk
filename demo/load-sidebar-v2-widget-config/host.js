@@ -41,8 +41,6 @@ const buildHelpCenterWidgetConfig = () => {
 		featuredMcpServer: HELP_CENTER_SERVER,
 		modeSwitcher: { enabled: false, default: 'agent' },
 		closeButton: 'collapse',
-		betaBanner: { enabled: false },
-		aiContextGuidance: { enabled: true },
 		localServers: { skipLoading: true },
 		userProfileMenu: { enabled: false },
 	};
@@ -99,8 +97,8 @@ const buildSandboxWidgetConfig = () => ( {
 	feedback: { enabled: true },
 	modeSwitcher: { enabled: true, default: 'agent' },
 	closeButton: 'collapse',
-	betaBanner: { enabled: true },
-	aiContextGuidance: { enabled: true },
+	statusBanner: { enabled: true },
+	quotaError: { enabled: true },
 	userProfileMenu: { enabled: true },
 	topBar: { enabled: false },
 } );

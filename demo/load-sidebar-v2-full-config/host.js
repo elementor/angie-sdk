@@ -83,7 +83,6 @@ sdk.loadSidebarV2( {
 				},
 			],
 		},
-		aiContextGuidance: { enabled: true },
 		closeButton: 'collapse',
 	},
 } ).catch( ( error ) => {

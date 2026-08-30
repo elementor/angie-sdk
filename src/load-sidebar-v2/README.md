@@ -76,7 +76,7 @@ Keep it focused on what helps the agent answer screen-level questions:
 
 Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js) reads `#demo-host-app` into `whatUserSees` and lists allowed actions in `whatUserCanDo`.
 
-Enable `widgetConfig.aiContextGuidance: { enabled: true }` so users see that host context is available. Full reference: [widget-config.md](./widget-config.md).
+Full `widgetConfig` reference: [widget-config.md](./widget-config.md).
 
 ### Custom CSS (toggle + sidebar panel)
 

@@ -36,6 +36,11 @@ export type ModelsConfig = {
   execution: string;
 };
 
+export type QuotaErrorConfig = {
+  enabled: boolean;
+  customMessage?: string;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -48,8 +53,8 @@ export type WidgetConfig = {
   closeButton?: 'collapse' | 'close';
   commands?: FeatureToggle;
   testMode?: FeatureToggle;
-  betaBanner?: FeatureToggle;
-  aiContextGuidance?: FeatureToggle;
+  statusBanner?: FeatureToggle;
+  quotaError?: QuotaErrorConfig;
   userProfileMenu?: FeatureToggle;
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
