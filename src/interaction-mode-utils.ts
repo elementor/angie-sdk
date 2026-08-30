@@ -4,17 +4,7 @@ import { AngieInteractionMode, MessageEventType } from './types';
 
 const interactionModeLogger = createChildLogger( 'interaction-mode' );
 
-export type SetAngieInteractionModeOptions = {
-	isStudioOpen?: boolean;
-	source?: string;
-	prompt?: string;
-};
-
-export const setAngieInteractionMode = (
-	mode: AngieInteractionMode,
-	options: SetAngieInteractionModeOptions = {},
-): boolean => {
-	const { isStudioOpen = false, source, prompt } = options;
+export const setAngieInteractionMode = ( mode: AngieInteractionMode ): boolean => {
 	const angieIframe = getAngieIframe();
 
 	if ( ! angieIframe ) {
@@ -24,16 +14,12 @@ export const setAngieInteractionMode = (
 
 	const success = postMessageToAngieIframe( {
 		type: MessageEventType.ANGIE_SET_INTERACTION_MODE,
-		payload: { mode, source, isStudioOpen },
+		payload: { mode },
 	} );
 
 	if ( ! success ) {
 		interactionModeLogger.error( 'Failed to post interaction mode message to Angie iframe' );
 		return false;
-	}
-
-	if ( prompt ) {
-		window.location.hash = `angie-prompt=${ encodeURIComponent( prompt ) }`;
 	}
 
 	return true;

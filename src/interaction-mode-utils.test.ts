@@ -15,7 +15,6 @@ describe( 'interaction-mode-utils', () => {
 
 	beforeEach( () => {
 		jest.clearAllMocks();
-		window.location.hash = '';
 		mockGetAngieIframe.mockReturnValue( mockIframe );
 		mockPostMessageToAngieIframe.mockReturnValue( true );
 	} );
@@ -27,28 +26,12 @@ describe( 'interaction-mode-utils', () => {
 		expect( mockPostMessageToAngieIframe ).not.toHaveBeenCalled();
 	} );
 
-	it( 'posts angie/set-interaction-mode with payload', () => {
-		setAngieInteractionMode( AngieInteractionMode.PLAN, { source: 'help-center', isStudioOpen: true } );
+	it( 'posts angie/set-interaction-mode with mode only', () => {
+		setAngieInteractionMode( AngieInteractionMode.PLAN );
 
 		expect( mockPostMessageToAngieIframe ).toHaveBeenCalledWith( {
 			type: MessageEventType.ANGIE_SET_INTERACTION_MODE,
-			payload: { mode: AngieInteractionMode.PLAN, source: 'help-center', isStudioOpen: true },
+			payload: { mode: AngieInteractionMode.PLAN },
 		} );
-	} );
-
-	it( 'sets angie-prompt hash when prompt is provided', () => {
-		setAngieInteractionMode( AngieInteractionMode.ASK, { prompt: 'Help me with ' } );
-
-		expect( window.location.hash ).toBe( '#angie-prompt=Help%20me%20with%20' );
-	} );
-
-	it( 'posts ask mode with source and prompt', () => {
-		setAngieInteractionMode( AngieInteractionMode.ASK, { source: 'help-center', prompt: 'Need help' } );
-
-		expect( mockPostMessageToAngieIframe ).toHaveBeenCalledWith( {
-			type: MessageEventType.ANGIE_SET_INTERACTION_MODE,
-			payload: { mode: AngieInteractionMode.ASK, source: 'help-center', isStudioOpen: false },
-		} );
-		expect( window.location.hash ).toBe( '#angie-prompt=Need%20help' );
 	} );
 } );
