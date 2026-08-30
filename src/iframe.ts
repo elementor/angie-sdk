@@ -1,4 +1,3 @@
-import { addLocalStorageListener } from './localStorage';
 import { appState, type AppState } from './config';
 import { createChildLogger } from './logger';
 import { listenToOAuthFromIframe, setupOidcLoginFlowHandler } from './oauth';
@@ -20,7 +19,6 @@ type OpenIframeProps = {
 
 type IframeHostHandler = {
 	instance: AppState;
-	iframe: HTMLIFrameElement;
 	trustedOrigins: string[];
 };
 
@@ -132,7 +130,7 @@ const ensureIframeHostMessageListener = (): void => {
 	}
 
 	iframeHostMessageListener = ( event: MessageEvent ) => {
-		const match = iframeHostHandlers.find( ( handler ) => isFromIframe( event, handler.iframe ) );
+		const match = iframeHostHandlers.find( ( handler ) => isFromIframe( event, handler.instance.iframe ) );
 
 		if ( ! match || ! match.trustedOrigins.includes( event.origin ) ) {
 			return;
@@ -282,8 +280,6 @@ export const openIframe = async (
 
 	flushPendingSdkMessages( instance );
 
-	addLocalStorageListener( instance );
-
 	listenToSDK( instance );
 
 	listenToOAuthFromIframe( instance );
@@ -291,7 +287,6 @@ export const openIframe = async (
 
 	registerIframeHostHandler( {
 		instance,
-		iframe,
 		trustedOrigins: [ window.location.origin, props.origin || 'https://angie.elementor.com' ],
 	} );
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { appState } from './config';
 import { createAngieInstance, resetInstancesForTests } from './instance-registry';
 import { flushPendingSdkMessages, listenToSDK, resetSdkListenersForTests } from './sdk';
 import { MessageEventType } from './types';
@@ -134,5 +135,21 @@ describe( 'sdk', () => {
 		} );
 
 		expect( postMessage ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'should forward unaddressed host messages for V1 loadSidebar when the registry is empty', () => {
+		appState.instanceId = 'v1-id';
+		const postMessage = attachIframe( appState );
+
+		listenToSDK( appState );
+		emitHostMessage( {
+			type: MessageEventType.SDK_TRIGGER_ANGIE,
+			payload: { requestId: 'req-v1', prompt: 'hello' },
+		} );
+
+		expect( postMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( { type: MessageEventType.SDK_TRIGGER_ANGIE } ),
+			ANGIE_ORIGIN,
+		);
 	} );
 } );

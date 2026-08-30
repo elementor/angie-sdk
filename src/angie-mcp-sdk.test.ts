@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
-import { AngieMcpSdk } from './angie-mcp-sdk';
+import { AngieMcpSdk, resetPromptHashListenersForTests } from './angie-mcp-sdk';
 import { appState } from './config';
 import * as instanceRegistry from './instance-registry';
 import type { AngieServerConfig, ServerRegistration, AngieDetectionResult, ClientCreationResponse } from './types';
@@ -97,6 +97,7 @@ describe('AngieMcpSdk', () => {
 
     jest.restoreAllMocks();
     addEventListenerSpy.mockRestore();
+    resetPromptHashListenersForTests();
   });
 
   describe('constructor', () => {
@@ -822,5 +823,60 @@ describe('AngieMcpSdk', () => {
 
       expect(window.location.hash).toBe('');
     });
+
+    it('should attach only one hashchange listener when loadSidebarV2 is called twice', async () => {
+      const options = { host: { appId: 'editor-lite', instanceId: 'stable-id' } };
+
+      await sdk.loadSidebarV2( options );
+      await sdk.loadSidebarV2( options );
+
+      const hashListeners = ( addEventListenerSpy.mock.calls as [ string, EventListener ][] ).filter(
+        ( [ type ] ) => type === 'hashchange',
+      );
+
+      expect( hashListeners ).toHaveLength( 1 );
+    });
+
+    it('should trigger from only the first SDK when two instances share an unaddressed hash', async () => {
+      const sdk2 = new AngieMcpSdk();
+      ( sdk as any ).isInitialized = true;
+      ( sdk2 as any ).isInitialized = true;
+
+      await sdk.loadSidebarV2( { host: { appId: 'app-a', instanceId: 'first' } } );
+      await sdk2.loadSidebarV2( { host: { appId: 'app-b', instanceId: 'second' } } );
+      postMessageSpy.mockClear();
+
+      window.location.hash = '#angie-prompt=Shared%20prompt';
+      window.dispatchEvent( new HashChangeEvent( 'hashchange' ) );
+      await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+      const triggerCalls = ( postMessageSpy.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
+        ( [ message ] ) => message?.type === 'sdk-trigger-angie',
+      );
+
+      expect( triggerCalls ).toHaveLength( 1 );
+      expect( triggerCalls[ 0 ][ 0 ].payload?.instanceId ).toBe( 'first' );
+    });
+
+    it('should trigger only the SDK named in angie-instance', async () => {
+      const sdk2 = new AngieMcpSdk();
+      ( sdk as any ).isInitialized = true;
+      ( sdk2 as any ).isInitialized = true;
+
+      await sdk.loadSidebarV2( { host: { appId: 'app-a', instanceId: 'first' } } );
+      await sdk2.loadSidebarV2( { host: { appId: 'app-b', instanceId: 'second' } } );
+      postMessageSpy.mockClear();
+
+      window.location.hash = '#angie-prompt=Targeted%20prompt&angie-instance=second';
+      window.dispatchEvent( new HashChangeEvent( 'hashchange' ) );
+      await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+      const triggerCalls = ( postMessageSpy.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
+        ( [ message ] ) => message?.type === 'sdk-trigger-angie',
+      );
+
+      expect( triggerCalls ).toHaveLength( 1 );
+      expect( triggerCalls[ 0 ][ 0 ].payload?.instanceId ).toBe( 'second' );
+    });
   });
-}); 
+});

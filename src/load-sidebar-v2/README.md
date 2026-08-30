@@ -160,7 +160,9 @@ specific instance.
 | Sidebar panel | `#${container.id}` (default `#angie-sidebar-container`) | SDK injects layout rules in `src/sidebar.css` |
 | Panel width / z-index | `:root { --angie-sidebar-width; --angie-sidebar-z-index; }` | Read by SDK when opening/resizing |
 | Gap from sidebar | `body.angie-sidebar-active { padding-inline-start: calc(var(--angie-sidebar-width) + 1.5rem) }` | SDK sets padding to width only; add your own gap (see demo CSS) |
-| Iframe | `#angie-sidebar-container iframe#angie-iframe` | `id="angie-iframe"` is set by the SDK |
+| Iframe | `#${container.id} iframe#angie-iframe` for the first instance; `#${container.id} iframe#angie-iframe-<instanceId>` for later ones | First instance keeps legacy `angie-iframe`; others use `angie-iframe-<host.instanceId>` |
+
+If a second instance reuses the default floating-chat toggle selector (`#angie-widget-toggle`), the SDK auto-suffixes it to `#angie-widget-toggle-<instanceId>` so toggles do not collide.
 
 If you use a custom `container.id`, copy or adapt the rules from `sidebar.css` for your id.
 
@@ -171,13 +173,17 @@ Example: [`demo/load-sidebar-v2-full-config/demo-host.css`](../../demo/load-side
 ```
 loadSidebarV2(options)
   → resolveConfig + shouldBoot
-  → initHostApiBridge (postMessage API)
+  → boot guards (unique container.id / instanceId, one sidebar layout)
+  → createAngieInstance + listenToSDK (buffers MCP until iframe exists)
+  → initHostApiBridge (postMessage API + V2 localStorage)
   → ensureSidebarContainer
   → layout strategy (initShell → open iframe → afterOpen)
   → sendEmbeddedConfig / sendWidgetConfig
 ```
 
 Entry point: [`boot-sidebar.ts`](./boot-sidebar.ts). Layout strategies: [`layouts/index.ts`](./layouts/index.ts).
+
+V1 `loadSidebar()` does not use this boot path. Its host localStorage bridge lives in [`localStorage.ts`](../localStorage.ts) instead of the bridge below.
 
 ## Prompt deep links
 
@@ -186,7 +192,10 @@ load and on every later `hashchange`:
 
 ```
 https://example.com/pricing#angie-prompt=Which%20plan%20fits%20me%3F
+https://example.com/pricing#angie-prompt=Help&angie-instance=my-app-help
 ```
+
+When more than one `AngieMcpSdk` is on the page, add `angie-instance=<host.instanceId>` so only that SDK handles the hash.
 
 It waits for Angie, sends the prompt, then clears the hash. Hosts need no hash code of their own.
 Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
@@ -198,7 +207,7 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
 - `angie/context/get-website-context` — host + document metadata
 - `angie/context/get-analytics-context` — screen path + `host.analytics`
-- Host localStorage get/set (for embedded persistence)
+- Host localStorage get/set (for embedded persistence on **loadSidebarV2** only; V1 uses [`localStorage.ts`](../localStorage.ts))
 
 ## Module map
 

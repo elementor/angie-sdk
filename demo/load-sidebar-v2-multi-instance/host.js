@@ -55,15 +55,17 @@ const bootAndRegister = ( sdk, instanceId, loadOptions, serverMeta, tools ) => {
 			featuredMcpServer: serverMeta.name,
 			localServers: { skipLoading: true },
 		},
-	} ).then( () => sdk.registerServer( {
-		name: serverMeta.name,
-		version: serverMeta.version,
-		description: serverMeta.description,
-		server,
-		capabilities: {
-			tools: {},
-		},
-	} ) );
+	} )
+		.then( () => sdk.waitForReady() )
+		.then( () => sdk.registerServer( {
+			name: serverMeta.name,
+			version: serverMeta.version,
+			description: serverMeta.description,
+			server,
+			capabilities: {
+				tools: {},
+			},
+		} ) );
 };
 
 // Boot concurrently so one instance may register servers while another iframe is still starting.

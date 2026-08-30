@@ -139,11 +139,7 @@ export const listenToSDK = ( instance: AppState ) => {
 							},
 							timestamp: Date.now(),
 						};
-						if ( target.iframe ) {
-							target.iframe.contentWindow?.postMessage( message, target.iframeUrlObject?.origin || '', [ channel.port2 ] );
-						} else {
-							throw new Error( 'Iframe not found' );
-						}
+						target.iframe?.contentWindow?.postMessage( message, target.iframeUrlObject?.origin || '', [ channel.port2 ] );
 					} catch ( error ) {
 						sdkLogger.error( `Failed to create client for SDK server "${ payload.serverName }":`, error );
 					}

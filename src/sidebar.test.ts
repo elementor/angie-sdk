@@ -5,6 +5,7 @@ import {
   getAngieSidebarSavedState,
   ANGIE_SIDEBAR_STATE_OPEN,
   ANGIE_SIDEBAR_STATE_CLOSED,
+  resetSidebarMessageListenerForTests,
 } from './sidebar';
 import { appState } from './config';
 
@@ -160,6 +161,7 @@ describe('sidebar', () => {
     const trustedOrigin = 'https://angie.example.com';
 
     beforeEach(() => {
+      resetSidebarMessageListenerForTests();
       const sidebarContainer = document.createElement('div');
       sidebarContainer.id = 'angie-sidebar-container';
       document.body.appendChild(sidebarContainer);
@@ -181,9 +183,12 @@ describe('sidebar', () => {
 
     it( 'should handle toggleAngieSidebar from the iframe origin', () => {
       const toggle = ( global.window as any ).toggleAngieSidebar as jest.Mock;
+      const ownWindow = {} as Window;
+      appState.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
 
       window.dispatchEvent( new MessageEvent( 'message', {
         origin: trustedOrigin,
+        source: ownWindow,
         data: { type: 'toggleAngieSidebar', payload: { force: true } },
       } ) );
 

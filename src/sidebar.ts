@@ -3,7 +3,7 @@ import { appState, type AppState } from "./config";
 import { MessageEventType } from "./types";
 import { createChildLogger } from "./logger";
 import { isOidcFlowInUrl } from "@elementor/oidc-auth";
-import { isFromIframe, isTrustedIframeMessage, sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility, waitForDocumentReady } from "./utils";
+import { isFromIframe, isTrustedIframeMessage, sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
 
 const sidebarLogger = createChildLogger( 'sidebar' );
@@ -36,7 +36,7 @@ export const ANGIE_SIDEBAR_STATE_CLOSED = 'closed';
 
 // Only the sidebar layout persists state, and only one sidebar may run on a page, so
 // these keys never collide and stay unprefixed.
-const STATE_STORAGE_KEY = 'angie_sidebar_state';
+export const STATE_STORAGE_KEY = 'angie_sidebar_state';
 const WIDTH_STORAGE_KEY = 'angie_sidebar_width';
 
 const SIDE_MENU_WIDTH = 40;
@@ -295,6 +295,10 @@ export function setupMessageListener( instance: AppState = appState ): void {
 		}
 	} );
 }
+
+export const resetSidebarMessageListenerForTests = (): void => {
+	sidebarToggleMessageListenerAttached = false;
+};
 
 type InitAngieSidebarOptions = {
 	onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void;

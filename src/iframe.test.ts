@@ -170,12 +170,10 @@ describe( 'iframe host message routing', () => {
 
 		registerIframeHostHandler( {
 			instance: sidebarInstance,
-			iframe: sidebarIframe,
 			trustedOrigins: [ window.location.origin, origin ],
 		} );
 		registerIframeHostHandler( {
 			instance: chatInstance,
-			iframe: chatIframe,
 			trustedOrigins: [ window.location.origin, origin ],
 		} );
 

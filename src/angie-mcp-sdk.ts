@@ -5,6 +5,7 @@ import { ClientManager } from './client-manager';
 import { appState, DEFAULT_CONTAINER_ID } from './config';
 import { createChildLogger } from './logger';
 import { openIframe } from './iframe';
+import { addLocalStorageListener } from './localStorage';
 import { handlePostConsentRedirect } from './oauth';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
@@ -18,7 +19,14 @@ export { DEFAULT_CONTAINER_ID } from './config';
 
 const HASH_PARAM_PROMPT = 'angie-prompt';
 const HASH_PARAM_NEW_CHAT = 'angie-new-chat';
+const HASH_PARAM_INSTANCE = 'angie-instance';
 const HASH_SOURCE = 'hash-parameter';
+
+const promptHashSdks: AngieMcpSdk[] = [];
+
+export const resetPromptHashListenersForTests = (): void => {
+  promptHashSdks.length = 0;
+};
 
 type FeatureToggle = { enabled: boolean };
 
@@ -90,6 +98,7 @@ export class AngieMcpSdk {
   private isInitialized = false;
   private instanceId: string;
   private sidebarV2BootPromise: Promise<void> | null = null;
+  private promptHashListenerAttached = false;
 
   constructor() {
     this.instanceId = generateInstanceId();
@@ -114,6 +123,10 @@ export class AngieMcpSdk {
     appState.instanceId = this.instanceId;
     initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
     const opened = await openIframe( config );
+
+    if ( opened ) {
+      addLocalStorageListener();
+    }
 
     if ( opened && widgetConfig ) {
       opened.iframe.contentWindow?.postMessage(
@@ -456,6 +469,19 @@ export class AngieMcpSdk {
     return new URLSearchParams(paramString);
   }
 
+  private shouldHandlePromptHash(params: URLSearchParams): boolean {
+    const targetId = params.get(HASH_PARAM_INSTANCE);
+    if (targetId) {
+      return targetId === this.instanceId;
+    }
+
+    if (promptHashSdks.length === 0) {
+      return true;
+    }
+
+    return promptHashSdks[0] === this;
+  }
+
   private async handlePromptHash(): Promise<void> {
     const hash = window.location.hash;
 
@@ -465,6 +491,10 @@ export class AngieMcpSdk {
 
     try {
       const params = this.parseHashParams(hash);
+      if (!this.shouldHandlePromptHash(params)) {
+        return;
+      }
+
       const prompt = params.get(HASH_PARAM_PROMPT) || '';
 
       if (!prompt) {
@@ -499,7 +529,12 @@ export class AngieMcpSdk {
   }
 
   private setupPromptHashDetection(): void {
-    this.handlePromptHash();
-    window.addEventListener('hashchange', () => this.handlePromptHash());
+    if (!this.promptHashListenerAttached) {
+      this.promptHashListenerAttached = true;
+      promptHashSdks.push(this);
+      window.addEventListener('hashchange', () => this.handlePromptHash());
+    }
+
+    void this.handlePromptHash();
   }
 }

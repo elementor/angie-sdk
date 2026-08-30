@@ -1,5 +1,4 @@
 import { appState, type AppState } from './config';
-import { getFirstInstance } from './instance-registry';
 import { createChildLogger } from './logger';
 
 const iframeUtilsLogger = createChildLogger( 'iframe-utils' );
@@ -55,11 +54,10 @@ const getInstanceIframeOrigin = ( instance: AppState ): string | null => {
  */
 export const postMessageToInstance = (
 	instance: AppState,
-	message: Record<string, unknown>,
-	targetOrigin?: string
+	message: Record<string, unknown>
 ): boolean => sendToIframe(
 	getInstanceIframe( instance ),
-	targetOrigin || getInstanceIframeOrigin( instance ),
+	getInstanceIframeOrigin( instance ),
 	message
 );
 
@@ -68,8 +66,7 @@ export const postMessageToInstance = (
  * #1. Nothing inside the SDK uses it, so an ambiguous answer cannot corrupt routing.
  */
 export const getAngieIframe = (): HTMLIFrameElement | null => {
-	const instance = getFirstInstance() ?? appState;
-	const instanceIframe = getInstanceIframe( instance );
+	const instanceIframe = getInstanceIframe( appState );
 
 	if ( instanceIframe ) {
 		return instanceIframe;
@@ -81,10 +78,6 @@ export const getAngieIframe = (): HTMLIFrameElement | null => {
 
 	angieIframeRef = document.querySelector( 'iframe[src*="angie/"]' ) as HTMLIFrameElement;
 	return angieIframeRef;
-};
-
-export const angieIframeExists = (): boolean => {
-	return getAngieIframe() !== null;
 };
 
 export const getAngieIframeOrigin = (): string | null => {

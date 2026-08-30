@@ -284,4 +284,81 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		expect( window.localStorage.getItem( 'angie-set-key' ) ).toBe( 'new-value' );
 		window.localStorage.removeItem( 'angie-set-key' );
 	} );
+
+	it( 'should ignore localStorage SET when two bridges share an origin but event.source matches neither iframe', async () => {
+		const first = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const second = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+		const firstWindow = {} as Window;
+		const secondWindow = {} as Window;
+
+		first.iframe = { contentWindow: firstWindow } as HTMLIFrameElement;
+		second.iframe = { contentWindow: secondWindow } as HTMLIFrameElement;
+
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance: first } );
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance: second } );
+
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: {
+				type: HostLocalStorageEventType.SET,
+				key: 'angie-wrong-source',
+				value: 'ignored',
+			},
+			origin: IFRAME_ORIGIN,
+			source: {} as Window,
+		} ) );
+
+		await flushAsync();
+
+		expect( window.localStorage.getItem( 'angie-wrong-source' ) ).toBeNull();
+
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: {
+				type: HostLocalStorageEventType.SET,
+				key: 'angie-right-source',
+				value: 'stored',
+			},
+			origin: IFRAME_ORIGIN,
+			source: secondWindow,
+		} ) );
+
+		await flushAsync();
+
+		expect( window.localStorage.getItem( 'angie-right-source' ) ).toBe( 'stored' );
+		window.localStorage.removeItem( 'angie-right-source' );
+	} );
+
+	it( 'should handle localStorage GET from the matching iframe source', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+		const ownWindow = {} as Window;
+
+		instance.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
+		window.localStorage.setItem( 'angie-chat-key', 'chat-value' );
+
+		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance } );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: HostLocalStorageEventType.GET, key: 'angie-chat-key' },
+			origin: IFRAME_ORIGIN,
+			source: ownWindow,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( { value: 'chat-value' } );
+		window.localStorage.removeItem( 'angie-chat-key' );
+	} );
 } );

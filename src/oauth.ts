@@ -3,6 +3,7 @@ import {
 	setupOidcAuthParentListener,
 	type OidcAuthAppWindow,
 } from "@elementor/oidc-auth";
+import { STATE_STORAGE_KEY } from "./sidebar";
 import { appState, type AppState } from "./config";
 import { createChildLogger } from "./logger";
 import { buildRedirectUrl, clearReferrerRedirect, executeReferrerRedirect, getReferrerRedirect } from "./referrer-redirect";
@@ -53,7 +54,7 @@ function onAuthenticationComplete(): void {
 	}
 
 	try {
-		localStorage.setItem( 'angie_sidebar_state', 'open' );
+		localStorage.setItem( STATE_STORAGE_KEY, 'open' );
 	} catch ( e ) {
 		logger.warn( 'localStorage not available' );
 	}
@@ -62,17 +63,18 @@ function onAuthenticationComplete(): void {
 	}, 500 );
 }
 
-const getOidcTargets = (): OidcAuthAppWindow[] =>
-	oauthInstances.flatMap( ( instance ) => {
-		if ( ! instance.iframe || ! instance.iframeUrlObject ) {
-			return [];
-		}
+const trackOAuthInstance = ( instance: AppState ): void => {
+	if ( ! oauthInstances.includes( instance ) ) {
+		oauthInstances.push( instance );
+	}
+};
 
-		return [ {
-			window: instance.iframe,
-			windowURL: instance.iframeUrlObject,
-		} ];
-	} );
+const getOidcTargets = (): OidcAuthAppWindow[] =>
+	oauthInstances.flatMap( ( instance ) =>
+		instance.iframe && instance.iframeUrlObject
+			? [ { window: instance.iframe, windowURL: instance.iframeUrlObject } ]
+			: []
+	);
 
 const forwardOidcLoginFlowToInstances = (): void => {
 	for ( const targets of getOidcTargets() ) {
@@ -81,9 +83,7 @@ const forwardOidcLoginFlowToInstances = (): void => {
 };
 
 export const listenToOAuthFromIframe = ( instance: AppState = appState ): void => {
-	if ( ! oauthInstances.includes( instance ) ) {
-		oauthInstances.push( instance );
-	}
+	trackOAuthInstance( instance );
 
 	if ( oidcParentListenerRegistered ) {
 		return;
@@ -98,9 +98,7 @@ export const listenToOAuthFromIframe = ( instance: AppState = appState ): void =
 };
 
 export const setupOidcLoginFlowHandler = ( instance: AppState = appState ): void => {
-	if ( ! oauthInstances.includes( instance ) ) {
-		oauthInstances.push( instance );
-	}
+	trackOAuthInstance( instance );
 
 	forwardOidcLoginFlowToInstances();
 

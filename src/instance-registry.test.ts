@@ -61,6 +61,26 @@ describe( 'instance-registry host-to-host routing', () => {
 		expect( shouldInstanceHandle( second, undefined ) ).toBe( false );
 	} );
 
+	it( 'should handle messages addressed to its own instanceId', () => {
+		const first = createAngieInstance( SIDEBAR_ARGS );
+
+		expect( shouldInstanceHandle( first, 'aaaaaa' ) ).toBe( true );
+	} );
+
+	it( 'should let appState handle unaddressed messages when the registry is empty (V1 loadSidebar)', () => {
+		appState.instanceId = 'v1-id';
+		appState.iframe = fakeIframe();
+
+		expect( shouldInstanceHandle( appState, undefined ) ).toBe( true );
+	} );
+
+	it( 'should match addressed messages to appState.instanceId when the registry is empty (V1 loadSidebar)', () => {
+		appState.instanceId = 'v1-id';
+		appState.iframe = fakeIframe();
+
+		expect( shouldInstanceHandle( appState, 'v1-id' ) ).toBe( true );
+	} );
+
 	it( 'should not let a later iframe owner answer for an unknown instance', () => {
 		const first = createAngieInstance( SIDEBAR_ARGS );
 		const second = createAngieInstance( CHAT_ARGS );

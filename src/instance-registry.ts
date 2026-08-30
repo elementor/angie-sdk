@@ -35,8 +35,21 @@ export const createAngieInstance = ( args: CreateAngieInstanceArgs ): AppState =
 
 export const getFirstInstance = (): AppState | null => instances[ 0 ] ?? null;
 
-const getFirstIframeInstance = (): AppState | null =>
-	instances.find( ( instance ) => instance.iframe !== null ) ?? null;
+const getFirstIframeInstance = (): AppState | null => {
+	const registered = instances.find( ( instance ) => instance.iframe !== null );
+
+	if ( registered ) {
+		return registered;
+	}
+
+	// V1 loadSidebar never calls createAngieInstance; legacy messages without
+	// instanceId still route through the shared appState iframe.
+	if ( instances.length === 0 && appState.iframe ) {
+		return appState;
+	}
+
+	return null;
+};
 
 export const getInstanceById = ( instanceId: string ): AppState | null =>
 	instances.find( ( instance ) => instance.instanceId === instanceId ) ?? null;
@@ -55,23 +68,12 @@ export const shouldInstanceHandle = ( instance: AppState, instanceId?: string ):
 		return true;
 	}
 
-	// An unaddressed message cannot be attributed to an instance. Older SDK bundles
-	// on the page still send these, so somebody has to answer -- but only one
-	// instance may, or the server is created in every iframe.
-	if ( ! instanceId ) {
-		return getFirstIframeInstance() === instance;
-	}
-
-	// The addressed instance is on this page, so it answers for itself and nobody
-	// else may answer for it. Its listener buffers the message until its iframe
-	// exists, so a boot still in progress is not a reason to hand the message over.
-	if ( getInstanceById( instanceId ) ) {
+	// Known sibling: it answers for itself, even while its iframe is still booting.
+	if ( instanceId && getInstanceById( instanceId ) ) {
 		return false;
 	}
 
-	// The id is unknown. The Elementor editor loads its own SDK bundle: it registers
-	// MCP servers but never opens an iframe, and relies on the Angie plugin's
-	// listener to pass its messages on. The first iframe owner answers for it.
+	// Missing id (old SDK) or unknown id (editor bundle): one iframe owner answers.
 	return getFirstIframeInstance() === instance;
 };
 
