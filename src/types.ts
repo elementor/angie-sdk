@@ -117,6 +117,13 @@ export interface AngieTriggerResponse {
 }
 
 
+export enum AngieInteractionMode {
+  AGENT = 'agent',
+  PLAN = 'plan',
+  ASK = 'ask',
+  SUPER_ADMIN = 'super-admin',
+}
+
 export enum MessageEventType {
   SDK_ANGIE_READY_PING = 'sdk-angie-ready-ping',
   SDK_ANGIE_REFRESH_PING = 'sdk-angie-refresh-ping',
@@ -134,6 +141,7 @@ export enum MessageEventType {
   ANGIE_PAGE_RELOAD = 'angie/page-reload',
   ANGIE_DISABLE_NAVIGATION_PREVENTION = 'angie/disable-navigation-prevention',
   ANGIE_NAVIGATE_AFTER_RESPONSE = 'angie/navigate-after-response',
+  ANGIE_SET_INTERACTION_MODE = 'angie/set-interaction-mode',
 }
 
 
