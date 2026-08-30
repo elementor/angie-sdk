@@ -8,6 +8,7 @@ import { openIframe } from './iframe';
 import { handlePostConsentRedirect } from './oauth';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
+import { getInstanceById } from './instance-registry';
 import { generateInstanceId } from './utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
@@ -139,6 +140,12 @@ export class AngieMcpSdk {
   private setupReRegistrationHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_ANGIE_REFRESH_PING) {
+        const iframeOrigin = getInstanceById( this.instanceId )?.iframeUrlObject?.origin;
+        if ( iframeOrigin && event.origin !== iframeOrigin ) {
+          this.logger.log(`Ignoring refresh ping from unexpected origin. Event origin: ${event.origin}, iframe origin: ${iframeOrigin}`);
+          return;
+        }
+
         const pingInstanceId = event.data?.payload?.instanceId;
         // Embedded Angie does not send instanceId yet; absent id keeps legacy behavior.
         if (pingInstanceId && pingInstanceId !== this.instanceId) {

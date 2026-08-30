@@ -22,8 +22,8 @@ export interface ClientCreationRequest {
 }
 
 const pendingMessages = new Map<AppState, Array<() => void>>();
-let listeningInstances = new WeakSet<AppState>();
-const registeredListeners: Array<( event: MessageEvent ) => void> = [];
+const routingInstances: AppState[] = [];
+let routingListener: ( ( event: MessageEvent ) => void ) | null = null;
 
 export const flushPendingSdkMessages = ( instance: AppState ): void => {
 	const queued = pendingMessages.get( instance );
@@ -37,13 +37,13 @@ export const flushPendingSdkMessages = ( instance: AppState ): void => {
 };
 
 export const resetSdkListenersForTests = (): void => {
-	for ( const listener of registeredListeners ) {
-		window.removeEventListener( 'message', listener );
+	if ( routingListener ) {
+		window.removeEventListener( 'message', routingListener );
+		routingListener = null;
 	}
 
-	registeredListeners.length = 0;
+	routingInstances.length = 0;
 	pendingMessages.clear();
-	listeningInstances = new WeakSet<AppState>();
 };
 
 const queueOrRun = ( instance: AppState, send: () => void ): void => {
@@ -62,39 +62,49 @@ const queueOrRun = ( instance: AppState, send: () => void ): void => {
 	queue.push( send );
 };
 
+const resolveTarget = ( event: MessageEvent ): AppState | null => {
+	if ( event.origin === window.location.origin ) {
+		return routingInstances.find(
+			( instance ) => shouldInstanceHandle( instance, event?.data?.payload?.instanceId )
+		) ?? null;
+	}
+
+	const instance = routingInstances.find(
+		( candidate ) => candidate.iframe?.contentWindow === event.source
+	);
+
+	if ( ! instance || ! isTrustedIframeMessage(
+		event,
+		instance.iframeUrlObject?.origin,
+		instance.iframe,
+	) ) {
+		return null;
+	}
+
+	return instance;
+};
+
 export const listenToSDK = ( instance: AppState ) => {
-	if ( listeningInstances.has( instance ) ) {
+	if ( ! routingInstances.includes( instance ) ) {
+		routingInstances.push( instance );
+	}
+
+	if ( routingListener ) {
 		return;
 	}
 
-	listeningInstances.add( instance );
+	routingListener = ( event: MessageEvent ) => {
+		const target = resolveTarget( event );
 
-	const listener = async ( event: MessageEvent ) => {
-		const isSameOrigin = event.origin === window.location.origin;
-		const isIframe = isTrustedIframeMessage(
-			event,
-			instance.iframeUrlObject?.origin,
-			instance.iframe,
-		);
-		if ( ! isSameOrigin && ! isIframe ) {
+		if ( ! target ) {
 			return;
 		}
-
-		// Host messages share event.source, so route them by instanceId.
-		const shouldHandleMessage = shouldInstanceHandle(
-			instance,
-			event?.data?.payload?.instanceId
-		);
 
 		switch ( event?.data?.type ) {
 			case MessageEventType.SDK_ANGIE_ALL_SERVERS_REGISTERED:
 				break;
 
 			case MessageEventType.SDK_ANGIE_READY_PING: {
-				if ( ! shouldInstanceHandle( instance, event?.data?.payload?.instanceId ) ) {
-					break;
-				}
-
 				const port = event.ports[ 0 ];
 				sdkLogger.log( 'Angie is ready', event );
 
@@ -105,14 +115,10 @@ export const listenToSDK = ( instance: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_REQUEST_CLIENT_CREATION: {
-				if ( ! shouldHandleMessage ) {
-					break;
-				}
-
 				const payload = event.data.payload as ClientCreationRequest;
 				const responsePort = event.ports[ 0 ];
 
-				queueOrRun( instance, () => {
+				queueOrRun( target, () => {
 					try {
 						// Create a new channel for host <-> iframe communication
 						const channel = new MessageChannel();
@@ -133,8 +139,8 @@ export const listenToSDK = ( instance: AppState ) => {
 							},
 							timestamp: Date.now(),
 						};
-						if ( instance.iframe ) {
-							instance.iframe.contentWindow?.postMessage( message, instance.iframeUrlObject?.origin || '', [ channel.port2 ] );
+						if ( target.iframe ) {
+							target.iframe.contentWindow?.postMessage( message, target.iframeUrlObject?.origin || '', [ channel.port2 ] );
 						} else {
 							throw new Error( 'Iframe not found' );
 						}
@@ -145,10 +151,6 @@ export const listenToSDK = ( instance: AppState ) => {
 				break;
 			}
 			case MessageEventType.SDK_TRIGGER_ANGIE: {
-				if ( ! shouldHandleMessage ) {
-					break;
-				}
-
 				sdkLogger.log( 'SDK Trigger Angie received', event.data );
 
 				// Not buffered like client creation: the caller is blocked on a
@@ -157,8 +159,8 @@ export const listenToSDK = ( instance: AppState ) => {
 				try {
 					const { requestId, prompt, context, options } = event.data.payload;
 
-					if ( instance.iframe ) {
-						instance.iframe.contentWindow?.postMessage( {
+					if ( target.iframe ) {
+						target.iframe.contentWindow?.postMessage( {
 							type: MessageEventType.SDK_TRIGGER_ANGIE,
 							payload: {
 								requestId,
@@ -166,7 +168,7 @@ export const listenToSDK = ( instance: AppState ) => {
 								context,
 								options,
 							},
-						}, instance.iframeUrlObject?.origin || '' );
+						}, target.iframeUrlObject?.origin || '' );
 					} else {
 						throw new Error( 'Iframe not found' );
 					}
@@ -196,6 +198,5 @@ export const listenToSDK = ( instance: AppState ) => {
 		}
 	};
 
-	registeredListeners.push( listener );
-	window.addEventListener( 'message', listener );
+	window.addEventListener( 'message', routingListener );
 };

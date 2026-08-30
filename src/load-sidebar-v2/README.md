@@ -109,6 +109,35 @@ await chatSdk.loadSidebarV2( {
 
 Working example: [`demo/load-sidebar-v2-multi-instance`](../../demo/load-sidebar-v2-multi-instance/).
 
+### Registering MCP servers
+
+You can boot instances in parallel. Register servers on each SDK only after that
+instance is ready:
+
+```js
+await Promise.all( [
+	sidebarSdk.loadSidebarV2( {
+		host: { appId: 'my-app', instanceId: 'my-app-sidebar' },
+		container: { layout: LAYOUT_SIDEBAR },
+	} ),
+	chatSdk.loadSidebarV2( {
+		host: { appId: 'my-app-help', instanceId: 'my-app-help' },
+		container: { id: 'angie-help-container', layout: LAYOUT_FLOATING_CHAT },
+	} ),
+] );
+
+await sidebarSdk.waitForReady();
+await chatSdk.waitForReady();
+
+await sidebarSdk.registerServer( { name: 'wordpress-tools', /* ... */ } );
+await chatSdk.registerServer( { name: 'help-center', /* ... */ } );
+```
+
+`waitForReady()` waits for the iframe boot, Angie availability, and any servers already
+queued on that SDK. Each instance routes MCP registrations to its own iframe, so give
+every instance a distinct `host.instanceId` when more than one registers servers on the
+same page.
+
 ### host.instanceId
 
 Optional. Names the instance. When you leave it out, the SDK generates a new id on every
