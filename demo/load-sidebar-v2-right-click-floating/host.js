@@ -225,6 +225,7 @@ await sdk.loadSidebarV2( {
 		modeSwitcher: { enabled: false, default: 'agent' },
 		featuredMcpServer: CONTEXT_SERVER_NAME,
 		localServers: { skipLoading: true },
+		topBar: { enabled: false },
 	},
 } );
 
