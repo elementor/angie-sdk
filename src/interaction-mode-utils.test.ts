@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, jest } from '@jest/globals';
 import { setAngieInteractionMode } from './interaction-mode-utils';
-import { MessageEventType } from './types';
+import { AngieInteractionMode, MessageEventType } from './types';
 
 jest.mock( './angie-iframe-utils', () => ( {
 	getAngieIframe: jest.fn(),
@@ -18,50 +18,36 @@ describe( 'interaction-mode-utils', () => {
 		window.location.hash = '';
 		mockGetAngieIframe.mockReturnValue( mockIframe );
 		mockPostMessageToAngieIframe.mockReturnValue( true );
-		delete ( window as { toggleAngieSidebar?: ( force?: boolean ) => void } ).toggleAngieSidebar;
 	} );
 
 	it( 'returns false when Angie iframe is not found', () => {
 		mockGetAngieIframe.mockReturnValue( null );
 
-		expect( setAngieInteractionMode( 'ask' ) ).toBe( false );
+		expect( setAngieInteractionMode( AngieInteractionMode.ASK ) ).toBe( false );
 		expect( mockPostMessageToAngieIframe ).not.toHaveBeenCalled();
 	} );
 
 	it( 'posts angie/set-interaction-mode with payload', () => {
-		setAngieInteractionMode( 'plan', { source: 'help-center', isStudioOpen: true } );
+		setAngieInteractionMode( AngieInteractionMode.PLAN, { source: 'help-center', isStudioOpen: true } );
 
 		expect( mockPostMessageToAngieIframe ).toHaveBeenCalledWith( {
 			type: MessageEventType.ANGIE_SET_INTERACTION_MODE,
-			payload: { mode: 'plan', source: 'help-center', isStudioOpen: true },
+			payload: { mode: AngieInteractionMode.PLAN, source: 'help-center', isStudioOpen: true },
 		} );
 	} );
 
-	it( 'opens sidebar when isOpen is true', () => {
-		const toggleAngieSidebar = jest.fn();
-		window.toggleAngieSidebar = toggleAngieSidebar;
-
-		setAngieInteractionMode( 'ask', { isOpen: true } );
-
-		expect( toggleAngieSidebar ).toHaveBeenCalledWith( true );
-	} );
-
 	it( 'sets angie-prompt hash when prompt is provided', () => {
-		setAngieInteractionMode( 'ask', { prompt: 'Help me with ' } );
+		setAngieInteractionMode( AngieInteractionMode.ASK, { prompt: 'Help me with ' } );
 
 		expect( window.location.hash ).toBe( '#angie-prompt=Help%20me%20with%20' );
 	} );
 
-	it( 'opens ask mode with sidebar when isOpen is true', () => {
-		const toggleAngieSidebar = jest.fn();
-		window.toggleAngieSidebar = toggleAngieSidebar;
+	it( 'posts ask mode with source and prompt', () => {
+		setAngieInteractionMode( AngieInteractionMode.ASK, { source: 'help-center', prompt: 'Need help' } );
 
-		setAngieInteractionMode( 'ask', { isOpen: true, source: 'help-center', prompt: 'Need help' } );
-
-		expect( toggleAngieSidebar ).toHaveBeenCalledWith( true );
 		expect( mockPostMessageToAngieIframe ).toHaveBeenCalledWith( {
 			type: MessageEventType.ANGIE_SET_INTERACTION_MODE,
-			payload: { mode: 'ask', source: 'help-center', isStudioOpen: false },
+			payload: { mode: AngieInteractionMode.ASK, source: 'help-center', isStudioOpen: false },
 		} );
 		expect( window.location.hash ).toBe( '#angie-prompt=Need%20help' );
 	} );

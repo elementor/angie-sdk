@@ -1,13 +1,10 @@
 import { createChildLogger } from './logger';
 import { getAngieIframe, postMessageToAngieIframe } from './angie-iframe-utils';
-import { MessageEventType } from './types';
+import { AngieInteractionMode, MessageEventType } from './types';
 
 const interactionModeLogger = createChildLogger( 'interaction-mode' );
 
-export type AngieInteractionMode = 'agent' | 'plan' | 'ask' | 'super-admin';
-
 export type SetAngieInteractionModeOptions = {
-	isOpen?: boolean;
 	isStudioOpen?: boolean;
 	source?: string;
 	prompt?: string;
@@ -17,16 +14,12 @@ export const setAngieInteractionMode = (
 	mode: AngieInteractionMode,
 	options: SetAngieInteractionModeOptions = {},
 ): boolean => {
-	const { isOpen = false, isStudioOpen = false, source, prompt } = options;
+	const { isStudioOpen = false, source, prompt } = options;
 	const angieIframe = getAngieIframe();
 
 	if ( ! angieIframe ) {
 		interactionModeLogger.error( 'Angie iframe not found' );
 		return false;
-	}
-
-	if ( isOpen && window.toggleAngieSidebar ) {
-		window.toggleAngieSidebar( true );
 	}
 
 	const success = postMessageToAngieIframe( {

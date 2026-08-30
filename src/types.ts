@@ -117,6 +117,13 @@ export interface AngieTriggerResponse {
 }
 
 
+export enum AngieInteractionMode {
+  AGENT = 'agent',
+  PLAN = 'plan',
+  ASK = 'ask',
+  SUPER_ADMIN = 'super-admin',
+}
+
 export enum MessageEventType {
   SDK_ANGIE_READY_PING = 'sdk-angie-ready-ping',
   SDK_ANGIE_REFRESH_PING = 'sdk-angie-refresh-ping',
