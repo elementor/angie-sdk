@@ -36,6 +36,7 @@ jest.mock( './logger', () => ( {
 
 import {
 	listenToOAuthFromIframe,
+	resetOAuthListenersForTests,
 	setupOidcLoginFlowHandler,
 	shouldExecutePostConsentRedirect,
 } from './oauth';
@@ -43,6 +44,7 @@ import {
 describe( 'oauth', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		resetOAuthListenersForTests();
 		mockGetReferrerRedirect.mockReturnValue( null );
 
 		Object.defineProperty( window, 'toggleAngieSidebar', {
@@ -174,6 +176,18 @@ describe( 'oauth', () => {
 
 			// Assert
 			expect( mockClearReferrerRedirect ).toHaveBeenCalled();
+		} );
+
+		it( 'should register OIDC parent listener only once for multiple instances', () => {
+			const secondIframe = document.createElement( 'iframe' );
+
+			listenToOAuthFromIframe();
+			listenToOAuthFromIframe( {
+				iframeUrlObject: { origin: 'https://angie.test.com' },
+				iframe: secondIframe,
+			} as any );
+
+			expect( mockSetupOidcAuthParentListener ).toHaveBeenCalledTimes( 1 );
 		} );
 	} );
 

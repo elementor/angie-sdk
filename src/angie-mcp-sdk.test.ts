@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, jest, afterEach } from '@jest/globals';
-import { AngieMcpSdk } from './angie-mcp-sdk';
+import { AngieMcpSdk, resetPromptHashListenersForTests } from './angie-mcp-sdk';
 import { appState } from './config';
+import * as instanceRegistry from './instance-registry';
 import type { AngieServerConfig, ServerRegistration, AngieDetectionResult, ClientCreationResponse } from './types';
 import { AngieServerType } from './types';
 
@@ -9,9 +10,6 @@ jest.mock('./angie-detector');
 jest.mock('./registration-queue');
 jest.mock('./client-manager');
 jest.mock('./browser-context-transport');
-jest.mock('./angie-iframe-utils', () => ({
-  postMessageToAngieIframe: jest.fn(),
-}));
 jest.mock('./sidebar', () => ({
   initAngieSidebar: jest.fn(),
 }));
@@ -34,7 +32,6 @@ describe('AngieMcpSdk', () => {
   let mockBrowserContextTransport: any;
   let mockInitAngieSidebar: any;
   let mockOpenIframe: any;
-  let mockPostMessageToAngieIframe: any;
   let addEventListenerSpy: ReturnType<typeof jest.spyOn>;
 
   beforeEach(() => {
@@ -52,8 +49,10 @@ describe('AngieMcpSdk', () => {
     mockRegistrationQueue = {
       add: jest.fn(),
       getAll: jest.fn(),
+      getPending: jest.fn(),
       processQueue: jest.fn(),
       updateStatus: jest.fn(),
+      resetAllToPending: jest.fn(),
       clear: jest.fn(),
     };
 
@@ -67,7 +66,6 @@ describe('AngieMcpSdk', () => {
     mockInitAngieSidebar = require('./sidebar').initAngieSidebar as jest.MockedFunction<any>;
     mockOpenIframe = require('./iframe').openIframe as jest.MockedFunction<any>;
     mockOpenIframe.mockResolvedValue(undefined);
-    mockPostMessageToAngieIframe = require('./angie-iframe-utils').postMessageToAngieIframe as jest.MockedFunction<any>;
 
     // Mock the constructors
     (require('./angie-detector') as any).AngieDetector.mockImplementation(() => mockAngieDetector);
@@ -79,6 +77,8 @@ describe('AngieMcpSdk', () => {
     mockAngieDetector.waitForReady.mockResolvedValue({ isReady: false });
     mockAngieDetector.isReady.mockReturnValue(false);
     mockRegistrationQueue.getAll.mockReturnValue([]);
+    mockRegistrationQueue.getPending.mockReturnValue([]);
+    mockRegistrationQueue.resetAllToPending.mockReturnValue(true);
     mockRegistrationQueue.processQueue.mockResolvedValue(undefined);
     mockClientManager.requestClientCreation.mockResolvedValue({
       success: true,
@@ -91,18 +91,28 @@ describe('AngieMcpSdk', () => {
   afterEach(() => {
     // Detach every listener this test registered, otherwise SDK instances keep
     // reacting to events (hashchange in particular) during later tests.
-    for ( const [ type, listener ] of addEventListenerSpy.mock.calls as [ string, EventListener ][] ) {
+    for ( const [ type, listener ] of addEventListenerSpy.mock.calls as [ string, ( event: Event ) => void ][] ) {
       window.removeEventListener( type, listener );
     }
 
     jest.restoreAllMocks();
     addEventListenerSpy.mockRestore();
+    resetPromptHashListenersForTests();
   });
 
   describe('constructor', () => {
     it('should set up message event listeners', () => {
       // Assert
       expect(global.window.addEventListener).toHaveBeenCalledWith('message', expect.any(Function));
+    });
+
+    it('should pass instance id getter to AngieDetector', () => {
+      const AngieDetectorMock = (require('./angie-detector') as any).AngieDetector;
+
+      expect(AngieDetectorMock).toHaveBeenCalledWith(expect.any(Function));
+
+      const getInstanceId = AngieDetectorMock.mock.calls[0][0];
+      expect(getInstanceId()).toBe((sdk as any).instanceId);
     });
   });
 
@@ -164,8 +174,6 @@ describe('AngieMcpSdk', () => {
         'Server instance is required'
       );
     });
-
-
 
     it('should handle registration errors', async () => {
       // Arrange
@@ -251,17 +259,19 @@ describe('AngieMcpSdk', () => {
 
   describe('message handling', () => {
     let messageHandler: (event: MessageEvent<any>) => void;
+    let refreshPingHandler: (event: MessageEvent<any>) => void;
 
     beforeEach(() => {
       // Extract the message handler that was registered
       const calls = addEventListenerSpy.mock.calls;
-      
+      const messageCalls = calls.filter((call: any[]) => call[0] === 'message');
+
       // Find the message event handler from the SDK constructor call
-      const messageCall = calls.find((call: any[]) => call[0] === 'message');
-      messageHandler = messageCall?.[1] as (event: MessageEvent<any>) => void;
-      
+      messageHandler = messageCalls[0]?.[1] as (event: MessageEvent<any>) => void;
+      refreshPingHandler = messageCalls[1]?.[1] as (event: MessageEvent<any>) => void;
+
       // Ensure we have a valid message handler
-      if (!messageHandler) {
+      if (!messageHandler || !refreshPingHandler) {
         throw new Error('Message handler not found in addEventListener calls');
       }
     });
@@ -309,8 +319,6 @@ describe('AngieMcpSdk', () => {
       expect(mockServer.connect).toHaveBeenCalled();
     });
 
-
-
     it('should handle server init request with non-existent server', () => {
       // Arrange
       mockRegistrationQueue.getAll.mockReturnValue([]);
@@ -332,8 +340,6 @@ describe('AngieMcpSdk', () => {
       // Assert
       expect(mockBrowserContextTransport).not.toHaveBeenCalled();
     });
-
-
 
     it('should handle server init request with server connection error', () => {
       // Arrange
@@ -394,6 +400,88 @@ describe('AngieMcpSdk', () => {
 
       // Assert
       expect(mockBrowserContextTransport).not.toHaveBeenCalled();
+    });
+
+    it('should not reset queue on refresh ping for a different instance', () => {
+      const event = {
+        data: {
+          type: 'sdk-angie-refresh-ping',
+          payload: {
+            instanceId: 'other-instance-id',
+          },
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should reset queue on refresh ping for its own instanceId', () => {
+      const event = {
+        data: {
+          type: 'sdk-angie-refresh-ping',
+          payload: {
+            instanceId: (sdk as any).instanceId,
+          },
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
+    });
+
+    it('should reset queue on refresh ping with no instanceId', () => {
+      const event = {
+        data: {
+          type: 'sdk-angie-refresh-ping',
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
+    });
+
+    it('should ignore refresh ping from host origin when iframe origin is known', () => {
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+
+      const event = {
+        origin: window.location.origin,
+        data: {
+          type: 'sdk-angie-refresh-ping',
+          payload: {
+            instanceId: ( sdk as any ).instanceId,
+          },
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should accept refresh ping from iframe origin', () => {
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+
+      const event = {
+        origin: 'https://angie.elementor.com',
+        data: {
+          type: 'sdk-angie-refresh-ping',
+          payload: {
+            instanceId: ( sdk as any ).instanceId,
+          },
+        },
+      } as unknown as MessageEvent<any>;
+
+      refreshPingHandler(event);
+
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
     });
   });
 
@@ -512,6 +600,11 @@ describe('AngieMcpSdk', () => {
 
     it('should send widget config via postMessage when provided', async () => {
       // Arrange
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
       const widgetConfig = {
         title: 'Custom Title',
         subtitle: 'Custom Subtitle',
@@ -526,14 +619,19 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebar({ widgetConfig });
 
       // Assert
-      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
-        type: 'sdk-widget-config',
-        payload: widgetConfig,
-      });
+      expect(iframePostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://angie.elementor.com',
+      );
     });
 
     it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
       // Arrange
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
       const widgetConfig = {
         title: 'Custom Title',
         modeSwitcher: { enabled: true, default: 'plan' as const },
@@ -544,18 +642,25 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebar({ widgetConfig });
 
       // Assert
-      expect(mockPostMessageToAngieIframe).toHaveBeenCalledWith({
-        type: 'sdk-widget-config',
-        payload: widgetConfig,
-      });
+      expect(iframePostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://angie.elementor.com',
+      );
     });
 
     it('should not send widget config when not provided', async () => {
+      // Arrange
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
+
       // Act
       await sdk.loadSidebar();
 
       // Assert
-      expect(mockPostMessageToAngieIframe).not.toHaveBeenCalled();
+      expect(iframePostMessage).not.toHaveBeenCalled();
     });
   });
 
@@ -571,7 +676,36 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebarV2( options );
 
       expect( mockBootSidebar ).toHaveBeenCalledTimes( 1 );
-      expect( mockBootSidebar ).toHaveBeenCalledWith( options );
+      expect( mockBootSidebar ).toHaveBeenCalledWith( {
+        ...options,
+        sdkInstanceId: expect.any( String ),
+      } );
+    });
+
+    it('should adopt host.instanceId so routing matches the booted instance', async () => {
+      const mockBootSidebar = require('./load-sidebar-v2/boot-sidebar').bootSidebar as jest.MockedFunction<any>;
+      const options = {
+        host: {
+          appId: 'editor-lite',
+          instanceId: 'stable-id',
+        },
+      };
+      mockAngieDetector.isReady.mockReturnValue(true);
+
+      await sdk.loadSidebarV2( options );
+
+      expect( mockBootSidebar ).toHaveBeenCalledWith( {
+        ...options,
+        sdkInstanceId: 'stable-id',
+      } );
+
+      const promise = sdk.triggerAngie( { prompt: 'hi', context: {}, options: { timeout: 50 } } );
+      const call = ( window.postMessage as jest.MockedFunction<any> ).mock.calls.find(
+        ( item: any[] ) => item[ 0 ]?.type === 'sdk-trigger-angie',
+      );
+
+      expect( call?.[ 0 ].payload.instanceId ).toBe( 'stable-id' );
+      await expect( promise ).rejects.toThrow( 'timed out' );
     });
   });
 
@@ -704,5 +838,60 @@ describe('AngieMcpSdk', () => {
 
       expect(window.location.hash).toBe('');
     });
+
+    it('should attach only one hashchange listener when loadSidebarV2 is called twice', async () => {
+      const options = { host: { appId: 'editor-lite', instanceId: 'stable-id' } };
+
+      await sdk.loadSidebarV2( options );
+      await sdk.loadSidebarV2( options );
+
+      const hashListeners = ( addEventListenerSpy.mock.calls as [ string, EventListener ][] ).filter(
+        ( [ type ] ) => type === 'hashchange',
+      );
+
+      expect( hashListeners ).toHaveLength( 1 );
+    });
+
+    it('should trigger from only the first SDK when two instances share an unaddressed hash', async () => {
+      const sdk2 = new AngieMcpSdk();
+      ( sdk as any ).isInitialized = true;
+      ( sdk2 as any ).isInitialized = true;
+
+      await sdk.loadSidebarV2( { host: { appId: 'app-a', instanceId: 'first' } } );
+      await sdk2.loadSidebarV2( { host: { appId: 'app-b', instanceId: 'second' } } );
+      postMessageSpy.mockClear();
+
+      window.location.hash = '#angie-prompt=Shared%20prompt';
+      window.dispatchEvent( new HashChangeEvent( 'hashchange' ) );
+      await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+      const triggerCalls = ( postMessageSpy.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
+        ( [ message ] ) => message?.type === 'sdk-trigger-angie',
+      );
+
+      expect( triggerCalls ).toHaveLength( 1 );
+      expect( triggerCalls[ 0 ][ 0 ].payload?.instanceId ).toBe( 'first' );
+    });
+
+    it('should trigger only the SDK named in angie-instance', async () => {
+      const sdk2 = new AngieMcpSdk();
+      ( sdk as any ).isInitialized = true;
+      ( sdk2 as any ).isInitialized = true;
+
+      await sdk.loadSidebarV2( { host: { appId: 'app-a', instanceId: 'first' } } );
+      await sdk2.loadSidebarV2( { host: { appId: 'app-b', instanceId: 'second' } } );
+      postMessageSpy.mockClear();
+
+      window.location.hash = '#angie-prompt=Targeted%20prompt&angie-instance=second';
+      window.dispatchEvent( new HashChangeEvent( 'hashchange' ) );
+      await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
+
+      const triggerCalls = ( postMessageSpy.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
+        ( [ message ] ) => message?.type === 'sdk-trigger-angie',
+      );
+
+      expect( triggerCalls ).toHaveLength( 1 );
+      expect( triggerCalls[ 0 ][ 0 ].payload?.instanceId ).toBe( 'second' );
+    });
   });
-}); 
+});

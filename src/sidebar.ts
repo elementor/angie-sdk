@@ -1,9 +1,9 @@
-import { postMessageToAngieIframe } from "./angie-iframe-utils";
-import { appState } from "./config";
+import { postMessageToInstance } from "./angie-iframe-utils";
+import { appState, type AppState } from "./config";
 import { MessageEventType } from "./types";
 import { createChildLogger } from "./logger";
 import { isOidcFlowInUrl } from "@elementor/oidc-auth";
-import { sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility, waitForDocumentReady } from "./utils";
+import { isFromIframe, isTrustedIframeMessage, sendSuccessMessage, toggleAngieSidebar as setIframeAccessibility } from "./utils";
 import sidebarCssContent from "./sidebar.css?raw";
 
 const sidebarLogger = createChildLogger( 'sidebar' );
@@ -34,6 +34,11 @@ function injectCSS(): void {
 export const ANGIE_SIDEBAR_STATE_OPEN = 'open';
 export const ANGIE_SIDEBAR_STATE_CLOSED = 'closed';
 
+// Only the sidebar layout persists state, and only one sidebar may run on a page, so
+// these keys never collide and stay unprefixed.
+export const STATE_STORAGE_KEY = 'angie_sidebar_state';
+const WIDTH_STORAGE_KEY = 'angie_sidebar_width';
+
 const SIDE_MENU_WIDTH = 40;
 const MIN_WIDTH = 310 + SIDE_MENU_WIDTH;
 const MAX_WIDTH = 550 + SIDE_MENU_WIDTH;
@@ -52,7 +57,7 @@ export function loadWidth(): number {
 	}
 
 	try {
-		const savedWidth = window.localStorage.getItem( 'angie_sidebar_width' );
+		const savedWidth = window.localStorage.getItem( WIDTH_STORAGE_KEY );
 		if ( savedWidth ) {
 			const width = parseInt( savedWidth, 10 );
 			if ( width >= MIN_WIDTH && width <= MAX_WIDTH ) {
@@ -69,13 +74,13 @@ export function getAngieSidebarSavedState(): AngieSidebarState | null {
 	if ( typeof window === 'undefined' ) {
 		return null;
 	}
-	return localStorage.getItem( 'angie_sidebar_state' ) as AngieSidebarState | null;
+	return localStorage.getItem( STATE_STORAGE_KEY ) as AngieSidebarState | null;
 }
 
-export function handleFocus( isOpen: boolean, delay: number ): void {
+export function handleFocus( isOpen: boolean, delay: number, instance: AppState = appState ): void {
 	if ( isOpen ) {
 		setTimeout( function() {
-			postMessageToAngieIframe( {
+			postMessageToInstance( instance, {
 				type: 'focusInput',
 			} );
 		}, delay );
@@ -84,7 +89,7 @@ export function handleFocus( isOpen: boolean, delay: number ): void {
 
 export function saveState( state: string ): void {
 	try {
-		localStorage.setItem( 'angie_sidebar_state', state );
+		localStorage.setItem( STATE_STORAGE_KEY, state );
 	} catch ( e ) {
 		sidebarLogger.warn( 'localStorage not available' );
 	}
@@ -92,7 +97,7 @@ export function saveState( state: string ): void {
 
 export function saveWidth( width: number ): void {
 	try {
-		localStorage.setItem( 'angie_sidebar_width', width.toString() );
+		localStorage.setItem( WIDTH_STORAGE_KEY, width.toString() );
 	} catch ( e ) {
 		sidebarLogger.warn( 'localStorage not available' );
 	}
@@ -105,7 +110,7 @@ export function applyWidth( width: number ): void {
 export function forceSidebarClosedDuringOAuth(): void {
 	applyState( ANGIE_SIDEBAR_STATE_CLOSED );
 	try {
-		localStorage.setItem( 'angie_sidebar_state', ANGIE_SIDEBAR_STATE_CLOSED );
+		localStorage.setItem( STATE_STORAGE_KEY, ANGIE_SIDEBAR_STATE_CLOSED );
 	} catch ( e ) {
 		sidebarLogger.warn( 'localStorage not available' );
 	}
@@ -126,8 +131,8 @@ export function applyState( state: AngieSidebarState ): void {
 	}
 }
 
-export function initializeResize(): void {
-	const sidebar = document.getElementById( appState.containerId );
+export function initializeResize( instance: AppState = appState ): void {
+	const sidebar = document.getElementById( instance.containerId );
 	if ( ! sidebar ) {
 		return;
 	}
@@ -184,7 +189,7 @@ export function initializeResize(): void {
 			const currentWidth = parseInt( getComputedStyle( document.documentElement ).getPropertyValue( '--angie-sidebar-width' ), 10 );
 			saveWidth( currentWidth );
 
-			postMessageToAngieIframe( {
+			postMessageToInstance( instance, {
 				type: MessageEventType.ANGIE_SIDEBAR_RESIZED,
 				payload: { initialWidth: startWidth, width: currentWidth },
 			} );
@@ -202,10 +207,13 @@ export function initializeResize(): void {
 	applyWidth( savedWidth );
 }
 
-export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void ): ( force?: boolean, skipTransition?: boolean ) => void {
+export function createToggleSidebarFunction(
+	onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void,
+	instance: AppState = appState
+): ( force?: boolean, skipTransition?: boolean ) => void {
 	return function( force?: boolean, skipTransition?: boolean ): void {
 		const body = document.body;
-		const sidebar = document.getElementById( appState.containerId );
+		const sidebar = document.getElementById( instance.containerId );
 
 		if ( ! sidebar ) {
 			sidebarLogger.warn( 'Required elements not found!' );
@@ -228,12 +236,12 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 			body.classList.remove( 'angie-sidebar-active' );
 		}
 
-		if ( appState.iframe ) {
-			setIframeAccessibility( appState.iframe, shouldOpen );
+		if ( instance.iframe ) {
+			setIframeAccessibility( instance.iframe, shouldOpen, instance.containerId );
 		}
 
 		const focusDelay = skipTransition ? 0 : 300;
-		handleFocus( shouldOpen, focusDelay );
+		handleFocus( shouldOpen, focusDelay, instance );
 
 		if ( onToggle ) {
 			onToggle( shouldOpen, sidebar, skipTransition );
@@ -246,7 +254,7 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 		} );
 		document.dispatchEvent( event );
 
-		postMessageToAngieIframe( {
+		postMessageToInstance( instance, {
 			type: MessageEventType.ANGIE_SIDEBAR_TOGGLED,
 			payload: { state: shouldOpen ? 'opened' : 'closed' },
 		} );
@@ -255,7 +263,7 @@ export function createToggleSidebarFunction( onToggle?: ( isOpen: boolean, sideb
 
 let sidebarToggleMessageListenerAttached = false;
 
-export function setupMessageListener(): void {
+export function setupMessageListener( instance: AppState = appState ): void {
 	if ( sidebarToggleMessageListenerAttached ) {
 		return;
 	}
@@ -267,8 +275,12 @@ export function setupMessageListener(): void {
 			return;
 		}
 
-		const iframeOrigin = appState.iframeUrlObject?.origin;
-		if ( iframeOrigin && event.origin !== iframeOrigin ) {
+		const iframeOrigin = instance.iframeUrlObject?.origin;
+		const isTrusted = iframeOrigin
+			? isTrustedIframeMessage( event, iframeOrigin, instance.iframe )
+			: isFromIframe( event, instance.iframe );
+
+		if ( ! isTrusted ) {
 			return;
 		}
 
@@ -284,9 +296,14 @@ export function setupMessageListener(): void {
 	} );
 }
 
+export const resetSidebarMessageListenerForTests = (): void => {
+	sidebarToggleMessageListenerAttached = false;
+};
+
 type InitAngieSidebarOptions = {
 	onToggle?: ( isOpen: boolean, sidebar: HTMLElement, skipTransition?: boolean ) => void;
 	skipDefaultCss?: boolean;
+	instance?: AppState;
 };
 
 export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
@@ -294,9 +311,11 @@ export function initAngieSidebar( options?: InitAngieSidebarOptions ): void {
 		injectCSS();
 	}
 
+	const instance = options?.instance ?? appState;
+
 	if ( typeof window !== 'undefined' ) {
-		window.toggleAngieSidebar = createToggleSidebarFunction( options?.onToggle );
-		setupMessageListener();
+		window.toggleAngieSidebar = createToggleSidebarFunction( options?.onToggle, instance );
+		setupMessageListener( instance );
 	}
 }
 

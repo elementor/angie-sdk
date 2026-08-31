@@ -1,14 +1,16 @@
 import type { Logger } from '@elementor/angie-logger';
-import { postMessageToAngieIframe } from './angie-iframe-utils';
 import { AngieDetector } from './angie-detector';
 import { BrowserContextTransport } from './browser-context-transport';
 import { ClientManager } from './client-manager';
 import { appState, DEFAULT_CONTAINER_ID } from './config';
 import { createChildLogger } from './logger';
 import { openIframe } from './iframe';
+import { addLocalStorageListener } from './localStorage';
 import { handlePostConsentRedirect } from './oauth';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
+import { getInstanceById } from './instance-registry';
+import { generateInstanceId } from './utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
 import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse } from './types';
@@ -17,7 +19,14 @@ export { DEFAULT_CONTAINER_ID } from './config';
 
 const HASH_PARAM_PROMPT = 'angie-prompt';
 const HASH_PARAM_NEW_CHAT = 'angie-new-chat';
+const HASH_PARAM_INSTANCE = 'angie-instance';
 const HASH_SOURCE = 'hash-parameter';
+
+const promptHashSdks: AngieMcpSdk[] = [];
+
+export const resetPromptHashListenersForTests = (): void => {
+  promptHashSdks.length = 0;
+};
 
 type FeatureToggle = { enabled: boolean };
 
@@ -89,12 +98,13 @@ export class AngieMcpSdk {
   private isInitialized = false;
   private instanceId: string;
   private sidebarV2BootPromise: Promise<void> | null = null;
+  private promptHashListenerAttached = false;
 
   constructor() {
-    this.instanceId = Math.random().toString(36).substring(2, 8);
+    this.instanceId = generateInstanceId();
     this.logger = createChildLogger({ instanceId: this.instanceId });
     this.logger.log('Constructor called - initializing SDK');
-    this.angieDetector = new AngieDetector();
+    this.angieDetector = new AngieDetector(() => this.instanceId);
     this.registrationQueue = new RegistrationQueue();
     this.clientManager = new ClientManager();
     this.logger.log('Setting up event handlers');
@@ -110,18 +120,30 @@ export class AngieMcpSdk {
     const { widgetConfig, ...rest } = options || {};
     const config = { ...DEFAULT_OPTIONS, ...rest };
     appState.containerId = config.containerId;
+    appState.instanceId = this.instanceId;
     initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
-    await openIframe( config );
+    const opened = await openIframe( config );
 
-    if ( widgetConfig ) {
-      postMessageToAngieIframe( { type: 'sdk-widget-config', payload: widgetConfig } );
+    if ( opened ) {
+      addLocalStorageListener();
+    }
+
+    if ( opened && widgetConfig ) {
+      opened.iframe.contentWindow?.postMessage(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        opened.iframeOrigin,
+      );
     }
 
     this.setupPromptHashDetection();
   }
 
   public loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
-    this.sidebarV2BootPromise = bootSidebar( options );
+    if ( options.host.instanceId ) {
+      this.instanceId = options.host.instanceId;
+    }
+
+    this.sidebarV2BootPromise = bootSidebar( { ...options, sdkInstanceId: this.instanceId } );
     this.setupPromptHashDetection();
     return this.sidebarV2BootPromise;
   }
@@ -131,6 +153,19 @@ export class AngieMcpSdk {
   private setupReRegistrationHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_ANGIE_REFRESH_PING) {
+        const iframeOrigin = getInstanceById( this.instanceId )?.iframeUrlObject?.origin;
+        if ( iframeOrigin && event.origin !== iframeOrigin ) {
+          this.logger.log(`Ignoring refresh ping from unexpected origin. Event origin: ${event.origin}, iframe origin: ${iframeOrigin}`);
+          return;
+        }
+
+        const pingInstanceId = event.data?.payload?.instanceId;
+        // Embedded Angie does not send instanceId yet; absent id keeps legacy behavior.
+        if (pingInstanceId && pingInstanceId !== this.instanceId) {
+          this.logger.log(`Ignoring refresh ping for different instance. Ping instanceId: ${pingInstanceId}, this instanceId: ${this.instanceId}`);
+          return;
+        }
+
         this.logger.log('Angie refresh ping received');
         
         // Use the safe reset method that checks for concurrent processing
@@ -323,6 +358,7 @@ export class AngieMcpSdk {
         type: MessageEventType.SDK_TRIGGER_ANGIE,
         payload: {
           requestId,
+          instanceId: this.instanceId,
           prompt: request.prompt,
           options: request.options,
           context: {
@@ -377,7 +413,7 @@ export class AngieMcpSdk {
       const registration = this.registrationQueue.getAll().find(reg => reg.id === serverId);
       
       if (!registration) {
-        this.logger.error(`No registration found for serverId: ${serverId}`);
+        this.logger.log(`No registration found for serverId: ${serverId} (likely belongs to another instance)`);
         return;
       }
 
@@ -433,6 +469,19 @@ export class AngieMcpSdk {
     return new URLSearchParams(paramString);
   }
 
+  private shouldHandlePromptHash(params: URLSearchParams): boolean {
+    const targetId = params.get(HASH_PARAM_INSTANCE);
+    if (targetId) {
+      return targetId === this.instanceId;
+    }
+
+    if (promptHashSdks.length === 0) {
+      return true;
+    }
+
+    return promptHashSdks[0] === this;
+  }
+
   private async handlePromptHash(): Promise<void> {
     const hash = window.location.hash;
 
@@ -442,6 +491,10 @@ export class AngieMcpSdk {
 
     try {
       const params = this.parseHashParams(hash);
+      if (!this.shouldHandlePromptHash(params)) {
+        return;
+      }
+
       const prompt = params.get(HASH_PARAM_PROMPT) || '';
 
       if (!prompt) {
@@ -476,7 +529,12 @@ export class AngieMcpSdk {
   }
 
   private setupPromptHashDetection(): void {
-    this.handlePromptHash();
-    window.addEventListener('hashchange', () => this.handlePromptHash());
+    if (!this.promptHashListenerAttached) {
+      this.promptHashListenerAttached = true;
+      promptHashSdks.push(this);
+      window.addEventListener('hashchange', () => this.handlePromptHash());
+    }
+
+    void this.handlePromptHash();
   }
 }

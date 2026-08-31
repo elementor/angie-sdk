@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — multi instances</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/server/mcp.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js",
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod": "../../node_modules/zod/index.js",
+      "zod/v3": "../../node_modules/zod/v3/index.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js",
+      "zod/v4-mini": "../../node_modules/zod/v4-mini/index.js",
+      "zod-to-json-schema": "../../node_modules/zod-to-json-schema/dist/esm/index.js",
+      "ajv": "./ajv-shim.js",
+      "ajv-formats": "./ajv-formats-shim.js"
+    }
+  }
+  </script>
+  <style>
+    body { margin: 0; padding: 1rem 1rem 8rem; font-family: system-ui, sans-serif; }
+    h2 { margin-block: 1.5rem 0.5rem; font-size: 1rem; }
+    code { background: #f2f2f2; padding: 0.1em 0.35em; border-radius: 3px; }
+    ul { line-height: 1.7; }
+
+    /* Move the second chat aside so both floating widgets stay visible.
+       `body #id.class` outranks the SDK's `#id.class` rules whatever the order. */
+    body #angie-chat-container-2.angie-widget-container {
+      inset-inline-end: 440px !important;
+    }
+    body #angie-widget-toggle-demo-chat-2 {
+      inset-inline-end: 96px !important;
+      background: #6366f1 !important;
+    }
+  </style>
+</head>
+<body>
+  <p><a href="../">← All demos</a></p>
+
+  <h2>Multi Angie instances on one page</h2>
+  <p>
+    One <code>sidebar</code> and two <code>floatingChat</code> instances. Each boots concurrently,
+    registers its own local MCP server, and keeps its own container, iframe, and widget config.
+  </p>
+
+  <ul>
+    <li><strong>Sidebar</strong> — <code>demo-sidebar</code>, server <code>demo-product-catalog</code> (Product catalog). Opens with the button below.</li>
+    <li><strong>Chat A</strong> — <code>demo-chat</code>, server <code>demo-help-center</code> (Help Center). Pink toggle at the bottom right.</li>
+    <li><strong>Chat B</strong> — <code>demo-chat-2</code>, server <code>demo-billing</code> (Billing). Indigo toggle beside it.</li>
+  </ul>
+
+  <p>
+    Open each instance and ask what tools it has. Each should list only its own server — never a sibling's.
+  </p>
+
+  <h2>Scoped host storage (devtools)</h2>
+  <p>
+    Each instance passes <code>host.instanceId</code>, so chat restore keys are scoped per widget
+    (<code>angie_active_chat_id::__angie::demo-chat</code>, etc.). In the console:
+  </p>
+  <ul>
+    <li><code>angieDemo.seedScopedStorage()</code> — write a distinct value per instance</li>
+    <li><code>angieDemo.scopedStorage()</code> — read scoped values by instance id</li>
+    <li><code>angieDemo.storage()</code> — all <code>angie*</code> host keys (includes scoped keys)</li>
+  </ul>
+  <p>
+    After chatting in one widget, reload and confirm the other widgets do not pick up that chat id.
+  </p>
+
+  <p>
+    <button type="button" id="sidebar-toggle">Open the sidebar instance</button>
+  </p>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <div id="angie-chat-container" aria-hidden="true"></div>
+  <div id="angie-chat-container-2" aria-hidden="true"></div>
+
+  <script type="module" src="./host.js"></script>
+</body>
+</html>

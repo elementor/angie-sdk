@@ -1,7 +1,11 @@
 import { appState } from './config';
 
-export const toggleAngieSidebar = ( iframe: HTMLIFrameElement, isOpen: boolean ) => {
-	const sidebarContainer = document.getElementById( appState.containerId );
+export const toggleAngieSidebar = (
+	iframe: HTMLIFrameElement,
+	isOpen: boolean,
+	containerId?: string,
+) => {
+	const sidebarContainer = document.getElementById( containerId ?? appState.containerId );
 	if ( sidebarContainer ) {
 		sidebarContainer.setAttribute( 'aria-hidden', isOpen ? 'false' : 'true' );
 	}
@@ -13,6 +17,31 @@ export const toggleAngieSidebar = ( iframe: HTMLIFrameElement, isOpen: boolean )
 		iframe.setAttribute( 'tabindex', '-1' );
 	}
 };
+
+/**
+ * Two instances on a page usually share one iframe origin, so `event.origin` cannot tell
+ * their iframes apart. The source window can.
+ *
+ * Returns true when there is nothing to compare against, so single-instance hosts behave
+ * exactly as before.
+ */
+export const isFromIframe = ( event: MessageEvent, iframe: HTMLIFrameElement | null ) => {
+	const ownWindow = iframe?.contentWindow;
+
+	if ( ! ownWindow || ! event.source ) {
+		return true;
+	}
+
+	return event.source === ownWindow;
+};
+
+export const isTrustedIframeMessage = (
+	event: MessageEvent,
+	iframeOrigin: string | undefined,
+	iframe: HTMLIFrameElement | null
+): boolean => event.origin === iframeOrigin && isFromIframe( event, iframe );
+
+export const generateInstanceId = (): string => Math.random().toString( 36 ).substring( 2, 8 );
 
 export const isMobile = () => {
 	return window.screen.availWidth <= 768;
