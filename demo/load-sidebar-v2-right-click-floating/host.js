@@ -226,6 +226,7 @@ await sdk.loadSidebarV2( {
 		featuredMcpServer: CONTEXT_SERVER_NAME,
 		localServers: { skipLoading: true },
 		topBar: { enabled: false },
+		quotaBanner: { enabled: true },
 	},
 } );
 

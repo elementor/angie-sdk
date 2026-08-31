@@ -98,7 +98,7 @@ const buildSandboxWidgetConfig = () => ( {
 	modeSwitcher: { enabled: true, default: 'agent' },
 	closeButton: 'collapse',
 	statusBanner: { enabled: true },
-	quotaError: { enabled: true },
+	quotaBanner: { enabled: true },
 	userProfileMenu: { enabled: true },
 	topBar: { enabled: false },
 } );
