@@ -96,6 +96,17 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockOpenEmbeddedIframe ).toHaveBeenCalled();
 	} );
 
+	it( 'should not create a floating-chat container when create is false', async () => {
+		await bootSidebar( {
+			container: { id: 'host-chat', layout: LAYOUT_FLOATING_CHAT, create: false },
+			host: { appId: 'my-elementor' },
+		} );
+
+		expect( document.getElementById( 'host-chat' ) ).toBeNull();
+		expect( mockOpenEmbeddedIframe ).toHaveBeenCalled();
+		expect( mockInitAngieSidebar ).not.toHaveBeenCalled();
+	} );
+
 	it( 'should boot floating-chat without sidebar shell', async () => {
 		await bootSidebar( {
 			container: {
