@@ -1,6 +1,12 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
-import { disableNavigationPrevention, isValidPath } from './iframe';
+import {
+	disableNavigationPrevention,
+	isValidPath,
+	registerIframeHostHandler,
+	resetIframeHostHandlersForTests,
+} from './iframe';
 import { appState } from './config';
+import { createAngieInstance, resetInstancesForTests } from './instance-registry';
 import { MessageEventType } from './types';
 
 jest.mock( './logger', () => ( {
@@ -19,6 +25,8 @@ describe( 'disableNavigationPrevention', () => {
 
 	beforeEach( () => {
 		jest.clearAllMocks();
+		resetInstancesForTests();
+		resetIframeHostHandlersForTests();
 		
 		originalSetTimeout = global.setTimeout;
 		
@@ -80,6 +88,109 @@ describe( 'disableNavigationPrevention', () => {
 
 		// Act & Assert
 		await expect( disableNavigationPrevention() ).rejects.toThrow( 'postMessage failed' );
+	} );
+
+	it( 'should post to the provided instance iframe, not global appState', async () => {
+		const sidebarWindow = { postMessage: jest.fn() };
+		const chatWindow = { postMessage: jest.fn() };
+		const origin = new URL( 'https://angie.elementor.com' );
+
+		const sidebarInstance = createAngieInstance( {
+			containerId: 'sidebar-container',
+			instanceId: 'demo-sidebar',
+			layout: 'sidebar',
+		} );
+		const chatInstance = createAngieInstance( {
+			containerId: 'chat-container',
+			instanceId: 'demo-chat',
+			layout: 'floatingChat',
+		} );
+
+		sidebarInstance.iframe = { contentWindow: sidebarWindow } as unknown as HTMLIFrameElement;
+		sidebarInstance.iframeUrlObject = origin;
+		chatInstance.iframe = { contentWindow: chatWindow } as unknown as HTMLIFrameElement;
+		chatInstance.iframeUrlObject = origin;
+
+		appState.iframe = sidebarInstance.iframe;
+		appState.iframeUrlObject = origin;
+
+		await disableNavigationPrevention( chatInstance );
+
+		expect( chatWindow.postMessage ).toHaveBeenCalledWith(
+			{ type: MessageEventType.ANGIE_DISABLE_NAVIGATION_PREVENTION },
+			origin.origin,
+		);
+		expect( sidebarWindow.postMessage ).not.toHaveBeenCalled();
+	} );
+} );
+
+describe( 'iframe host message routing', () => {
+	let originalSetTimeout: typeof setTimeout;
+
+	beforeEach( () => {
+		jest.clearAllMocks();
+		resetInstancesForTests();
+		resetIframeHostHandlersForTests();
+
+		originalSetTimeout = global.setTimeout;
+		global.setTimeout = jest.fn( ( callback: () => void ) => {
+			callback();
+			return 0 as unknown as ReturnType<typeof setTimeout>;
+		} ) as unknown as typeof setTimeout;
+	} );
+
+	afterEach( () => {
+		global.setTimeout = originalSetTimeout;
+		resetIframeHostHandlersForTests();
+	} );
+
+	it( 'should disable navigation prevention on the iframe that sent the reload message', () => {
+		const sidebarWindow = { postMessage: jest.fn() };
+		const chatWindow = { postMessage: jest.fn() };
+		const origin = 'https://angie.elementor.com';
+
+		const sidebarInstance = createAngieInstance( {
+			containerId: 'sidebar-container',
+			instanceId: 'demo-sidebar',
+			layout: 'sidebar',
+		} );
+		const chatInstance = createAngieInstance( {
+			containerId: 'chat-container',
+			instanceId: 'demo-chat',
+			layout: 'floatingChat',
+		} );
+
+		const sidebarIframe = { contentWindow: sidebarWindow } as unknown as HTMLIFrameElement;
+		const chatIframe = { contentWindow: chatWindow } as unknown as HTMLIFrameElement;
+
+		sidebarInstance.iframe = sidebarIframe;
+		sidebarInstance.iframeUrlObject = new URL( `${ origin }/angie/embedded` );
+		chatInstance.iframe = chatIframe;
+		chatInstance.iframeUrlObject = new URL( `${ origin }/angie/embedded` );
+
+		registerIframeHostHandler( {
+			instance: sidebarInstance,
+			trustedOrigins: [ window.location.origin, origin ],
+		} );
+		registerIframeHostHandler( {
+			instance: chatInstance,
+			trustedOrigins: [ window.location.origin, origin ],
+		} );
+
+		window.dispatchEvent( Object.assign( new Event( 'message' ), {
+			origin,
+			source: chatWindow,
+			data: {
+				type: MessageEventType.ANGIE_PAGE_RELOAD,
+				payload: { confirmed: true },
+			},
+		} ) );
+
+		expect( chatWindow.postMessage ).toHaveBeenCalledWith(
+			{ type: MessageEventType.ANGIE_DISABLE_NAVIGATION_PREVENTION },
+			origin,
+		);
+		expect( sidebarWindow.postMessage ).not.toHaveBeenCalled();
 	} );
 } );
 

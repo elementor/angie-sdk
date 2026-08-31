@@ -54,7 +54,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 | Section | Purpose |
 |---------|---------|
-| `host` | **Required.** `appId`, optional `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
+| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
@@ -78,6 +78,80 @@ Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2
 
 Full `widgetConfig` reference: [widget-config.md](./widget-config.md).
 
+## Multiple instances on one page
+
+You can run more than one Angie instance on the same page. Each one keeps its own
+iframe, its own config and its own messages.
+
+Two rules:
+
+1. **Give every extra instance its own `container.id`.** The default is
+   `angie-sidebar-container` for every layout, so two instances that do not set it would
+   share one `<div>`. Booting the second one throws an error that names the id.
+2. **Only one instance may use the `sidebar` layout.** That layout paints through
+   page-wide CSS (`body.angie-sidebar-active` and `#angie-sidebar-container`), so a
+   second sidebar would have no styling and would share the first one's open state.
+   Booting a second sidebar throws. Extra instances must use `floatingChat`.
+
+```js
+const sidebarSdk = new AngieMcpSdk();
+await sidebarSdk.loadSidebarV2( {
+	host: { appId: 'my-app', instanceId: 'my-app-sidebar' },
+	container: { layout: LAYOUT_SIDEBAR },
+} );
+
+const chatSdk = new AngieMcpSdk();
+await chatSdk.loadSidebarV2( {
+	host: { appId: 'my-app-help', instanceId: 'my-app-help' },
+	container: { id: 'angie-help-container', layout: LAYOUT_FLOATING_CHAT },
+} );
+```
+
+Working example: [`demo/load-sidebar-v2-multi-instance`](../../demo/load-sidebar-v2-multi-instance/).
+
+### Registering MCP servers
+
+You can boot instances in parallel. Register servers on each SDK only after that
+instance is ready:
+
+```js
+await Promise.all( [
+	sidebarSdk.loadSidebarV2( {
+		host: { appId: 'my-app', instanceId: 'my-app-sidebar' },
+		container: { layout: LAYOUT_SIDEBAR },
+	} ),
+	chatSdk.loadSidebarV2( {
+		host: { appId: 'my-app-help', instanceId: 'my-app-help' },
+		container: { id: 'angie-help-container', layout: LAYOUT_FLOATING_CHAT },
+	} ),
+] );
+
+await sidebarSdk.waitForReady();
+await chatSdk.waitForReady();
+
+await sidebarSdk.registerServer( { name: 'wordpress-tools', /* ... */ } );
+await chatSdk.registerServer( { name: 'help-center', /* ... */ } );
+```
+
+`waitForReady()` waits for the iframe boot, Angie availability, and any servers already
+queued on that SDK. Each instance routes MCP registrations to its own iframe, so give
+every instance a distinct `host.instanceId` when more than one registers servers on the
+same page.
+
+### host.instanceId
+
+Optional. Names the instance. When you leave it out, the SDK generates a new id on every
+page load.
+
+The id names the instance's iframe (`angie-iframe-<instanceId>`), appears as the
+`instanceId` query parameter in the iframe URL, and routes MCP server registrations back
+to the right instance. Pass a stable id when you want those to stay the same across page
+loads, for example to target the iframe from your own CSS or end-to-end tests.
+
+Legacy globals (`window.toggleAngieSidebar`, `getAngieIframe()`, and similar helpers)
+still target the first booted instance. Hold the `AngieMcpSdk` object if you need a
+specific instance.
+
 ### Custom CSS (toggle + sidebar panel)
 
 | Target | Selector | Notes |
@@ -86,7 +160,9 @@ Full `widgetConfig` reference: [widget-config.md](./widget-config.md).
 | Sidebar panel | `#${container.id}` (default `#angie-sidebar-container`) | SDK injects layout rules in `src/sidebar.css` |
 | Panel width / z-index | `:root { --angie-sidebar-width; --angie-sidebar-z-index; }` | Read by SDK when opening/resizing |
 | Gap from sidebar | `body.angie-sidebar-active { padding-inline-start: calc(var(--angie-sidebar-width) + 1.5rem) }` | SDK sets padding to width only; add your own gap (see demo CSS) |
-| Iframe | `#angie-sidebar-container iframe#angie-iframe` | `id="angie-iframe"` is set by the SDK |
+| Iframe | `#${container.id} iframe#angie-iframe` for the first instance; `#${container.id} iframe#angie-iframe-<instanceId>` for later ones | First instance keeps legacy `angie-iframe`; others use `angie-iframe-<host.instanceId>` |
+
+If a second instance reuses the default floating-chat toggle selector (`#angie-widget-toggle`), the SDK auto-suffixes it to `#angie-widget-toggle-<instanceId>` so toggles do not collide.
 
 If you use a custom `container.id`, copy or adapt the rules from `sidebar.css` for your id.
 
@@ -97,13 +173,17 @@ Example: [`demo/load-sidebar-v2-full-config/demo-host.css`](../../demo/load-side
 ```
 loadSidebarV2(options)
   → resolveConfig + shouldBoot
-  → initHostApiBridge (postMessage API)
+  → boot guards (unique container.id / instanceId, one sidebar layout)
+  → createAngieInstance + registerSdkInstance + startSdkMessageRouting (buffers MCP until iframe exists)
+  → initHostApiBridge (postMessage API + V2 localStorage)
   → ensureSidebarContainer
   → layout strategy (initShell → open iframe → afterOpen)
   → sendEmbeddedConfig / sendWidgetConfig
 ```
 
 Entry point: [`boot-sidebar.ts`](./boot-sidebar.ts). Layout strategies: [`layouts/index.ts`](./layouts/index.ts).
+
+V1 `loadSidebar()` does not use this boot path. Its host localStorage bridge lives in [`localStorage.ts`](../localStorage.ts) instead of the bridge below.
 
 ## Prompt deep links
 
@@ -112,7 +192,10 @@ load and on every later `hashchange`:
 
 ```
 https://example.com/pricing#angie-prompt=Which%20plan%20fits%20me%3F
+https://example.com/pricing#angie-prompt=Help&angie-instance=my-app-help
 ```
+
+When more than one `AngieMcpSdk` is on the page, add `angie-instance=<host.instanceId>` so only that SDK handles the hash.
 
 It waits for Angie, sends the prompt, then clears the hash. Hosts need no hash code of their own.
 Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
@@ -124,7 +207,7 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
 - `angie/context/get-website-context` — host + document metadata
 - `angie/context/get-analytics-context` — screen path + `host.analytics`
-- Host localStorage get/set (for embedded persistence)
+- Host localStorage get/set (V2 only; V1 uses [`localStorage.ts`](../localStorage.ts)). With `host.instanceId`, keys are scoped per widget (`logicalKey::__angie::<id>`); omit it for legacy unprefixed keys on a single widget.
 
 ## Module map
 

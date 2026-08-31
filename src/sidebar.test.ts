@@ -5,6 +5,7 @@ import {
   getAngieSidebarSavedState,
   ANGIE_SIDEBAR_STATE_OPEN,
   ANGIE_SIDEBAR_STATE_CLOSED,
+  resetSidebarMessageListenerForTests,
 } from './sidebar';
 import { appState } from './config';
 
@@ -12,7 +13,7 @@ import { appState } from './config';
 
 // Mock dependencies
 jest.mock('./angie-iframe-utils', () => ({
-  postMessageToAngieIframe: jest.fn(),
+  postMessageToInstance: jest.fn(),
 }));
 
 jest.mock('./iframe', () => ({
@@ -23,6 +24,7 @@ jest.mock('./iframe', () => ({
 }));
 
 jest.mock('./utils', () => ({
+  ...(jest.requireActual('./utils') as object),
   waitForDocumentReady: jest.fn().mockImplementation(() => Promise.resolve()),
   sendSuccessMessage: jest.fn(),
   toggleAngieSidebar: jest.fn(),
@@ -159,6 +161,7 @@ describe('sidebar', () => {
     const trustedOrigin = 'https://angie.example.com';
 
     beforeEach(() => {
+      resetSidebarMessageListenerForTests();
       const sidebarContainer = document.createElement('div');
       sidebarContainer.id = 'angie-sidebar-container';
       document.body.appendChild(sidebarContainer);
@@ -180,13 +183,40 @@ describe('sidebar', () => {
 
     it( 'should handle toggleAngieSidebar from the iframe origin', () => {
       const toggle = ( global.window as any ).toggleAngieSidebar as jest.Mock;
+      const ownWindow = {} as Window;
+      appState.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
 
       window.dispatchEvent( new MessageEvent( 'message', {
         origin: trustedOrigin,
+        source: ownWindow,
         data: { type: 'toggleAngieSidebar', payload: { force: true } },
       } ) );
 
       expect( toggle ).toHaveBeenCalledWith( true, undefined );
+    } );
+
+    it( 'should ignore a toggle message sent by a different instance iframe', () => {
+      const toggle = ( global.window as any ).toggleAngieSidebar as jest.Mock;
+      const ownWindow = {} as Window;
+      appState.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
+
+      window.dispatchEvent( new MessageEvent( 'message', {
+        origin: trustedOrigin,
+        source: {} as Window,
+        data: { type: 'toggleAngieSidebar', payload: { force: true } },
+      } ) );
+
+      expect( toggle ).not.toHaveBeenCalled();
+
+      window.dispatchEvent( new MessageEvent( 'message', {
+        origin: trustedOrigin,
+        source: ownWindow,
+        data: { type: 'toggleAngieSidebar', payload: { force: true } },
+      } ) );
+
+      expect( toggle ).toHaveBeenCalledWith( true, undefined );
+
+      appState.iframe = null;
     } );
 
     it( 'should ack toggleAngieSidebar requests over MessagePort', () => {

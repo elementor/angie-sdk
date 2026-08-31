@@ -7,8 +7,10 @@ export class AngieDetector {
   private isAngieReady = false;
   private readyPromise: Promise<AngieDetectionResult>;
   private readyResolve?: (result: AngieDetectionResult) => void;
+  private getInstanceId?: () => string;
 
-  constructor() {
+  constructor(getInstanceId?: () => string) {
+    this.getInstanceId = getInstanceId;
     this.readyPromise = new Promise((resolve) => {
       this.readyResolve = resolve;
     });
@@ -42,6 +44,7 @@ export class AngieDetector {
 
       const message = {
         type: MessageEventType.SDK_ANGIE_READY_PING,
+        payload: { instanceId: this.getInstanceId?.() },
         timestamp: Date.now(),
       };
 

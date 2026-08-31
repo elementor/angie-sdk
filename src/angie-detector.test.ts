@@ -67,6 +67,37 @@ describe('AngieDetector', () => {
       expect(global.window.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'sdk-angie-ready-ping',
+          payload: { instanceId: undefined },
+          timestamp: expect.any(Number),
+        }),
+        'http://localhost',
+        expect.any(Array)
+      );
+    });
+
+    it('should include instanceId from getter in ping payload and read getter at ping time', () => {
+      let currentId = 'instance-a';
+      const getInstanceId = () => currentId;
+
+      detector = new AngieDetector(getInstanceId);
+
+      expect(global.window.postMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'sdk-angie-ready-ping',
+          payload: { instanceId: 'instance-a' },
+          timestamp: expect.any(Number),
+        }),
+        'http://localhost',
+        expect.any(Array)
+      );
+
+      currentId = 'instance-b';
+      jest.advanceTimersByTime(500);
+
+      expect(global.window.postMessage).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          type: 'sdk-angie-ready-ping',
+          payload: { instanceId: 'instance-b' },
           timestamp: expect.any(Number),
         }),
         'http://localhost',
