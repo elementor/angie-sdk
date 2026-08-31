@@ -35,6 +35,8 @@ export const createAngieInstance = ( args: CreateAngieInstanceArgs ): AppState =
 
 export const getFirstInstance = (): AppState | null => instances[ 0 ] ?? null;
 
+export const getInstanceCount = (): number => instances.length;
+
 const getFirstIframeInstance = (): AppState | null => {
 	const registered = instances.find( ( instance ) => instance.iframe !== null );
 
