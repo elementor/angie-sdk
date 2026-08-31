@@ -177,7 +177,6 @@ export class AngieMcpSdk {
         }
 
         if ( ! this.isRefreshPingForThisInstance( event, instance ) ) {
-          this.logger.log(`Ignoring refresh ping from another instance's iframe. This instanceId: ${this.instanceId}`);
           return;
         }
 
