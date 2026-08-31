@@ -71,6 +71,69 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		} );
 	} );
 
+	it( 'should prefer context providers over static host fields', async () => {
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: {
+				appId: 'wordpress',
+				website: { name: 'from host.website' },
+				analytics: { siteKey: 'from-host' },
+			},
+			getWebsiteContext: async () => ( { appId: 'wordpress', name: 'from provider' } ),
+			getAnalyticsContext: async () => ( { siteKey: 'from-provider' } ),
+			instance: appState,
+		} );
+
+		const websitePort = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_WEBSITE_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ websitePort as unknown as MessagePort ],
+		} ) );
+
+		const analyticsPort = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_ANALYTICS_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ analyticsPort as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( websitePort.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: { payload: { appId: 'wordpress', name: 'from provider' } },
+		} );
+		expect( analyticsPort.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: { payload: { siteKey: 'from-provider' } },
+		} );
+	} );
+
+	it( 'should report an error when a context provider throws', async () => {
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			getWebsiteContext: async () => {
+				throw new Error( 'context unavailable' );
+			},
+			instance: appState,
+		} );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_WEBSITE_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( {
+			status: 'error',
+			payload: { message: 'context unavailable' },
+		} );
+	} );
+
 	it( 'should respond with empty headers when no callback is provided', async () => {
 		initHostApiBridge( { iframeOrigin: IFRAME_ORIGIN, instance: appState } );
 

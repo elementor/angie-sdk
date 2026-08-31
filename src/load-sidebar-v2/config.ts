@@ -51,9 +51,16 @@ export type ExternalHeadersCallback = () =>
 	| Record<string, string | undefined>
 	| Promise<Record<string, string | undefined>>;
 
+/** Per-request context when boot-time `host.website` / `host.analytics` is not enough. */
+export type HostContextProvider = () =>
+	| Record<string, unknown>
+	| Promise<Record<string, unknown>>;
+
 export type CallbacksConfig = {
 	onClose?: () => void;
 	getExternalHeaders?: ExternalHeadersCallback;
+	getWebsiteContext?: HostContextProvider;
+	getAnalyticsContext?: HostContextProvider;
 };
 
 export type LoadSidebarV2Options = {

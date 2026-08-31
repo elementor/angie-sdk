@@ -78,6 +78,8 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		iframeOrigin: config.iframe.origin,
 		host: config.host,
 		getExternalHeaders: config.callbacks.getExternalHeaders,
+		getWebsiteContext: config.callbacks.getWebsiteContext,
+		getAnalyticsContext: config.callbacks.getAnalyticsContext,
 		instance,
 	} );
 

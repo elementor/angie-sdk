@@ -58,7 +58,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
-| `callbacks` | `onClose`, `getExternalHeaders` for auth/API headers |
+| `callbacks` | `onClose`, `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership)) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
@@ -205,9 +205,23 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 [`host-api-bridge.ts`](./host-api-bridge.ts) listens for messages from the Angie iframe (origin-checked) and responds on a `MessagePort`:
 
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
-- `angie/context/get-website-context` — host + document metadata
-- `angie/context/get-analytics-context` — screen path + `host.analytics`
+- `angie/context/get-website-context` — `callbacks.getWebsiteContext()`, else host + document metadata
+- `angie/context/get-analytics-context` — `callbacks.getAnalyticsContext()`, else screen path + `host.analytics`
 - Host localStorage get/set (V2 only; V1 uses [`localStorage.ts`](../localStorage.ts)). With `host.instanceId`, keys are scoped per widget (`logicalKey::__angie::<id>`); omit it for legacy unprefixed keys on a single widget.
+
+### Message ownership
+
+The iframe uses the **first** reply on the port. Do not keep a host `window` listener for these
+types — it races the bridge and usually loses the payload the host meant to send.
+
+| Need | Owner |
+|---|---|
+| Static website/analytics fields | `host.website` / `host.analytics` |
+| Per-request context | `callbacks.getWebsiteContext` / `getAnalyticsContext` |
+| Auth headers | `callbacks.getExternalHeaders` |
+| Host localStorage | Bridge (do not add a get/set listener) |
+
+Providers may be async. A throw becomes an error reply.
 
 ## Module map
 

@@ -20,6 +20,19 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
+	it( 'should carry context providers through to the resolved callbacks', () => {
+		const getWebsiteContext = jest.fn( () => ( { appId: 'wordpress' } ) );
+		const getAnalyticsContext = jest.fn( () => ( { siteKey: 'abc' } ) );
+
+		const config = resolveConfig( {
+			callbacks: { getAnalyticsContext, getWebsiteContext },
+			host: { appId: 'wordpress' },
+		}, DEFAULT_ENV );
+
+		expect( config.callbacks.getWebsiteContext ).toBe( getWebsiteContext );
+		expect( config.callbacks.getAnalyticsContext ).toBe( getAnalyticsContext );
+	} );
+
 	it( 'should resolve floating-chat defaults', () => {
 		const config = resolveConfig(
 			{ container: { layout: LAYOUT_FLOATING_CHAT }, host: { appId: 'editor-lite' } },
