@@ -100,11 +100,12 @@ Control the embedded app top bar (the bar containing new chat, history, and the 
 |-------|------|---------|
 | `topBar` | `{ enabled: boolean }` | `enabled: false` hides the whole top bar (new chat, history, and user menu) |
 
-### Quota error banner
+### Quota
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `quotaError` | `{ enabled: boolean; customMessage?: string }` | **Opt in** to the usage/quota-blocked banner — off by default. Pass `{ enabled: true }` to show it; `customMessage` overrides the default blocking copy. Hiding it (the default) means a quota-blocked chat stops responding without an in-chat explanation, so only leave it off if the host surfaces the block elsewhere. |
+| `quotaBanner` | `{ enabled: boolean }` | Show the quota-blocked banner. |
+| `inChatQuotaErrorMessage` | `string` | Custom in-chat message shown when the daily limit is hit. |
 
 ## Patterns from production hosts
 
