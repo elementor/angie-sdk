@@ -209,8 +209,8 @@ describe('AngieMcpSdk', () => {
   });
 
   describe('triggerAngie', () => {
-    it('should send message context unchanged without requiring a prompt', async () => {
-      const messageContext = {
+    it('should send a context attachment unchanged without requiring a prompt', async () => {
+      const contextAttachment = {
         label: 'Selected error',
         content: 'Checkout failed with error code PAYMENT_DECLINED.',
       };
@@ -230,7 +230,7 @@ describe('AngieMcpSdk', () => {
       mockAngieDetector.isReady.mockReturnValue(true);
 
       await sdk.triggerAngie({
-        messageContext,
+        contextAttachment,
         context: {
           source: 'checkout-plugin',
           pageUrl: 'https://example.com/checkout',
@@ -243,7 +243,7 @@ describe('AngieMcpSdk', () => {
       )?.[0];
 
       expect(triggerMessage.payload.prompt).toBeUndefined();
-      expect(triggerMessage.payload.messageContext).toBe(messageContext);
+      expect(triggerMessage.payload.contextAttachment).toBe(contextAttachment);
       expect(triggerMessage.payload.context).toEqual({
         source: 'checkout-plugin',
         pageUrl: 'https://example.com/checkout',

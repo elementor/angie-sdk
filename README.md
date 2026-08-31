@@ -177,10 +177,10 @@ In most cases, you don't need to `await` it since registration happens in the ba
 
 ## Triggering Angie with Prompts
 
-The SDK can trigger Angie with a prompt, model-visible message context, or both.
+The SDK can trigger Angie with a prompt, a context attachment, or both.
 
 ```typescript
-interface MessageContext {
+interface ContextAttachment {
   label: string;
   content: string;
 }
@@ -188,7 +188,7 @@ interface MessageContext {
 interface AngieTriggerRequest {
   prompt?: string;
   context?: { source?: string } & Record<string, unknown>;
-  messageContext?: MessageContext;
+  contextAttachment?: ContextAttachment;
   options?: {
     timeout?: number;
     newChat?: boolean;
@@ -197,7 +197,7 @@ interface AngieTriggerRequest {
 ```
 
 ```typescript
-import { AngieMcpSdk, type MessageContext } from '@elementor/angie-sdk';
+import { AngieMcpSdk, type ContextAttachment } from '@elementor/angie-sdk';
 
 // Register your MCP server and trigger Angie
 const server = createSeoMcpServer();
@@ -216,7 +216,7 @@ sdk.registerServer({
 await sdk.triggerAngie({
   prompt: 'Help me optimize this page for SEO',
   context: { pageType: 'product', source: 'my-plugin' },
-  messageContext: {
+  contextAttachment: {
     label: 'Current SEO report',
     content: 'The page is missing a meta description.',
   },
@@ -231,18 +231,18 @@ await sdk.triggerAngie({
   prompt: 'Help me create a contact page'
 });
 
-// Model-visible context without a prompt
-const messageContext: MessageContext = {
+// Attach context without pre-filling a prompt
+const contextAttachment: ContextAttachment = {
   label: 'Selected error',
   content: 'Checkout failed with error code PAYMENT_DECLINED.',
 };
 
-await sdk.triggerAngie({ messageContext });
+await sdk.triggerAngie({ contextAttachment });
 ```
 
 **Request fields:**
 - `prompt`: Optional prompt text.
-- `messageContext`: Optional labeled content that is visible to the model. It can be used without `prompt`.
+- `contextAttachment`: Optional labeled content attached to the next submitted user message. It can be used without `prompt` and is not rendered as part of the message text.
 - `context`: Optional integration metadata. The SDK adds the current `pageUrl` and `pageTitle`; supplied values can override them. This legacy field is not model-visible message content.
 - `options.timeout`: How long to wait for Angie response in milliseconds (default: `30000`).
 - `options.newChat`: When `true`, clears the current conversation and opens a fresh chat.

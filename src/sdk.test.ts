@@ -11,7 +11,7 @@ jest.mock('./logger', () => ({
 }));
 
 describe('listenToSDK', () => {
-	it('should relay message context unchanged to the Angie iframe', async () => {
+	it('should relay a context attachment unchanged to the Angie iframe', async () => {
 		const iframePostMessage = jest.fn();
 		const appState = {
 			open: false,
@@ -24,7 +24,7 @@ describe('listenToSDK', () => {
 			containerId: 'angie-sidebar-container',
 		} satisfies AppState;
 		const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
-		const messageContext = {
+		const contextAttachment = {
 			label: 'Selected error',
 			content: 'Checkout failed with error code PAYMENT_DECLINED.',
 		};
@@ -41,19 +41,19 @@ describe('listenToSDK', () => {
 				type: MessageEventType.SDK_TRIGGER_ANGIE,
 				payload: {
 					requestId: 'request-123',
-					messageContext,
+					contextAttachment,
 				},
 			},
 		} as MessageEvent);
 
 		const relayedMessage = iframePostMessage.mock.calls[0][0] as {
 			payload: {
-				messageContext?: typeof messageContext;
+				contextAttachment?: typeof contextAttachment;
 				prompt?: string;
 			};
 		};
 
-		expect(relayedMessage.payload.messageContext).toBe(messageContext);
+		expect(relayedMessage.payload.contextAttachment).toBe(contextAttachment);
 		expect(relayedMessage.payload.prompt).toBeUndefined();
 		expect(iframePostMessage).toHaveBeenCalledWith(
 			expect.objectContaining({

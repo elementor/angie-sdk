@@ -290,8 +290,8 @@ export class AngieMcpSdk {
   }
 
   /**
-   * Triggers Angie with a prompt, message context, or both
-   * @param request - The trigger request containing optional prompt and context
+   * Triggers Angie with a prompt, context attachment, or both
+   * @param request - The trigger request containing an optional prompt and context attachment
    * @returns Promise resolving to Angie's response
    */
   public async triggerAngie(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
@@ -325,7 +325,7 @@ export class AngieMcpSdk {
           requestId,
           prompt: request.prompt,
           options: request.options,
-          messageContext: request.messageContext,
+          contextAttachment: request.contextAttachment,
           context: {
             pageUrl: window.location.href,
             pageTitle: document.title,
