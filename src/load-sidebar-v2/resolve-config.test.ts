@@ -17,20 +17,34 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.container.styleTheme ).toBe( '' );
 		expect( config.container.persistOpenState ).toBe( true );
 		expect( config.container.chatToggleButton.enabled ).toBe( false );
+		expect( config.container.create ).toBe( true );
+		expect( config.container.injectDefaultCss ).toBe( true );
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
+	} );
+
+	it( 'should let the host own the container element and its styling', () => {
+		const config = resolveConfig( {
+			container: { create: false, injectDefaultCss: false },
+			host: { appId: 'my-elementor' },
+		}, DEFAULT_ENV );
+
+		expect( config.container.create ).toBe( false );
+		expect( config.container.injectDefaultCss ).toBe( false );
 	} );
 
 	it( 'should carry context providers through to the resolved callbacks', () => {
 		const getWebsiteContext = jest.fn( () => ( { appId: 'wordpress' } ) );
 		const getAnalyticsContext = jest.fn( () => ( { siteKey: 'abc' } ) );
+		const onToggle = jest.fn();
 
 		const config = resolveConfig( {
-			callbacks: { getAnalyticsContext, getWebsiteContext },
+			callbacks: { getAnalyticsContext, getWebsiteContext, onToggle },
 			host: { appId: 'wordpress' },
 		}, DEFAULT_ENV );
 
 		expect( config.callbacks.getWebsiteContext ).toBe( getWebsiteContext );
 		expect( config.callbacks.getAnalyticsContext ).toBe( getAnalyticsContext );
+		expect( config.callbacks.onToggle ).toBe( onToggle );
 	} );
 
 	it( 'should resolve floating-chat defaults', () => {

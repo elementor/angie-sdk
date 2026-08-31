@@ -28,6 +28,9 @@ export type ContainerConfig = {
 	id: string;
 	layout: LoadSidebarV2Layout;
 	styleTheme: LoadSidebarV2ContainerStyleTheme;
+	/** `false`: wait for a host-rendered element with this id. */
+	create: boolean;
+	injectDefaultCss: boolean;
 	persistOpenState: boolean;
 	resizable: boolean;
 	chatToggleButton: {
@@ -58,6 +61,8 @@ export type HostContextProvider = () =>
 
 export type CallbacksConfig = {
 	onClose?: () => void;
+	/** Sidebar only. Floating chat uses `onClose`. */
+	onToggle?: ( isOpen: boolean ) => void;
 	getExternalHeaders?: ExternalHeadersCallback;
 	getWebsiteContext?: HostContextProvider;
 	getAnalyticsContext?: HostContextProvider;

@@ -56,9 +56,9 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 |---------|---------|
 | `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
-| `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), resize/persist flags, chat toggle button |
+| `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `injectDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
-| `callbacks` | `onClose`, `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership)) |
+| `callbacks` | `onClose`, `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership)) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
@@ -176,7 +176,7 @@ loadSidebarV2(options)
   → boot guards (unique container.id / instanceId, one sidebar layout)
   → createAngieInstance + registerSdkInstance + startSdkMessageRouting (buffers MCP until iframe exists)
   → initHostApiBridge (postMessage API + V2 localStorage)
-  → ensureSidebarContainer
+  → ensureSidebarContainer (skipped when `container.create` is false)
   → layout strategy (initShell → open iframe → afterOpen)
   → sendEmbeddedConfig / sendWidgetConfig
 ```
@@ -222,6 +222,12 @@ types — it races the bridge and usually loses the payload the host meant to se
 | Host localStorage | Bridge (do not add a get/set listener) |
 
 Providers may be async. A throw becomes an error reply.
+
+### Host-owned container and styling
+
+- `container.create: false` — wait for a host-rendered element with that id (both layouts).
+- `container.injectDefaultCss: false` — skip the SDK sidebar stylesheet (sidebar layout). Replaces V1 `skipDefaultCss`.
+- `callbacks.onToggle(isOpen)` — every open/close (sidebar layout). Floating chat still uses `onClose`.
 
 ## Module map
 

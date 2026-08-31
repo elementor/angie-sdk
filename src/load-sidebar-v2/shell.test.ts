@@ -16,6 +16,8 @@ const baseContainer = {
 	id: 'angie-sidebar-container',
 	layout: 'sidebar' as const,
 	styleTheme: '' as const,
+	create: true,
+	injectDefaultCss: true,
 	persistOpenState: false,
 	resizable: false,
 	chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
@@ -69,5 +71,31 @@ describe( 'load-sidebar-v2/shell', () => {
 		expect( initAngieSidebar ).toHaveBeenCalledWith(
 			expect.not.objectContaining( { skipDefaultCss: true } ),
 		);
+	} );
+
+	it( 'should skip the default sidebar CSS when injectDefaultCss is false', () => {
+		initSidebarShell(
+			{ ...baseContainer, injectDefaultCss: false },
+			{ onClose: jest.fn() },
+		);
+
+		expect( initAngieSidebar ).toHaveBeenCalledWith(
+			expect.objectContaining( { skipDefaultCss: true } ),
+		);
+	} );
+
+	it( 'should forward every toggle to callbacks.onToggle', () => {
+		const onToggle = jest.fn();
+
+		initSidebarShell( baseContainer, { onToggle } );
+
+		const options = ( initAngieSidebar as jest.Mock ).mock.calls[ 0 ][ 0 ] as {
+			onToggle: ( isOpen: boolean ) => void;
+		};
+		options.onToggle( true );
+		options.onToggle( false );
+
+		expect( onToggle ).toHaveBeenNthCalledWith( 1, true );
+		expect( onToggle ).toHaveBeenNthCalledWith( 2, false );
 	} );
 } );

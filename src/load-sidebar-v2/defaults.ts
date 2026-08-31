@@ -14,6 +14,8 @@ export const DEFAULTS = {
 	container: {
 		layout: SIDEBAR_PRESET_DEFAULTS.layout,
 		styleTheme: SIDEBAR_PRESET_DEFAULTS.styleTheme,
+		create: SIDEBAR_PRESET_DEFAULTS.create,
+		injectDefaultCss: SIDEBAR_PRESET_DEFAULTS.injectDefaultCss,
 		persistOpenState: SIDEBAR_PRESET_DEFAULTS.persistOpenState,
 		resizable: SIDEBAR_PRESET_DEFAULTS.resizable,
 		chatToggleButtonSelector: DEFAULT_CHAT_TOGGLE_BUTTON_SELECTOR,

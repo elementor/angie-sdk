@@ -50,6 +50,26 @@ describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 		);
 	} );
 
+	it( 'should mount into a host container that only appears after boot', async () => {
+		setTimeout( () => {
+			const hostDrawer = document.createElement( 'div' );
+			hostDrawer.id = 'host-drawer';
+			hostDrawer.dataset.owner = 'host';
+			document.body.appendChild( hostDrawer );
+		}, 150 );
+
+		await bootSidebar( {
+			container: { id: 'host-drawer', layout: LAYOUT_SIDEBAR, create: false },
+			host: { appId: 'app-my-elementor', instanceId: 'my-elementor' },
+		} );
+
+		const drawers = document.querySelectorAll( '#host-drawer' );
+
+		expect( drawers ).toHaveLength( 1 );
+		expect( ( drawers[ 0 ] as HTMLElement ).dataset.owner ).toBe( 'host' );
+		expect( drawers[ 0 ].querySelector( 'iframe' ) ).not.toBeNull();
+	} );
+
 	it( 'should run a sidebar and a floating chat side by side', async () => {
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },
