@@ -156,7 +156,7 @@ export const startSdkMessageRouting = (): void => {
 				// timeout, and on mobile no iframe is ever opened, so a queued
 				// trigger would stall instead of reporting the failure.
 				try {
-					const { requestId, prompt, context, options } = event.data.payload;
+					const { requestId, prompt, context, contextAttachment, options } = event.data.payload;
 
 					if ( target.iframe ) {
 						target.iframe.contentWindow?.postMessage( {
@@ -165,6 +165,7 @@ export const startSdkMessageRouting = (): void => {
 								requestId,
 								prompt,
 								context,
+								contextAttachment,
 								options,
 							},
 						}, target.iframeUrlObject?.origin || '' );

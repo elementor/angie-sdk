@@ -1,6 +1,10 @@
 import { AngieMcpSdk, LAYOUT_SIDEBAR } from '../../dist/index.js';
 
 const DEFAULT_PROMPT = 'Help me improve the headline on this page for conversions.';
+const CONTEXT_ATTACHMENT = {
+	label: 'Current page headline',
+	content: 'Build faster with Angie',
+};
 
 const sdk = new AngieMcpSdk();
 const statusEl = document.getElementById( 'demo-status' );
@@ -32,6 +36,7 @@ const triggerWithPrompt = async ( { newChat = false, prompt = getPrompt() } = {}
 
 		const response = await sdk.triggerAngie( {
 			prompt,
+			contextAttachment: CONTEXT_ATTACHMENT,
 			options: {
 				newChat,
 				timeout: 30000,

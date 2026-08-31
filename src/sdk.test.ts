@@ -76,6 +76,39 @@ describe( 'sdk', () => {
 		expect( secondPostMessage ).not.toHaveBeenCalled();
 	} );
 
+	it( 'should relay a context attachment unchanged to the Angie iframe', () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const postMessage = attachIframe( instance );
+		const contextAttachment = {
+			label: 'Selected error',
+			content: 'Checkout failed with error code PAYMENT_DECLINED.',
+		};
+
+		registerForRouting( instance );
+		emitHostMessage( {
+			type: MessageEventType.SDK_TRIGGER_ANGIE,
+			payload: {
+				instanceId: 'aaaaaa',
+				requestId: 'request-123',
+				contextAttachment,
+			},
+		} );
+
+		const relayedMessage = postMessage.mock.calls[ 0 ][ 0 ] as {
+			payload: {
+				contextAttachment?: typeof contextAttachment;
+				prompt?: string;
+			};
+		};
+
+		expect( relayedMessage.payload.contextAttachment ).toBe( contextAttachment );
+		expect( relayedMessage.payload.prompt ).toBeUndefined();
+	} );
+
 	it( 'should not forward client creation to a sibling while the addressed instance is still booting', () => {
 		const first = createAngieInstance( {
 			containerId: 'container-a',

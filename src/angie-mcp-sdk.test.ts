@@ -3,7 +3,7 @@ import { AngieMcpSdk, resetPromptHashListenersForTests } from './angie-mcp-sdk';
 import { appState } from './config';
 import * as instanceRegistry from './instance-registry';
 import type { AngieServerConfig, ServerRegistration, AngieDetectionResult, ClientCreationResponse } from './types';
-import { AngieServerType } from './types';
+import { AngieServerType, MessageEventType } from './types';
 
 // Mock dependencies
 jest.mock('./angie-detector');
@@ -213,6 +213,52 @@ describe('AngieMcpSdk', () => {
 
       // Assert
       expect(result).toBe(false);
+    });
+  });
+
+  describe('triggerAngie', () => {
+    it('should send a context attachment unchanged without requiring a prompt', async () => {
+      const contextAttachment = {
+        label: 'Selected error',
+        content: 'Checkout failed with error code PAYMENT_DECLINED.',
+      };
+      const postMessageSpy = jest.spyOn(window, 'postMessage').mockImplementation((message: any) => {
+        if (message?.type === MessageEventType.SDK_TRIGGER_ANGIE) {
+          window.dispatchEvent(new MessageEvent('message', {
+            data: {
+              type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+              payload: {
+                success: true,
+                requestId: message.payload.requestId,
+              },
+            },
+          }));
+        }
+      });
+      mockAngieDetector.isReady.mockReturnValue(true);
+
+      await sdk.triggerAngie({
+        contextAttachment,
+        context: {
+          source: 'checkout-plugin',
+          pageUrl: 'https://example.com/checkout',
+          pageTitle: 'Checkout',
+        },
+      });
+
+      const triggerMessage = postMessageSpy.mock.calls.find(
+        ([message]) => message.type === MessageEventType.SDK_TRIGGER_ANGIE
+      )?.[0];
+
+      expect(triggerMessage.payload.prompt).toBeUndefined();
+      expect(triggerMessage.payload.contextAttachment).toBe(contextAttachment);
+      expect(triggerMessage.payload.context).toEqual({
+        source: 'checkout-plugin',
+        pageUrl: 'https://example.com/checkout',
+        pageTitle: 'Checkout',
+      });
+
+      postMessageSpy.mockRestore();
     });
   });
 
