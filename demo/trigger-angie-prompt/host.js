@@ -106,6 +106,74 @@ document.querySelectorAll( '[data-prompt-chip]' ).forEach( ( chip ) => {
 	} );
 } );
 
+// 3. Inject context on the fly — the field value rides the next message
+// under `context.consumer`, so Angie doesn't need a "read current value" tool.
+const fieldInput = document.getElementById( 'demo-field-input' );
+
+const injectFieldContext = async () => {
+	try {
+		setStatus( 'Waiting for Angie…' );
+		await sdk.waitForReady();
+
+		const value = fieldInput?.value?.trim() || '';
+		const response = await sdk.triggerAngie( {
+			options: { newChat: true, timeout: 30000 },
+			context: {
+				source: 'demo-field-context',
+				selectedField: { name: 'headline', value },
+			},
+		} );
+
+		if ( response.success ) {
+			setStatus( 'Angie opened with the field in context. Ask it about the headline — no read tool needed.', 'success' );
+			return;
+		}
+
+		setStatus( response.error || 'Angie trigger failed.', 'error' );
+	} catch ( error ) {
+		setStatus( error instanceof Error ? error.message : 'Unknown error', 'error' );
+	}
+};
+
+document.getElementById( 'demo-inject-context' )?.addEventListener( 'click', () => {
+	void injectFieldContext();
+} );
+
+// 4. Conversation starters at trigger time — set the new chat's starters
+// from the host, per entry point, instead of only at loadSidebar.
+const TEXT_EDITING_STARTERS = {
+	items: [
+		{ label: 'Make it longer', value: 'Make this text longer.' },
+		{ label: 'Make it shorter', value: 'Make this text shorter.' },
+		{ label: 'Fix grammar', value: 'Fix the grammar in this text.' },
+	],
+};
+
+const triggerWithStarters = async () => {
+	try {
+		setStatus( 'Waiting for Angie…' );
+		await sdk.waitForReady();
+
+		const response = await sdk.triggerAngie( {
+			options: { newChat: true, timeout: 30000 },
+			suggestions: TEXT_EDITING_STARTERS,
+		} );
+
+		if ( response.success ) {
+			setStatus( 'New chat opened with custom conversation starters.', 'success' );
+			return;
+		}
+
+		setStatus( response.error || 'Angie trigger failed.', 'error' );
+	} catch ( error ) {
+		setStatus( error instanceof Error ? error.message : 'Unknown error', 'error' );
+	}
+};
+
+document.getElementById( 'demo-trigger-starters' )?.addEventListener( 'click', () => {
+	void triggerWithStarters();
+} );
+
 sdk.loadSidebarV2( {
 	host: {
 		appId: 'demo-trigger-angie-prompt',

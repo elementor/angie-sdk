@@ -103,12 +103,22 @@ export interface ContextAttachment {
   content: string;
 }
 
+export interface PromptSuggestion {
+  label: string;
+  value: string;
+  autoSend?: boolean;
+  color?: string;
+  isNew?: boolean;
+  requiresPrompt?: string;
+}
+
 export interface AngieTriggerRequest {
   prompt?: string;
   context?: {
     source?: string;
   } & Record<string, unknown>;
   contextAttachment?: ContextAttachment;
+  suggestions?: { items: PromptSuggestion[] };
   options?: {
     timeout?: number;
     newChat?: boolean;
