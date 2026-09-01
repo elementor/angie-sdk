@@ -37,7 +37,7 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 				layout: 'sidebar',
 				styleTheme: 'wordpress',
 				create: true,
-				injectDefaultCss: true,
+				skipDefaultCss: false,
 				persistOpenState: true,
 				resizable: true,
 				chatToggleButton: {

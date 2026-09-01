@@ -17,7 +17,7 @@ const baseContainer = {
 	layout: 'sidebar' as const,
 	styleTheme: '' as const,
 	create: true,
-	injectDefaultCss: true,
+	skipDefaultCss: false,
 	persistOpenState: false,
 	resizable: false,
 	chatToggleButton: { enabled: false, selector: '#angie-widget-toggle' },
@@ -73,9 +73,9 @@ describe( 'load-sidebar-v2/shell', () => {
 		);
 	} );
 
-	it( 'should skip the default sidebar CSS when injectDefaultCss is false', () => {
+	it( 'should skip the default sidebar CSS when skipDefaultCss is true', () => {
 		initSidebarShell(
-			{ ...baseContainer, injectDefaultCss: false },
+			{ ...baseContainer, skipDefaultCss: true },
 			{ onClose: jest.fn() },
 		);
 

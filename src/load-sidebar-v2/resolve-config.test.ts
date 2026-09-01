@@ -18,18 +18,18 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.container.persistOpenState ).toBe( true );
 		expect( config.container.chatToggleButton.enabled ).toBe( false );
 		expect( config.container.create ).toBe( true );
-		expect( config.container.injectDefaultCss ).toBe( true );
+		expect( config.container.skipDefaultCss ).toBe( false );
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
 	it( 'should let the host own the container element and its styling', () => {
 		const config = resolveConfig( {
-			container: { create: false, injectDefaultCss: false },
+			container: { create: false, skipDefaultCss: true },
 			host: { appId: 'my-elementor' },
 		}, DEFAULT_ENV );
 
 		expect( config.container.create ).toBe( false );
-		expect( config.container.injectDefaultCss ).toBe( false );
+		expect( config.container.skipDefaultCss ).toBe( true );
 	} );
 
 	it( 'should carry context providers through to the resolved callbacks', () => {

@@ -48,7 +48,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 			layout,
 			styleTheme: container.styleTheme ?? layoutDefaults.styleTheme,
 			create: container.create ?? layoutDefaults.create,
-			injectDefaultCss: container.injectDefaultCss ?? layoutDefaults.injectDefaultCss,
+			skipDefaultCss: container.skipDefaultCss ?? layoutDefaults.skipDefaultCss,
 			persistOpenState: container.persistOpenState ?? layoutDefaults.persistOpenState,
 			resizable: container.resizable ?? layoutDefaults.resizable,
 			chatToggleButton: {

@@ -4,7 +4,7 @@ export const FLOATING_CHAT_PRESET_DEFAULTS = {
 	layout: LAYOUT_FLOATING_CHAT,
 	styleTheme: '' as const,
 	create: true,
-	injectDefaultCss: true,
+	skipDefaultCss: false,
 	persistOpenState: false,
 	resizable: false,
 	chatToggleButtonEnabled: true,

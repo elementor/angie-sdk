@@ -4,7 +4,7 @@ export const SIDEBAR_PRESET_DEFAULTS = {
 	layout: LAYOUT_SIDEBAR,
 	styleTheme: '' as const,
 	create: true,
-	injectDefaultCss: true,
+	skipDefaultCss: false,
 	persistOpenState: true,
 	resizable: true,
 	chatToggleButtonEnabled: false,

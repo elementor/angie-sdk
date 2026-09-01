@@ -30,7 +30,7 @@ export type ContainerConfig = {
 	styleTheme: LoadSidebarV2ContainerStyleTheme;
 	/** `false`: wait for a host-rendered element with this id. */
 	create: boolean;
-	injectDefaultCss: boolean;
+	skipDefaultCss: boolean;
 	persistOpenState: boolean;
 	resizable: boolean;
 	chatToggleButton: {

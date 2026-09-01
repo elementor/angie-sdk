@@ -56,7 +56,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 |---------|---------|
 | `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
-| `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `injectDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
+| `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
 | `callbacks` | `onClose`, `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership)) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
@@ -226,7 +226,7 @@ Providers may be async. A throw becomes an error reply.
 ### Host-owned container and styling
 
 - `container.create: false` — wait for a host-rendered element with that id (both layouts).
-- `container.injectDefaultCss: false` — skip the SDK sidebar stylesheet (sidebar layout). Replaces V1 `skipDefaultCss`.
+- `container.skipDefaultCss: true` — skip the SDK sidebar stylesheet (sidebar layout). Same meaning as V1 `skipDefaultCss`.
 - `callbacks.onToggle(isOpen)` — every open/close (sidebar layout). Floating chat still uses `onClose`.
 
 ## Module map
