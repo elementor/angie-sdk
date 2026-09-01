@@ -478,14 +478,65 @@ describe('AngieMcpSdk', () => {
       expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
     });
 
-    it('should reset queue on refresh ping with no instanceId', () => {
-      const event = {
-        data: {
-          type: 'sdk-angie-refresh-ping',
-        },
-      } as unknown as MessageEvent<any>;
+    it('should ignore a refresh ping sent by another instance iframe', () => {
+      const ownWindow = {} as Window;
+      const siblingWindow = {} as Window;
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframe: { contentWindow: ownWindow } as HTMLIFrameElement,
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
 
-      refreshPingHandler(event);
+      refreshPingHandler( {
+        origin: 'https://angie.elementor.com',
+        source: siblingWindow,
+        data: { type: 'sdk-angie-refresh-ping', payload: { timestamp: 1 } },
+      } as unknown as MessageEvent<any> );
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should accept an id-less refresh ping sent by its own iframe', () => {
+      const ownWindow = {} as Window;
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframe: { contentWindow: ownWindow } as HTMLIFrameElement,
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+
+      refreshPingHandler( {
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: { type: 'sdk-angie-refresh-ping', payload: { timestamp: 1 } },
+      } as unknown as MessageEvent<any> );
+
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
+    });
+
+    it('should ignore an unverifiable id-less refresh ping while siblings are registered', () => {
+      jest.spyOn( instanceRegistry, 'getInstanceCount' ).mockReturnValue( 2 );
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframe: null,
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+
+      refreshPingHandler( {
+        origin: 'https://angie.elementor.com',
+        data: { type: 'sdk-angie-refresh-ping', payload: { timestamp: 1 } },
+      } as unknown as MessageEvent<any> );
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should still accept an unverifiable id-less refresh ping as the only instance', () => {
+      jest.spyOn( instanceRegistry, 'getInstanceCount' ).mockReturnValue( 1 );
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframe: null,
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+
+      refreshPingHandler( {
+        origin: 'https://angie.elementor.com',
+        data: { type: 'sdk-angie-refresh-ping', payload: { timestamp: 1 } },
+      } as unknown as MessageEvent<any> );
 
       expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
     });

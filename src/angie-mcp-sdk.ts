@@ -2,14 +2,14 @@ import type { Logger } from '@elementor/angie-logger';
 import { AngieDetector } from './angie-detector';
 import { BrowserContextTransport } from './browser-context-transport';
 import { ClientManager } from './client-manager';
-import { appState, DEFAULT_CONTAINER_ID } from './config';
+import { appState, DEFAULT_CONTAINER_ID, type AppState } from './config';
 import { createChildLogger } from './logger';
 import { openIframe } from './iframe';
 import { addLocalStorageListener } from './localStorage';
 import { handlePostConsentRedirect } from './oauth';
 import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
-import { getInstanceById } from './instance-registry';
+import { getInstanceById, getInstanceCount } from './instance-registry';
 import { generateInstanceId } from './utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
@@ -144,21 +144,35 @@ export class AngieMcpSdk {
     return this.sidebarV2BootPromise;
   }
 
-  // listen to MessageEventType.SDK_ANGIE_READY_PING
+  // Id-less pings: match event.source so a sibling iframe does not re-register servers.
+  private isRefreshPingForThisInstance( event: MessageEvent, instance: AppState | null ): boolean {
+    const pingInstanceId = event.data?.payload?.instanceId;
+
+    if ( pingInstanceId ) {
+      return pingInstanceId === this.instanceId;
+    }
+
+    const contentWindow = instance?.iframe?.contentWindow;
+
+    if ( contentWindow && event.source ) {
+      return event.source === contentWindow;
+    }
+
+    // Cannot match source (V1, or iframe/source missing). Safe only with no sibling.
+    return getInstanceCount() < 2;
+  }
 
   private setupReRegistrationHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_ANGIE_REFRESH_PING) {
-        const iframeOrigin = getInstanceById( this.instanceId )?.iframeUrlObject?.origin;
+        const instance = getInstanceById( this.instanceId );
+        const iframeOrigin = instance?.iframeUrlObject?.origin;
         if ( iframeOrigin && event.origin !== iframeOrigin ) {
           this.logger.log(`Ignoring refresh ping from unexpected origin. Event origin: ${event.origin}, iframe origin: ${iframeOrigin}`);
           return;
         }
 
-        const pingInstanceId = event.data?.payload?.instanceId;
-        // Embedded Angie does not send instanceId yet; absent id keeps legacy behavior.
-        if (pingInstanceId && pingInstanceId !== this.instanceId) {
-          this.logger.log(`Ignoring refresh ping for different instance. Ping instanceId: ${pingInstanceId}, this instanceId: ${this.instanceId}`);
+        if ( ! this.isRefreshPingForThisInstance( event, instance ) ) {
           return;
         }
 
