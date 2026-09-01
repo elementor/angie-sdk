@@ -2,8 +2,8 @@ import { AngieMcpSdk, LAYOUT_SIDEBAR } from '../../dist/index.js';
 
 const DEFAULT_PROMPT = 'Help me improve the headline on this page for conversions.';
 const CONTEXT_ATTACHMENT = {
-	label: 'Current page headline',
-	content: 'Build faster with Angie',
+	label: 'Selected heading',
+	content: 'Element type: heading (h1). Current text: "Get started today". Section: pricing hero. Goal: more trial sign-ups.',
 };
 
 const sdk = new AngieMcpSdk();
@@ -36,7 +36,6 @@ const triggerWithPrompt = async ( { newChat = false, prompt = getPrompt() } = {}
 
 		const response = await sdk.triggerAngie( {
 			prompt,
-			contextAttachment: CONTEXT_ATTACHMENT,
 			options: {
 				newChat,
 				timeout: 30000,
@@ -54,12 +53,45 @@ const triggerWithPrompt = async ( { newChat = false, prompt = getPrompt() } = {}
 	}
 };
 
+const triggerWithContextAttachment = async () => {
+	try {
+		setStatus( 'Waiting for Angie…' );
+		await sdk.waitForReady();
+
+		const prompt = getPrompt();
+		const response = await sdk.triggerAngie( {
+			prompt,
+			contextAttachment: CONTEXT_ATTACHMENT,
+			options: {
+				newChat: true,
+				timeout: 30000,
+			},
+		} );
+
+		if ( response.success ) {
+			setStatus(
+				`Prompt and context attachment sent. Prompt: "${ prompt }". Label: "${ CONTEXT_ATTACHMENT.label }". Content: "${ CONTEXT_ATTACHMENT.content }". Request ID: ${ response.requestId }`,
+				'success'
+			);
+			return;
+		}
+
+		setStatus( response.error || 'Context attachment trigger failed.', 'error' );
+	} catch ( error ) {
+		setStatus( error instanceof Error ? error.message : 'Unknown error', 'error' );
+	}
+};
+
 document.getElementById( 'demo-trigger-fill' )?.addEventListener( 'click', () => {
 	void triggerWithPrompt();
 } );
 
 document.getElementById( 'demo-trigger-new-chat' )?.addEventListener( 'click', () => {
 	void triggerWithPrompt( { newChat: true } );
+} );
+
+document.getElementById( 'demo-trigger-context-attachment' )?.addEventListener( 'click', () => {
+	void triggerWithContextAttachment();
 } );
 
 document.querySelectorAll( '[data-prompt-chip]' ).forEach( ( chip ) => {
@@ -95,6 +127,7 @@ sdk.loadSidebarV2( {
 	widgetConfig: {
 		title: 'Angie',
 		subtitle: 'Prompt trigger demo',
+		localServers: { skipLoading: true },
 		suggestions: {
 			items: [
 				{
