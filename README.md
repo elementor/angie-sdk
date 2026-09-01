@@ -185,10 +185,20 @@ interface ContextAttachment {
   content: string;
 }
 
+interface PromptSuggestion {
+  label: string;
+  value: string;
+  autoSend?: boolean;
+  color?: string;
+  isNew?: boolean;
+  requiresPrompt?: string;
+}
+
 interface AngieTriggerRequest {
   prompt?: string;
   context?: { source?: string } & Record<string, unknown>;
   contextAttachment?: ContextAttachment;
+  suggestions?: { items: PromptSuggestion[] };
   options?: {
     timeout?: number;
     newChat?: boolean;
@@ -220,6 +230,12 @@ await sdk.triggerAngie({
     label: 'Current SEO report',
     content: 'The page is missing a meta description.',
   },
+  suggestions: {
+    items: [
+      { label: 'Add meta description', value: 'Add a meta description to this page', autoSend: true },
+      { label: 'Improve title', value: 'Suggest a better SEO title', isNew: true },
+    ],
+  },
   options: {
     timeout: 30000, // Optional: 30 seconds timeout (default: 30000)
     newChat: true,
@@ -243,6 +259,7 @@ await sdk.triggerAngie({ contextAttachment });
 **Request fields:**
 - `prompt`: Optional prompt text.
 - `contextAttachment`: Optional labeled content attached to the next submitted user message. It can be used without `prompt` and is not rendered as part of the message text.
+- `suggestions`: Optional list of prompt suggestions shown to the user. Each item has a `label` (displayed text) and `value` (prompt sent when selected); optional `autoSend` submits immediately, `color` sets the chip color, `isNew` shows a "new" badge, and `requiresPrompt` gates the suggestion behind a given prompt.
 - `context`: Optional integration metadata. The SDK adds the current `pageUrl` and `pageTitle`; supplied values can override them. This legacy field is not model-visible message content.
 - `options.timeout`: How long to wait for Angie response in milliseconds (default: `30000`).
 - `options.newChat`: When `true`, clears the current conversation and opens a fresh chat.
