@@ -109,6 +109,32 @@ describe( 'sdk', () => {
 		expect( relayedMessage.payload.prompt ).toBeUndefined();
 	} );
 
+	it( 'should relay conversation-starter suggestions to the Angie iframe', () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const postMessage = attachIframe( instance );
+		const suggestions = { items: [ { label: 'Make it longer', value: 'Make it longer' } ] };
+
+		registerForRouting( instance );
+		emitHostMessage( {
+			type: MessageEventType.SDK_TRIGGER_ANGIE,
+			payload: {
+				instanceId: 'aaaaaa',
+				requestId: 'request-123',
+				suggestions,
+			},
+		} );
+
+		const relayedMessage = postMessage.mock.calls[ 0 ][ 0 ] as {
+			payload: { suggestions?: typeof suggestions };
+		};
+
+		expect( relayedMessage.payload.suggestions ).toBe( suggestions );
+	} );
+
 	it( 'should not forward client creation to a sibling while the addressed instance is still booting', () => {
 		const first = createAngieInstance( {
 			containerId: 'container-a',
