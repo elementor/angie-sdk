@@ -26,10 +26,13 @@ export const initSidebarShell = (
 
 	initAngieSidebar( {
 		instance,
+		skipDefaultCss: container.skipDefaultCss,
 		onToggle: ( isOpen ) => {
 			if ( toggleButtonSelector ) {
 				syncToggleButton( toggleButtonSelector, isOpen );
 			}
+
+			callbacks.onToggle?.( isOpen );
 
 			if ( ! isOpen && callbacks.onClose ) {
 				callbacks.onClose();

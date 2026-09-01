@@ -36,6 +36,8 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 				id: 'angie-sidebar-container',
 				layout: 'sidebar',
 				styleTheme: 'wordpress',
+				create: true,
+				skipDefaultCss: false,
 				persistOpenState: true,
 				resizable: true,
 				chatToggleButton: {

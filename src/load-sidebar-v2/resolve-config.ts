@@ -47,6 +47,8 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 			id: container.id?.trim() || DEFAULT_CONTAINER_ID,
 			layout,
 			styleTheme: container.styleTheme ?? layoutDefaults.styleTheme,
+			create: container.create ?? layoutDefaults.create,
+			skipDefaultCss: container.skipDefaultCss ?? layoutDefaults.skipDefaultCss,
 			persistOpenState: container.persistOpenState ?? layoutDefaults.persistOpenState,
 			resizable: container.resizable ?? layoutDefaults.resizable,
 			chatToggleButton: {
@@ -62,6 +64,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		},
 		callbacks: {
 			onClose: callbacks.onClose,
+			onToggle: callbacks.onToggle,
 			getExternalHeaders: callbacks.getExternalHeaders,
 			getWebsiteContext: callbacks.getWebsiteContext,
 			getAnalyticsContext: callbacks.getAnalyticsContext,

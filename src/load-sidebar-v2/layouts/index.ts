@@ -1,4 +1,5 @@
 import { initFloatingChatLayout } from '../chat-toggle/init-floating-chat-layout';
+import { prepareChatWidgetContainer } from '../chat-toggle/widget-ui';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR, type LoadSidebarV2Layout, type ResolvedConfigV2 } from '../config';
 import type { AppState } from '../../config';
 import type { Env } from '../env';
@@ -44,6 +45,10 @@ const floatingChatStrategy: LayoutStrategy = {
 			injectToggleButton: chatToggleButton.enabled,
 			instance,
 		} );
+	},
+	// `create: false`: host node may appear only after openIframe waits.
+	afterOpenIframe: ( { config } ) => {
+		prepareChatWidgetContainer( config.container.id );
 	},
 };
 

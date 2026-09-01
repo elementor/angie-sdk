@@ -83,7 +83,10 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		instance,
 	} );
 
-	ensureSidebarContainer( config.container.id, env.isRTL );
+	// `create: false`: host owns the element; openIframe waits for it.
+	if ( config.container.create ) {
+		ensureSidebarContainer( config.container.id, env.isRTL );
+	}
 
 	const strategy = LAYOUT_STRATEGIES[ config.container.layout ];
 	const bootContext = { config, env, instance };

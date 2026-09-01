@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { bootSidebar } from './boot-sidebar';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
-import { CHAT_WIDGET_HIDDEN_CLASS } from './chat-toggle/constants';
+import { CHAT_WIDGET_CONTAINER_CLASS, CHAT_WIDGET_HIDDEN_CLASS } from './chat-toggle/constants';
 import { resetHostApiBridgeForTests } from './host-api-bridge';
 import { resetHostMessageRouterForTests } from './host-message-router';
 import { resetChatShellForTests } from './chat-toggle/chat-shell';
@@ -48,6 +48,55 @@ describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 				return { iframe, iframeUrlObject: new URL( ANGIE_ORIGIN ) };
 			},
 		);
+	} );
+
+	it( 'should mount into a host container that only appears after boot', async () => {
+		setTimeout( () => {
+			const hostDrawer = document.createElement( 'div' );
+			hostDrawer.id = 'host-drawer';
+			hostDrawer.dataset.owner = 'host';
+			document.body.appendChild( hostDrawer );
+		}, 150 );
+
+		await bootSidebar( {
+			container: { id: 'host-drawer', layout: LAYOUT_SIDEBAR, create: false },
+			host: { appId: 'app-my-elementor', instanceId: 'my-elementor' },
+		} );
+
+		const drawers = document.querySelectorAll( '#host-drawer' );
+
+		expect( drawers ).toHaveLength( 1 );
+		expect( ( drawers[ 0 ] as HTMLElement ).dataset.owner ).toBe( 'host' );
+		expect( drawers[ 0 ].querySelector( 'iframe' ) ).not.toBeNull();
+	} );
+
+	it( 'should mount floating chat into a host container that only appears after boot', async () => {
+		setTimeout( () => {
+			const hostChat = document.createElement( 'div' );
+			hostChat.id = 'host-chat';
+			hostChat.dataset.owner = 'host';
+			document.body.appendChild( hostChat );
+		}, 150 );
+
+		await bootSidebar( {
+			container: {
+				id: 'host-chat',
+				layout: LAYOUT_FLOATING_CHAT,
+				create: false,
+				chatToggleButton: { enabled: false, selector: '#host-chat-toggle' },
+			},
+			host: { appId: 'app-host-chat', instanceId: 'host-chat' },
+		} );
+
+		const chats = document.querySelectorAll( '#host-chat' );
+		const hostEl = chats[ 0 ] as HTMLElement;
+
+		expect( chats ).toHaveLength( 1 );
+		expect( hostEl.dataset.owner ).toBe( 'host' );
+		expect( hostEl.querySelector( 'iframe' ) ).not.toBeNull();
+		expect( hostEl.classList.contains( CHAT_WIDGET_CONTAINER_CLASS ) ).toBe( true );
+		expect( hostEl.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) ).toBe( true );
+		expect( hostEl.getAttribute( 'role' ) ).toBe( 'complementary' );
 	} );
 
 	it( 'should run a sidebar and a floating chat side by side', async () => {
