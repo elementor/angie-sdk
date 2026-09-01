@@ -1,9 +1,42 @@
 import { AngieMcpSdk, LAYOUT_SIDEBAR } from '../../dist/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const DEFAULT_PROMPT = 'Help me improve the headline on this page for conversions.';
+const PAGE_SERVER_NAME = 'demo-page-heading';
 const CONTEXT_ATTACHMENT = {
 	label: 'Selected heading',
 	content: 'Element type: heading (h1). Current text: "Get started today". Section: pricing hero. Goal: more trial sign-ups.',
+};
+
+const createPageHeadingServer = () => {
+	const server = new McpServer(
+		{
+			name: PAGE_SERVER_NAME,
+			version: '1.0.0',
+			title: 'Page heading',
+		},
+		{
+			capabilities: {
+				tools: {},
+			},
+			instructions: 'Use get-selected-heading to read the heading the user is editing.',
+		}
+	);
+
+	server.registerTool(
+		'get-selected-heading',
+		{
+			description: 'Read the selected heading on this demo page: element type, current text, section, and goal.',
+			annotations: {
+				readOnlyHint: true,
+			},
+		},
+		async () => ( {
+			content: [ { type: 'text', text: CONTEXT_ATTACHMENT.content } ],
+		} )
+	);
+
+	return server;
 };
 
 const sdk = new AngieMcpSdk();
@@ -127,6 +160,7 @@ sdk.loadSidebarV2( {
 	widgetConfig: {
 		title: 'Angie',
 		subtitle: 'Prompt trigger demo',
+		featuredMcpServer: PAGE_SERVER_NAME,
 		localServers: { skipLoading: true },
 		suggestions: {
 			items: [
@@ -141,8 +175,18 @@ sdk.loadSidebarV2( {
 			],
 		},
 	},
-} ).then( () => {
-	setStatus( 'Angie sidebar loaded. Use the controls or hash links below.' );
-} ).catch( ( error ) => {
-	setStatus( error instanceof Error ? error.message : 'Failed to load Angie', 'error' );
-} );
+} ).then( () => sdk.waitForReady() )
+	.then( () => sdk.registerServer( {
+		name: PAGE_SERVER_NAME,
+		version: '1.0.0',
+		description: 'Selected heading on this demo page',
+		server: createPageHeadingServer(),
+		capabilities: {
+			tools: {},
+		},
+	} ) )
+	.then( () => {
+		setStatus( 'Angie sidebar loaded. Use the controls or hash links below.' );
+	} ).catch( ( error ) => {
+		setStatus( error instanceof Error ? error.message : 'Failed to load Angie', 'error' );
+	} );
