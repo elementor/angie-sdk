@@ -63,6 +63,8 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		callbacks: {
 			onClose: callbacks.onClose,
 			getExternalHeaders: callbacks.getExternalHeaders,
+			getWebsiteContext: callbacks.getWebsiteContext,
+			getAnalyticsContext: callbacks.getAnalyticsContext,
 		},
 		widgetConfig: resolveWidgetConfig( layout, options.widgetConfig ),
 	};

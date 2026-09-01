@@ -3,6 +3,7 @@ export {
 	LAYOUT_FLOATING_CHAT,
 	LAYOUT_SIDEBAR,
 	type ExternalHeadersCallback,
+	type HostContextProvider,
 	type LoadSidebarV2Options,
 } from './load-sidebar-v2/config';
 export { AngieDetector } from './angie-detector';

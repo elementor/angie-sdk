@@ -1,7 +1,7 @@
 import { sendErrorMessage, sendSuccessMessage } from '../utils';
 import { HostLocalStorageEventType } from '../types';
 import type { AppState } from '../config';
-import type { ExternalHeadersCallback, HostConfig } from './config';
+import type { ExternalHeadersCallback, HostConfig, HostContextProvider } from './config';
 
 export const GET_EXTERNAL_HEADERS_MESSAGE_TYPE = 'GET_EXTERNAL_HEADERS';
 
@@ -13,6 +13,8 @@ type InitHostApiBridgeArgs = {
 	iframeOrigin: string;
 	host?: HostConfig;
 	getExternalHeaders?: ExternalHeadersCallback;
+	getWebsiteContext?: HostContextProvider;
+	getAnalyticsContext?: HostContextProvider;
 	instance: AppState;
 };
 
@@ -65,6 +67,26 @@ export const buildAnalyticsContextResponse = ( host?: HostConfig ) => ( {
 		...host?.analytics,
 	},
 } );
+
+// First reply on the port wins. Do not add a host listener for these types.
+const respondWithContext = async (
+	port: MessagePort,
+	provider: HostContextProvider | undefined,
+	buildFallback: () => { payload: Record<string, unknown> },
+): Promise<void> => {
+	if ( ! provider ) {
+		sendSuccessMessage( port, buildFallback() );
+		return;
+	}
+
+	try {
+		sendSuccessMessage( port, { payload: await provider() } );
+	} catch ( error ) {
+		sendErrorMessage( port, {
+			message: error instanceof Error ? error.message : String( error ),
+		} );
+	}
+};
 
 const handleGetExternalHeaders = async (
 	port: MessagePort,
@@ -142,7 +164,11 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 			if ( ! port ) {
 				return;
 			}
-			sendSuccessMessage( port, buildWebsiteContextResponse( bridgeConfig.host ) );
+			await respondWithContext(
+				port,
+				bridgeConfig.getWebsiteContext,
+				() => buildWebsiteContextResponse( bridgeConfig.host ),
+			);
 			break;
 		}
 
@@ -150,7 +176,11 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 			if ( ! port ) {
 				return;
 			}
-			sendSuccessMessage( port, buildAnalyticsContextResponse( bridgeConfig.host ) );
+			await respondWithContext(
+				port,
+				bridgeConfig.getAnalyticsContext,
+				() => buildAnalyticsContextResponse( bridgeConfig.host ),
+			);
 			break;
 		}
 
