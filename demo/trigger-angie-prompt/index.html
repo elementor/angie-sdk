@@ -147,8 +147,69 @@ await sdk.triggerAngie({
 &lt;/a&gt;</pre>
         </section>
 
+        <section class="demo-card" aria-labelledby="context-heading">
+          <h2 id="context-heading">3. Inject context on the fly</h2>
+          <p class="demo-card-lead">
+            Pass a <code>context</code> object to <code>triggerAngie</code> and it rides the next
+            message under a reserved <code>context.consumer</code> key — so Angie already knows the
+            value instead of calling a "read current value" tool. Everything you send goes in as-is.
+          </p>
+
+          <div class="demo-field">
+            <label for="demo-field-input">Headline field (the value your control holds)</label>
+            <textarea id="demo-field-input" spellcheck="false">Build faster with Angie</textarea>
+          </div>
+
+          <div class="demo-actions">
+            <button type="button" class="demo-btn demo-btn-primary" id="demo-inject-context">
+              Open Angie with this field as context
+            </button>
+          </div>
+
+          <p class="demo-card-lead">
+            Then ask Angie anything about "this field" — the value is already in
+            <code>context.consumer.selectedField</code> on the request.
+          </p>
+
+          <pre class="demo-code-block" aria-hidden="true">await sdk.waitForReady();
+await sdk.triggerAngie({
+  options: { newChat: true },
+  context: {
+    source: 'demo-field-context',
+    selectedField: { name: 'headline', value: fieldValue },
+  },
+});</pre>
+        </section>
+
+        <section class="demo-card" aria-labelledby="starters-heading">
+          <h2 id="starters-heading">4. Conversation starters at trigger time</h2>
+          <p class="demo-card-lead">
+            Pass <code>suggestions</code> to <code>triggerAngie</code> to set the conversation
+            starters for the new chat — different entry points can offer different starters,
+            not only the ones configured at <code>loadSidebar</code>.
+          </p>
+
+          <div class="demo-actions">
+            <button type="button" class="demo-btn demo-btn-primary" id="demo-trigger-starters">
+              New chat with text-editing starters
+            </button>
+          </div>
+
+          <pre class="demo-code-block" aria-hidden="true">await sdk.waitForReady();
+await sdk.triggerAngie({
+  options: { newChat: true },
+  suggestions: {
+    items: [
+      { label: 'Make it longer',  value: 'Make this text longer.' },
+      { label: 'Make it shorter', value: 'Make this text shorter.' },
+      { label: 'Fix grammar',     value: 'Fix the grammar in this text.' },
+    ],
+  },
+});</pre>
+        </section>
+
         <section class="demo-card" aria-labelledby="status-heading">
-          <h2 id="status-heading">3. Status</h2>
+          <h2 id="status-heading">5. Status</h2>
           <p class="demo-card-lead">
             Last result from the controls above. Hash links are handled inside the SDK, so they do
             not report here.
