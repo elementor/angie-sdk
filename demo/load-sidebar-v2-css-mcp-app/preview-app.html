@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>CSS preview</title>
+<style>
+	:root {
+		--card-bg: var( --color-background-primary, #ffffff );
+		--card-bg-soft: var( --color-background-secondary, #f9fafb );
+		--card-border: var( --color-border-primary, #e5e7eb );
+		--text: var( --color-text-primary, #111827 );
+		--text-soft: var( --color-text-secondary, #6b7280 );
+		--btn-bg: var( --color-background-inverse, #111827 );
+		--btn-text: var( --color-text-inverse, #ffffff );
+		--danger: var( --color-text-danger, #b91c1c );
+		--success: var( --color-text-success, #15803d );
+		--mono: var( --font-mono, ui-monospace, SFMono-Regular, Menlo, monospace );
+		--sans: var( --font-sans, system-ui, -apple-system, sans-serif );
+	}
+
+	* { box-sizing: border-box; }
+
+	html, body { margin: 0; padding: 0; background: transparent; }
+
+	body {
+		font-family: var( --sans );
+		color: var( --text );
+		font-size: 13px;
+	}
+
+	.card {
+		background: var( --card-bg );
+		border: 1px solid var( --card-border );
+		border-radius: 12px;
+		overflow: hidden;
+	}
+
+	.card-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 14px;
+	}
+
+	.glyph {
+		font-family: var( --mono );
+		font-size: 12px;
+		color: var( --text-soft );
+	}
+
+	.title {
+		font-weight: 600;
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.chip {
+		flex: none;
+		padding: 1px 6px;
+		border: 1px solid var( --card-border );
+		border-radius: 5px;
+		font-size: 11px;
+		color: var( --text-soft );
+		background: var( --card-bg-soft );
+	}
+
+	.code-wrap {
+		position: relative;
+		margin: 0 14px;
+		border: 1px solid var( --card-border );
+		border-radius: 8px;
+		background: var( --card-bg-soft );
+	}
+
+	pre {
+		margin: 0;
+		padding: 12px 40px 12px 12px;
+		max-height: 260px;
+		overflow: auto;
+		font: 12px/1.55 var( --mono );
+		white-space: pre;
+		tab-size: 2;
+	}
+
+	.tok-sel { color: #b45309; }
+	.tok-prop { color: #1d4ed8; }
+	.tok-val { color: #047857; }
+	.tok-comment { color: var( --text-soft ); font-style: italic; }
+
+	.copy {
+		position: absolute;
+		top: 6px;
+		right: 6px;
+		padding: 4px 7px;
+		border: 1px solid var( --card-border );
+		border-radius: 6px;
+		background: var( --card-bg );
+		color: var( --text-soft );
+		font: 11px/1 var( --sans );
+		cursor: pointer;
+	}
+
+	.copy:hover { color: var( --text ); }
+
+	.card-foot {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 12px;
+		padding: 10px 14px;
+		border-top: 1px solid var( --card-border );
+	}
+
+	.meta {
+		flex: 1;
+		min-width: 0;
+		font-size: 11px;
+		color: var( --text-soft );
+	}
+
+	.meta.is-error { color: var( --danger ); }
+	.meta.is-applied { color: var( --success ); }
+
+	button {
+		font-family: var( --sans );
+		cursor: pointer;
+	}
+
+	.btn-ghost {
+		padding: 6px 10px;
+		border: 0;
+		border-radius: 8px;
+		background: transparent;
+		color: var( --text-soft );
+		font-size: 12px;
+	}
+
+	.btn-ghost:hover { color: var( --text ); }
+
+	.btn-primary {
+		padding: 7px 13px;
+		border: 0;
+		border-radius: 8px;
+		background: var( --btn-bg );
+		color: var( --btn-text );
+		font-size: 12px;
+		font-weight: 500;
+	}
+
+	.btn-primary:disabled {
+		opacity: 0.45;
+		cursor: default;
+	}
+
+	[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+	<div class="card">
+		<div class="card-head">
+			<span class="glyph">&lt;/&gt;</span>
+			<span class="title" id="title">Loading proposal…</span>
+			<span class="chip">CSS</span>
+		</div>
+
+		<div class="code-wrap">
+			<button class="copy" id="copy" type="button">Copy</button>
+			<pre><code id="code"></code></pre>
+		</div>
+
+		<div class="card-foot">
+			<span class="meta" id="meta">Waiting for the tool result…</span>
+			<button class="btn-ghost" id="discard" type="button" hidden>Discard</button>
+			<button class="btn-primary" id="apply" type="button" hidden>Apply to page</button>
+		</div>
+	</div>
+
+<script>
+( () => {
+	'use strict';
+
+	const PROTOCOL_VERSION = '2026-01-26';
+
+	const el = ( id ) => document.getElementById( id );
+	const titleEl = el( 'title' );
+	const codeEl = el( 'code' );
+	const metaEl = el( 'meta' );
+	const applyBtn = el( 'apply' );
+	const discardBtn = el( 'discard' );
+	const copyBtn = el( 'copy' );
+
+	/* ---------- JSON-RPC over postMessage ----------
+	   The host loads this document via iframe srcdoc, so our origin is `null` and the
+	   CSP blocks external scripts. That rules out bundling @modelcontextprotocol/ext-apps,
+	   so we speak the MCP Apps wire protocol directly. The host validates event.source
+	   and expects `null` as our origin, so '*' is the correct target origin here. */
+
+	const pending = new Map();
+	let nextId = 1;
+
+	const request = ( method, params ) => {
+		const id = nextId++;
+
+		return new Promise( ( resolve, reject ) => {
+			pending.set( id, { resolve, reject } );
+			parent.postMessage( { jsonrpc: '2.0', id, method, params: params || {} }, '*' );
+		} );
+	};
+
+	const notify = ( method, params ) => {
+		parent.postMessage( { jsonrpc: '2.0', method, params: params || {} }, '*' );
+	};
+
+	const respond = ( id, result ) => {
+		parent.postMessage( { jsonrpc: '2.0', id, result: result || {} }, '*' );
+	};
+
+	window.addEventListener( 'message', ( event ) => {
+		const msg = event.data;
+
+		if ( ! msg || msg.jsonrpc !== '2.0' ) {
+			return;
+		}
+
+		const isResponse = 'result' in msg || 'error' in msg;
+
+		if ( isResponse && pending.has( msg.id ) ) {
+			const entry = pending.get( msg.id );
+			pending.delete( msg.id );
+
+			if ( msg.error ) {
+				entry.reject( new Error( msg.error.message || 'Request failed' ) );
+			} else {
+				entry.resolve( msg.result );
+			}
+
+			return;
+		}
+
+		if ( ! msg.method ) {
+			return;
+		}
+
+		// Host -> app requests (ping, ui/resource-teardown) need an answer or the host waits.
+		if ( msg.id !== undefined && msg.id !== null ) {
+			respond( msg.id, {} );
+			return;
+		}
+
+		if ( msg.method === 'ui/notifications/tool-result' ) {
+			renderProposal( msg.params );
+		}
+	} );
+
+	/* ---------- Sizing ----------
+	   The host starts the iframe at 50px and resizes only when we report a height. */
+
+	let lastHeight = 0;
+
+	const reportHeight = () => {
+		const height = Math.ceil( document.documentElement.scrollHeight );
+
+		if ( height > 0 && height !== lastHeight ) {
+			lastHeight = height;
+			notify( 'ui/notifications/size-changed', { height } );
+		}
+	};
+
+	if ( window.ResizeObserver ) {
+		new ResizeObserver( reportHeight ).observe( document.documentElement );
+	}
+
+	/* ---------- Rendering ---------- */
+
+	const escapeHtml = ( value ) => value
+		.replace( /&/g, '&amp;' )
+		.replace( /</g, '&lt;' )
+		.replace( />/g, '&gt;' );
+
+	// Enough highlighting to make a stylesheet readable, line by line.
+	const highlight = ( css ) => css.split( '\n' ).map( ( line ) => {
+		const safe = escapeHtml( line );
+		const trimmed = safe.trim();
+
+		if ( ! trimmed ) {
+			return safe;
+		}
+
+		if ( trimmed.startsWith( '/*' ) || trimmed.startsWith( '*' ) ) {
+			return '<span class="tok-comment">' + safe + '</span>';
+		}
+
+		const colon = safe.indexOf( ':' );
+
+		if ( colon !== -1 && ! trimmed.endsWith( '{' ) ) {
+			return '<span class="tok-prop">' + safe.slice( 0, colon ) + '</span>:' +
+				'<span class="tok-val">' + safe.slice( colon + 1 ) + '</span>';
+		}
+
+		if ( trimmed.endsWith( '{' ) || trimmed.startsWith( '@' ) ) {
+			return '<span class="tok-sel">' + safe + '</span>';
+		}
+
+		return safe;
+	} ).join( '\n' );
+
+	let proposal = null;
+	let settled = false;
+
+	const setMeta = ( text, state ) => {
+		metaEl.textContent = text;
+		metaEl.className = 'meta' + ( state ? ' is-' + state : '' );
+	};
+
+	const readProposal = ( toolResult ) => {
+		if ( toolResult && toolResult.structuredContent && toolResult.structuredContent.css ) {
+			return toolResult.structuredContent;
+		}
+
+		// Fallback for hosts that forward content blocks only.
+		const block = ( toolResult && toolResult.content || [] ).find( ( item ) => item.type === 'text' );
+
+		try {
+			const parsed = JSON.parse( block && block.text );
+			return parsed && parsed.css ? parsed : null;
+		} catch {
+			return null;
+		}
+	};
+
+	function renderProposal( toolResult ) {
+		proposal = readProposal( toolResult );
+
+		if ( ! proposal ) {
+			titleEl.textContent = 'No CSS in this proposal';
+			setMeta( 'The tool result did not include any CSS.', 'error' );
+			reportHeight();
+			return;
+		}
+
+		titleEl.textContent = proposal.summary || 'Heading style';
+		codeEl.innerHTML = highlight( proposal.css );
+		setMeta( 'v' + ( proposal.version || 1 ) + ' · Proposed just now' );
+		applyBtn.hidden = false;
+		discardBtn.hidden = false;
+		reportHeight();
+	}
+
+	/* ---------- Actions ---------- */
+
+	applyBtn.addEventListener( 'click', async () => {
+		if ( settled || ! proposal ) {
+			return;
+		}
+
+		applyBtn.disabled = true;
+		discardBtn.disabled = true;
+		setMeta( 'Applying…' );
+
+		try {
+			// Angie proxies tools/call straight to the MCP server that served this app.
+			const result = await request( 'tools/call', {
+				name: 'apply-css',
+				arguments: { css: proposal.css, proposalId: proposal.proposalId },
+			} );
+
+			if ( result && result.isError ) {
+				throw new Error( 'The apply-css tool reported an error' );
+			}
+
+			settled = true;
+			applyBtn.textContent = 'Applied';
+			discardBtn.hidden = true;
+			setMeta( 'v' + ( ( proposal.version || 1 ) + 1 ) + ' · Applied just now', 'applied' );
+			reportHeight();
+
+			// Plain text, never the $$MCP_SIGNAL$$ prefix — signals ask the host to reload the page.
+			request( 'ui/message', {
+				role: 'user',
+				content: [ { type: 'text', text: 'I applied the proposed CSS to the page.' } ],
+			} ).catch( () => {} );
+		} catch ( error ) {
+			applyBtn.disabled = false;
+			discardBtn.disabled = false;
+			setMeta( error.message || 'Could not apply the CSS', 'error' );
+			reportHeight();
+		}
+	} );
+
+	discardBtn.addEventListener( 'click', () => {
+		if ( settled ) {
+			return;
+		}
+
+		settled = true;
+		applyBtn.hidden = true;
+		discardBtn.hidden = true;
+		setMeta( 'Discarded · nothing was applied' );
+		reportHeight();
+	} );
+
+	copyBtn.addEventListener( 'click', async () => {
+		if ( ! proposal ) {
+			return;
+		}
+
+		try {
+			await navigator.clipboard.writeText( proposal.css );
+		} catch {
+			// Clipboard access is often denied in a null-origin sandbox.
+			const scratch = document.createElement( 'textarea' );
+			scratch.value = proposal.css;
+			document.body.appendChild( scratch );
+			scratch.select();
+			document.execCommand( 'copy' );
+			scratch.remove();
+		}
+
+		copyBtn.textContent = 'Copied';
+		setTimeout( () => {
+			copyBtn.textContent = 'Copy';
+		}, 1200 );
+	} );
+
+	/* ---------- Handshake ---------- */
+
+	const applyHostStyles = ( hostContext ) => {
+		const variables = hostContext && hostContext.styles && hostContext.styles.variables;
+
+		if ( ! variables ) {
+			return;
+		}
+
+		Object.keys( variables ).forEach( ( key ) => {
+			if ( variables[ key ] ) {
+				document.documentElement.style.setProperty( key, variables[ key ] );
+			}
+		} );
+	};
+
+	request( 'ui/initialize', {
+		appInfo: { name: 'CSS preview', version: '1.0.0' },
+		appCapabilities: {},
+		protocolVersion: PROTOCOL_VERSION,
+	} ).then( ( result ) => {
+		// Whatever version the host negotiated is the version we use. Never assert equality.
+		applyHostStyles( result && result.hostContext );
+		notify( 'ui/notifications/initialized', {} );
+		reportHeight();
+	} ).catch( ( error ) => {
+		setMeta( error.message || 'Could not reach the Angie host', 'error' );
+		reportHeight();
+	} );
+} )();
+</script>
+</body>
+</html>

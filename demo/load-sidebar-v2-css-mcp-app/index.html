@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — CSS with MCP App preview</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/server/mcp.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js",
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod": "../../node_modules/zod/index.js",
+      "zod/v3": "../../node_modules/zod/v3/index.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js",
+      "zod/v4-mini": "../../node_modules/zod/v4-mini/index.js",
+      "zod-to-json-schema": "../../node_modules/zod-to-json-schema/dist/esm/index.js",
+      "ajv": "./ajv-shim.js",
+      "ajv-formats": "./ajv-formats-shim.js"
+    }
+  }
+  </script>
+
+  <!-- Angie writes into this tag. Everything below is the demo page chrome. -->
+  <style id="angie-custom-css">
+#demo-heading {
+	font-size: 2.5rem;
+	color: #111827;
+}
+  </style>
+
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #fff; color: #111827; }
+    .page { padding: 1rem; max-width: 40rem; }
+    .hint { color: #555; }
+    #demo-sidebar-toggle { padding: 0.5rem 1rem; font: inherit; cursor: pointer; }
+    #demo-heading { margin: 2rem 0; }
+    .code-panel { border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden; }
+    .code-panel-label {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 0.75rem; background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+      font-size: 0.8rem; font-weight: 600; color: #374151;
+    }
+    .code-panel-label .chip {
+      padding: 0.05rem 0.35rem; border: 1px solid #d1d5db; border-radius: 0.25rem;
+      font-weight: 500; color: #6b7280;
+    }
+    .code-panel-label .spacer { flex: 1; }
+    #css-ai-button {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.2rem 0.45rem; border: 1px solid #d8b4fe; border-radius: 0.3rem;
+      background: #faf5ff; color: #7c3aed;
+      font: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    }
+    #css-ai-button:hover { background: #f3e8ff; }
+    #css-ai-button:disabled { opacity: 0.5; cursor: default; }
+    .code-panel pre { margin: 0; padding: 0.75rem; overflow-x: auto; }
+    .code-panel code { font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: #111827; tab-size: 2; }
+  </style>
+</head>
+<body>
+  <main class="page">
+  <p><a href="../">← All demos</a></p>
+  <p>Angie writes the CSS for the heading below, but nothing is applied until you approve it.</p>
+  <p class="hint">
+    Ask for a style change in the sidebar. Angie calls <code>propose-css</code>, which renders an MCP App
+    preview card inside the chat. The CSS only reaches this page when you click <strong>Apply to page</strong>
+    in that card — the button calls the <code>apply-css</code> tool directly.
+  </p>
+
+  <p><button type="button" id="demo-sidebar-toggle">Open Angie</button></p>
+
+  <h1 id="demo-heading">Summer sale is live</h1>
+
+  <div class="code-panel">
+    <div class="code-panel-label">
+      Applied CSS <span class="chip">CSS</span>
+      <span class="spacer"></span>
+      <button type="button" id="css-ai-button" title="Edit this CSS with Angie">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2l1.9 5.6L19.5 9.5 13.9 11.4 12 17l-1.9-5.6L4.5 9.5l5.6-1.9L12 2z" />
+          <path d="M18.5 14.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z" />
+        </svg>
+        Edit with Angie
+      </button>
+    </div>
+    <pre><code id="css-code"></code></pre>
+  </div>
+  </main>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>
