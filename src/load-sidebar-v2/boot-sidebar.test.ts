@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { LAYOUT_FLOATING_CHAT, LAYOUT_SIDEBAR } from './config';
 import { bootSidebar } from './boot-sidebar';
-import { getFirstInstance, resetInstancesForTests } from '../instance-registry';
+import { getFirstInstance, getInstanceById, resetInstancesForTests } from '../instance-registry';
 
 jest.mock( '../sidebar', () => ( {
 	ANGIE_SIDEBAR_STATE_CLOSED: 'closed',
@@ -84,6 +84,55 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		);
 		expect( mockLoadState ).toHaveBeenCalledWith( 'open' );
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'should carry the sdk appId on the instance so the iframe url can use it', async () => {
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'editor-lite' },
+			appId: 'NG-XRLGFZE',
+		} );
+
+		expect( getFirstInstance()?.appId ).toBe( 'NG-XRLGFZE' );
+	} );
+
+	it( 'should leave the instance appId unset when the sdk has none', async () => {
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'editor-lite' },
+		} );
+
+		expect( getFirstInstance()?.appId ).toBeUndefined();
+	} );
+
+	it( 'should give each instance its own appId', async () => {
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a', instanceId: 'first' },
+			appId: 'NG-XRLGFXYZ',
+		} );
+		await bootSidebar( {
+			container: { id: 'second-container', layout: LAYOUT_FLOATING_CHAT },
+			host: { appId: 'app-b', instanceId: 'second' },
+			appId: 'NG-XRLGFZRX',
+		} );
+
+		expect( getInstanceById( 'first' )?.appId ).toBe( 'NG-XRLGFXYZ' );
+		expect( getInstanceById( 'second' )?.appId ).toBe( 'NG-XRLGFZRX' );
+	} );
+
+	it( 'should not leak an appId to a sibling instance that declares none', async () => {
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a', instanceId: 'first' },
+			appId: 'NG-XRLGFXYZ',
+		} );
+		await bootSidebar( {
+			container: { id: 'second-container', layout: LAYOUT_FLOATING_CHAT },
+			host: { appId: 'app-b', instanceId: 'second' },
+		} );
+
+		expect( getInstanceById( 'second' )?.appId ).toBeUndefined();
 	} );
 
 	it( 'should not create the container when create is false', async () => {
