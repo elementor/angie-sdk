@@ -68,6 +68,7 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 	const instance = createAngieInstance( {
 		containerId: config.container.id,
 		instanceId,
+		appId: options.appId,
 		layout: config.container.layout,
 	} );
 

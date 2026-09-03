@@ -16,6 +16,7 @@ type OpenSaaSPageInput = {
 	sdkVersion: string;
 	iframeElementId?: string;
 	instanceId?: string;
+	appId?: string;
 };
 
 type OpenSaaSPageOutput = {
@@ -43,6 +44,10 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 
 		if ( props.isRTL ) {
 			iframeUrlObject.searchParams.append( 'isRTL', props.isRTL ? 'true' : 'false' );
+		}
+
+		if ( props.appId ) {
+			iframeUrlObject.searchParams.append( 'appId', props.appId );
 		}
 
 		// pass testing error messages to iframe
