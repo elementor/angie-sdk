@@ -9,9 +9,11 @@ permissions:
 
 jobs:
   dispatch:
+    # CONTRIBUTOR is included because teammates on this public repo often have
+    # that association instead of MEMBER (see PR #98). Forks are still skipped.
     if: |
       github.event.pull_request.head.repo.full_name == github.repository &&
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
