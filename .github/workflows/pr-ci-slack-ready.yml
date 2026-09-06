@@ -3,31 +3,25 @@ name: PR Slack Ready for Review
 on:
   pull_request:
     types: [opened, ready_for_review]
-  workflow_dispatch:
-    inputs:
-      pr_input:
-        description: 'PR number or URL (e.g., "123" or "https://github.com/owner/repo/pull/123")'
-        required: true
-        type: string
 
 permissions:
   contents: read
 
 jobs:
   dispatch:
+    # CONTRIBUTOR is included because teammates on this public repo often have
+    # that association instead of MEMBER (see PR #98). Forks are still skipped.
     if: |
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        github.event.pull_request.draft == false
-      )
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.draft == false &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+          ref: ${{ github.event.pull_request.base.sha }}
       - uses: ./.github/actions/dispatch-angie-dev-tools
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
