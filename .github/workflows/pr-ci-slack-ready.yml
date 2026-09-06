@@ -2,7 +2,7 @@ name: PR Slack Ready for Review
 
 on:
   pull_request:
-    types: [opened, ready_for_review]
+    types: [ready_for_review]
 
 permissions:
   contents: read
@@ -13,7 +13,6 @@ jobs:
     # that association instead of MEMBER (see PR #98). Forks are still skipped.
     if: |
       github.event.pull_request.head.repo.full_name == github.repository &&
-      github.event.pull_request.draft == false &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
     timeout-minutes: 5
