@@ -146,12 +146,12 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( shouldBoot( config, DEFAULT_ENV ) ).toBe( true );
 	} );
 
-	it( 'should forward host.generations without interpreting ids', () => {
+	it( 'should forward host.generationTypes without interpreting ids', () => {
 		const config = resolveConfig(
-			{ host: { appId: 'wordpress', generations: [ 'artifacts', 'image' ] } },
+			{ host: { appId: 'wordpress', generationTypes: [ 'artifacts', 'image' ] } },
 			DEFAULT_ENV,
 		);
 
-		expect( config.host.generations ).toEqual( [ 'artifacts', 'image' ] );
+		expect( config.host.generationTypes ).toEqual( [ 'artifacts', 'image' ] );
 	} );
 } );

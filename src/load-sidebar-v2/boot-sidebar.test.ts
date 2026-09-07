@@ -86,19 +86,19 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
 	} );
 
-	it( 'should forward host.generations on the embedded config payload', async () => {
+	it( 'should forward host.generationTypes on the embedded config payload', async () => {
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },
-			host: { appId: 'wordpress', generations: [ 'artifacts' ] },
+			host: { appId: 'wordpress', generationTypes: [ 'artifacts' ] },
 		} );
 
 		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledWith(
 			expect.objectContaining( {
-				embeddedConfig: expect.objectContaining( { generations: [ 'artifacts' ] } ),
+				embeddedConfig: expect.objectContaining( { generationTypes: [ 'artifacts' ] } ),
 			} ),
 		);
 		expect( mockSendEmbeddedConfig ).toHaveBeenCalledWith(
-			expect.objectContaining( { generations: [ 'artifacts' ] } ),
+			expect.objectContaining( { generationTypes: [ 'artifacts' ] } ),
 			expect.anything(),
 		);
 	} );
