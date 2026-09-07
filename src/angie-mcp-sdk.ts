@@ -43,6 +43,16 @@ export type ModelsConfig = {
   execution: string;
 };
 
+export type GenerationTypeConfig = {
+  models?: string[];
+};
+
+export type GenerationTypesConfig = {
+  images?: GenerationTypeConfig;
+  video?: GenerationTypeConfig;
+  artifacts?: GenerationTypeConfig;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -62,6 +72,7 @@ export type WidgetConfig = {
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
   models?: ModelsConfig;
+  generationTypes?: GenerationTypesConfig;
   topBar?: FeatureToggle;
 };
 

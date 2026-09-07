@@ -33,6 +33,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	let mockInitializeResize: jest.Mock;
 	let mockOpenEmbeddedIframe: jest.Mock;
 	let mockSendEmbeddedConfig: jest.Mock;
+	let mockSendWidgetConfig: jest.Mock;
 
 	beforeAll( () => {
 		Object.defineProperty( window, 'matchMedia', {
@@ -61,6 +62,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		mockInitializeResize = require( '../sidebar' ).initializeResize as jest.Mock;
 		mockOpenEmbeddedIframe = require( './open-embedded-iframe' ).openEmbeddedIframe as jest.Mock;
 		mockSendEmbeddedConfig = require( './embedded-handshake' ).sendEmbeddedConfig as jest.Mock;
+		mockSendWidgetConfig = require( './embedded-handshake' ).sendWidgetConfig as jest.Mock;
 	} );
 
 	it( 'should boot sidebar shell, iframe, and embedded config', async () => {
@@ -86,21 +88,20 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
 	} );
 
-	it( 'should forward host.generationTypes on the embedded config payload', async () => {
+	it( 'should forward widgetConfig.generationTypes on sdk-widget-config', async () => {
+		const generationTypes = { artifacts: {}, images: { models: [ 'nano' ] } };
+
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },
-			host: { appId: 'wordpress', generationTypes: [ 'artifacts' ] },
+			host: { appId: 'wordpress' },
+			widgetConfig: { generationTypes },
 		} );
 
-		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledWith(
-			expect.objectContaining( {
-				embeddedConfig: expect.objectContaining( { generationTypes: [ 'artifacts' ] } ),
-			} ),
-		);
-		expect( mockSendEmbeddedConfig ).toHaveBeenCalledWith(
-			expect.objectContaining( { generationTypes: [ 'artifacts' ] } ),
+		expect( mockSendWidgetConfig ).toHaveBeenCalledWith(
+			expect.objectContaining( { generationTypes } ),
 			expect.anything(),
 		);
+		expect( mockSendEmbeddedConfig.mock.calls[ 0 ][ 0 ] ).not.toHaveProperty( 'generationTypes' );
 	} );
 
 	it( 'should not create the container when create is false', async () => {

@@ -109,6 +109,19 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		} );
 	} );
 
+	it( 'should keep widgetConfig.generationTypes as an object per kind', () => {
+		const generationTypes = { artifacts: {}, images: { models: [ 'nano' ] } };
+		const config = resolveConfig(
+			{
+				host: { appId: 'wordpress' },
+				widgetConfig: { generationTypes },
+			},
+			DEFAULT_ENV,
+		);
+
+		expect( config.widgetConfig?.generationTypes ).toEqual( generationTypes );
+	} );
+
 	it( 'should preserve callbacks.onClose', () => {
 		const onClose = jest.fn();
 		const config = resolveConfig(
@@ -146,12 +159,4 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( shouldBoot( config, DEFAULT_ENV ) ).toBe( true );
 	} );
 
-	it( 'should forward host.generationTypes without interpreting ids', () => {
-		const config = resolveConfig(
-			{ host: { appId: 'wordpress', generationTypes: [ 'artifacts', 'image' ] } },
-			DEFAULT_ENV,
-		);
-
-		expect( config.host.generationTypes ).toEqual( [ 'artifacts', 'image' ] );
-	} );
 } );
