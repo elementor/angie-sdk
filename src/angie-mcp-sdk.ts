@@ -43,6 +43,10 @@ export type ModelsConfig = {
   execution: string;
 };
 
+export type GenerationTypesConfig = {
+  artifacts?: FeatureToggle;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -62,6 +66,7 @@ export type WidgetConfig = {
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
   models?: ModelsConfig;
+  generationTypes?: GenerationTypesConfig;
   topBar?: FeatureToggle;
 };
 

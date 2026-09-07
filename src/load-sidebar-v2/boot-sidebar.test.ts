@@ -33,6 +33,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	let mockInitializeResize: jest.Mock;
 	let mockOpenEmbeddedIframe: jest.Mock;
 	let mockSendEmbeddedConfig: jest.Mock;
+	let mockSendWidgetConfig: jest.Mock;
 
 	beforeAll( () => {
 		Object.defineProperty( window, 'matchMedia', {
@@ -61,6 +62,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		mockInitializeResize = require( '../sidebar' ).initializeResize as jest.Mock;
 		mockOpenEmbeddedIframe = require( './open-embedded-iframe' ).openEmbeddedIframe as jest.Mock;
 		mockSendEmbeddedConfig = require( './embedded-handshake' ).sendEmbeddedConfig as jest.Mock;
+		mockSendWidgetConfig = require( './embedded-handshake' ).sendWidgetConfig as jest.Mock;
 	} );
 
 	it( 'should boot sidebar shell, iframe, and embedded config', async () => {
@@ -84,6 +86,22 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		);
 		expect( mockLoadState ).toHaveBeenCalledWith( 'open' );
 		expect( mockInitializeResize ).toHaveBeenCalledTimes( 1 );
+	} );
+
+	it( 'should forward widgetConfig.generationTypes on sdk-widget-config', async () => {
+		const generationTypes = { artifacts: { enabled: true } };
+
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'wordpress' },
+			widgetConfig: { generationTypes },
+		} );
+
+		expect( mockSendWidgetConfig ).toHaveBeenCalledWith(
+			expect.objectContaining( { generationTypes } ),
+			expect.anything(),
+		);
+		expect( mockSendEmbeddedConfig.mock.calls[ 0 ][ 0 ] ).not.toHaveProperty( 'generationTypes' );
 	} );
 
 	it( 'should not create the container when create is false', async () => {

@@ -109,6 +109,19 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		} );
 	} );
 
+	it( 'should keep widgetConfig.generationTypes as an object per kind', () => {
+		const generationTypes = { artifacts: { enabled: true } };
+		const config = resolveConfig(
+			{
+				host: { appId: 'wordpress' },
+				widgetConfig: { generationTypes },
+			},
+			DEFAULT_ENV,
+		);
+
+		expect( config.widgetConfig?.generationTypes ).toEqual( generationTypes );
+	} );
+
 	it( 'should preserve callbacks.onClose', () => {
 		const onClose = jest.fn();
 		const config = resolveConfig(
@@ -145,4 +158,5 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( shouldBoot( config, { ...DEFAULT_ENV, isInIframe: true } ) ).toBe( false );
 		expect( shouldBoot( config, DEFAULT_ENV ) ).toBe( true );
 	} );
+
 } );

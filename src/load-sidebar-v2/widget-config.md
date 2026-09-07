@@ -107,6 +107,20 @@ Control the embedded app top bar (the bar containing new chat, history, and the 
 | `quotaBanner` | `{ enabled: boolean }` | Show the quota-blocked banner. |
 | `inChatQuotaErrorMessage` | `string` | Custom in-chat message shown when the daily limit is hit. |
 
+### Generation types
+
+Widget generation abilities. Same `{ enabled: boolean }` toggle as other widget features. The SDK forwards the object on `sdk-widget-config`. This is not host identity — do not put it on `host`. Distinct from `models.execution` (chat execution model).
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `generationTypes` | `{ artifacts?: { enabled: boolean } }` | Opt into artifact generation with `{ artifacts: { enabled: true } }`. Omit or `{ enabled: false }` to disable. |
+
+```typescript
+widgetConfig: {
+  generationTypes: { artifacts: { enabled: true } },
+}
+```
+
 ## Patterns from production hosts
 
 These mirror [`ai-remote-integration`](https://github.com/elementor/elementor-ai/tree/main/editor-saas-services/packages/ai-remote-integration) (Elementor my.elementor sidebar and visitor floating widget).
