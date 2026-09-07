@@ -101,6 +101,11 @@ const buildSandboxWidgetConfig = () => ( {
 	quotaBanner: { enabled: true },
 	userProfileMenu: { enabled: true },
 	topBar: { enabled: false },
+	signInScreen: {
+		title: 'Sign in to continue',
+		subtitle: 'Log in to your demo store account to keep chatting.',
+		buttonText: 'Log in',
+	},
 } );
 
 const PRESETS = {
