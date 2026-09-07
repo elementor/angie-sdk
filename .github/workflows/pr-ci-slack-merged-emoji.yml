@@ -1,0 +1,29 @@
+name: PR Slack Merged Emoji
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: ./.github/actions/dispatch-angie-dev-tools
+        env:
+          GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
+        with:
+          workflow: pr-ci-slack-merged-emoji.yml
+          extra-fields: |
+            source_event=${{ github.event_name }}
