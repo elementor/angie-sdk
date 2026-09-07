@@ -47,6 +47,12 @@ export type GenerationTypesConfig = {
   artifacts?: FeatureToggle;
 };
 
+export type SignInScreenConfig = {
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -68,6 +74,7 @@ export type WidgetConfig = {
   models?: ModelsConfig;
   generationTypes?: GenerationTypesConfig;
   topBar?: FeatureToggle;
+  signInScreen?: SignInScreenConfig;
 };
 
 export type AngieMcpSdkOptions = {

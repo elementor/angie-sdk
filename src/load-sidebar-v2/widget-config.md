@@ -59,9 +59,32 @@ All fields are optional. Omitted fields use Angie embedded-app defaults.
 |-------|------|---------|
 | `title` | `string` | Main heading in the empty chat state |
 | `subtitle` | `string` | Supporting line under the title |
+| `signInScreen` | `{ title?: string; subtitle?: string; buttonText?: string }` | Copy of the signed-out screen — see [Signed-out screen](#signed-out-screen) |
 | `suggestions` | `{ items: { label: string; value: string }[] }` | Starter prompt chips. `label` is shown in the UI; `value` is the prompt sent when clicked |
 
 `suggestions.items` is the same shape used in production Elementor hosts (`window.angieConfig.prompts` mapped to `suggestions.items`).
+
+### Signed-out screen
+
+Angie shows a signed-out screen when the user has no active session. Use `signInScreen` to replace its copy so it matches your product's wording.
+
+| Field | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `signInScreen.title` | `string` | `You're signed out` | Heading on the signed-out screen |
+| `signInScreen.subtitle` | `string` | `Sign in to start creating with Angie` | Supporting line under the heading |
+| `signInScreen.buttonText` | `string` | `Sign in to Angie` | Label of the sign-in button |
+
+```typescript
+widgetConfig: {
+  signInScreen: {
+    title: 'Sign in to continue',
+    subtitle: 'Log in to your store account to get help with orders.',
+    buttonText: 'Log in',
+  },
+}
+```
+
+Each field is independent. Omitted fields keep the Angie default copy.
 
 ### Feature toggles
 
