@@ -109,18 +109,15 @@ Control the embedded app top bar (the bar containing new chat, history, and the 
 
 ### Generation types
 
-Widget abilities for media/snippet generation. A present key is the opt-in. The SDK forwards the object on `sdk-widget-config` and does not interpret kinds or model ids. This is not host identity — do not put it on `host`. Distinct from `models.execution` (chat execution model).
+Widget generation abilities. A present key is the opt-in. The SDK forwards the object on `sdk-widget-config`. This is not host identity — do not put it on `host`. Distinct from `models.execution` (chat execution model).
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `generationTypes` | `{ images?: { models?: string[] }; video?: { models?: string[] }; artifacts?: { models?: string[] } }` | Per-kind settings. Omit a key to disable that kind. |
+| `generationTypes` | `{ artifacts?: {} }` | Opt into artifact generation. Omit the key to disable. |
 
 ```typescript
 widgetConfig: {
-  generationTypes: {
-    artifacts: {},
-    images: { models: ['nano'] },
-  },
+  generationTypes: { artifacts: {} },
 }
 ```
 

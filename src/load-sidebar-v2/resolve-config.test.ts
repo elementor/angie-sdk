@@ -110,7 +110,7 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 	} );
 
 	it( 'should keep widgetConfig.generationTypes as an object per kind', () => {
-		const generationTypes = { artifacts: {}, images: { models: [ 'nano' ] } };
+		const generationTypes = { artifacts: {} };
 		const config = resolveConfig(
 			{
 				host: { appId: 'wordpress' },

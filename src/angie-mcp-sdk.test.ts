@@ -761,7 +761,7 @@ describe('AngieMcpSdk', () => {
         iframeOrigin: 'https://angie.elementor.com',
       });
       const widgetConfig = {
-        generationTypes: { artifacts: {}, images: { models: ['nano'] } },
+        generationTypes: { artifacts: {} },
       };
 
       await sdk.loadSidebar({ widgetConfig });

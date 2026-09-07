@@ -43,14 +43,8 @@ export type ModelsConfig = {
   execution: string;
 };
 
-export type GenerationTypeConfig = {
-  models?: string[];
-};
-
 export type GenerationTypesConfig = {
-  images?: GenerationTypeConfig;
-  video?: GenerationTypeConfig;
-  artifacts?: GenerationTypeConfig;
+  artifacts?: Record<string, never>;
 };
 
 export type WidgetConfig = {
