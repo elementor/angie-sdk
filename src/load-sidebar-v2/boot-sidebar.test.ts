@@ -89,7 +89,7 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 	} );
 
 	it( 'should forward widgetConfig.generationTypes on sdk-widget-config', async () => {
-		const generationTypes = { artifacts: {} };
+		const generationTypes = { artifacts: { enabled: true } };
 
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },

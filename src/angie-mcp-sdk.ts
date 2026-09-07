@@ -44,7 +44,7 @@ export type ModelsConfig = {
 };
 
 export type GenerationTypesConfig = {
-  artifacts?: Record<string, never>;
+  artifacts?: FeatureToggle;
 };
 
 export type WidgetConfig = {

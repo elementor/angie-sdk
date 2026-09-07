@@ -109,15 +109,15 @@ Control the embedded app top bar (the bar containing new chat, history, and the 
 
 ### Generation types
 
-Widget generation abilities. A present key is the opt-in. The SDK forwards the object on `sdk-widget-config`. This is not host identity — do not put it on `host`. Distinct from `models.execution` (chat execution model).
+Widget generation abilities. Same `{ enabled: boolean }` toggle as other widget features. The SDK forwards the object on `sdk-widget-config`. This is not host identity — do not put it on `host`. Distinct from `models.execution` (chat execution model).
 
 | Field | Type | Purpose |
 |-------|------|---------|
-| `generationTypes` | `{ artifacts?: {} }` | Opt into artifact generation. Omit the key to disable. |
+| `generationTypes` | `{ artifacts?: { enabled: boolean } }` | Opt into artifact generation with `{ artifacts: { enabled: true } }`. Omit or `{ enabled: false }` to disable. |
 
 ```typescript
 widgetConfig: {
-  generationTypes: { artifacts: {} },
+  generationTypes: { artifacts: { enabled: true } },
 }
 ```
 
