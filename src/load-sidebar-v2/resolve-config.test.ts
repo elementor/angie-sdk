@@ -145,4 +145,13 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( shouldBoot( config, { ...DEFAULT_ENV, isInIframe: true } ) ).toBe( false );
 		expect( shouldBoot( config, DEFAULT_ENV ) ).toBe( true );
 	} );
+
+	it( 'should forward host.generations without interpreting ids', () => {
+		const config = resolveConfig(
+			{ host: { appId: 'wordpress', generations: [ 'artifacts', 'image' ] } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.host.generations ).toEqual( [ 'artifacts', 'image' ] );
+	} );
 } );

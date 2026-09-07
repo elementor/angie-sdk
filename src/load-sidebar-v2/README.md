@@ -54,7 +54,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 | Section | Purpose |
 |---------|---------|
-| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
+| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics`, optional `generations` (`string[]` forwarded as-is; the SDK does not interpret ids) sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
@@ -75,6 +75,17 @@ Keep it focused on what helps the agent answer screen-level questions:
 | `whatUserCanDo` | Actions the user can take on this screen |
 
 Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js) reads `#demo-host-app` into `whatUserSees` and lists allowed actions in `whatUserCanDo`.
+
+### host.generations
+
+Optional `string[]` on `host`, copied onto `sdk-embedded-config` / `HOST_READY` `embedded.generations`. The SDK does not interpret values. Angie uses known ids (for example `artifacts`) and ignores unknown ones. Omit the field when the host does not opt into any generation kinds.
+
+```js
+await sdk.loadSidebarV2({
+  host: { appId: 'wordpress', generations: ['artifacts'] },
+  container: { layout: LAYOUT_SIDEBAR },
+});
+```
 
 Full `widgetConfig` reference: [widget-config.md](./widget-config.md).
 

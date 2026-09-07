@@ -16,6 +16,7 @@ export type HostConfig = {
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
 	analytics?: Record<string, unknown>;
+	generations?: string[];
 };
 
 export type BootConfig = {
@@ -91,6 +92,7 @@ export type HostEmbeddedConfigPayload = {
 	aiContext?: Record<string, unknown>;
 	appId?: string;
 	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
+	generations?: string[];
 	telemetry?: Record<string, unknown>;
 	website?: Record<string, unknown>;
 };
@@ -101,6 +103,7 @@ export const buildHostEmbeddedConfigPayload = (
 	aiContext: host.aiContext,
 	appId: host.appId,
 	configVersion: LOAD_SIDEBAR_V2_CONFIG_VERSION,
+	...( host.generations !== undefined ? { generations: host.generations } : {} ),
 	telemetry: {
 		screenPath: window.location.pathname,
 	},
