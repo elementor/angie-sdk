@@ -43,6 +43,16 @@ export type ModelsConfig = {
   execution: string;
 };
 
+export type GenerationTypesConfig = {
+  artifacts?: FeatureToggle;
+};
+
+export type SignInScreenConfig = {
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+};
+
 export type WidgetConfig = {
   title?: string;
   subtitle?: string;
@@ -62,7 +72,9 @@ export type WidgetConfig = {
   localServers?: LocalServersConfig;
   planning?: FeatureToggle;
   models?: ModelsConfig;
+  generationTypes?: GenerationTypesConfig;
   topBar?: FeatureToggle;
+  signInScreen?: SignInScreenConfig;
 };
 
 export type AngieMcpSdkConstructorOptions = {

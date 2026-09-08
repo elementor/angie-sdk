@@ -1,17 +1,16 @@
-name: PR Slack Ready for Review
+name: PR Slack Merged Emoji
 
 on:
   pull_request:
-    types: [ready_for_review]
+    types: [closed]
 
 permissions:
   contents: read
 
 jobs:
   dispatch:
-    # CONTRIBUTOR is included because teammates on this public repo often have
-    # that association instead of MEMBER (see PR #98). Forks are still skipped.
     if: |
+      github.event.pull_request.merged == true &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.pull_request.author_association)
     runs-on: ubuntu-latest
@@ -25,4 +24,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
         with:
-          workflow: pr-ci-slack-ready.yml
+          workflow: pr-ci-slack-merged-emoji.yml
+          extra-fields: |
+            source_event=${{ github.event_name }}

@@ -754,6 +754,24 @@ describe('AngieMcpSdk', () => {
       );
     });
 
+    it('should send widget config with generationTypes via postMessage', async () => {
+      const iframePostMessage = jest.fn();
+      mockOpenIframe.mockResolvedValue({
+        iframe: { contentWindow: { postMessage: iframePostMessage } },
+        iframeOrigin: 'https://angie.elementor.com',
+      });
+      const widgetConfig = {
+        generationTypes: { artifacts: { enabled: true } },
+      };
+
+      await sdk.loadSidebar({ widgetConfig });
+
+      expect(iframePostMessage).toHaveBeenCalledWith(
+        { type: 'sdk-widget-config', payload: widgetConfig },
+        'https://angie.elementor.com',
+      );
+    });
+
     it('should send widget config with modeSwitcher and closeButton via postMessage', async () => {
       // Arrange
       const iframePostMessage = jest.fn();

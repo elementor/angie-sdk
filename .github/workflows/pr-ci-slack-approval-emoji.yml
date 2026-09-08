@@ -1,0 +1,43 @@
+name: PR Slack Approval Emoji
+
+on:
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    if: |
+      (
+        github.event_name == 'pull_request_review' &&
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.review.user.type != 'Bot' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.review.author_association)
+      ) ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        github.event.comment.user.type != 'Bot' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.comment.author_association)
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha || github.sha }}
+      - uses: ./.github/actions/dispatch-angie-dev-tools
+        env:
+          GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
+        with:
+          workflow: pr-ci-slack-approval-emoji.yml
+          extra-fields: |
+            source_event=${{ github.event_name }}
+            review_state=${{ github.event.review.state }}
+            event_user=${{ github.event.review.user.login || github.event.comment.user.login }}
+            event_user_type=${{ github.event.review.user.type || github.event.comment.user.type }}
