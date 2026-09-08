@@ -202,6 +202,7 @@ interface AngieTriggerRequest {
   options?: {
     timeout?: number;
     newChat?: boolean;
+    autoSend?: boolean;
   };
 }
 ```
@@ -263,6 +264,7 @@ await sdk.triggerAngie({ contextAttachment });
 - `context`: Optional integration metadata. The SDK adds the current `pageUrl` and `pageTitle`;
 - `options.timeout`: How long to wait for Angie response in milliseconds (default: `30000`).
 - `options.newChat`: When `true`, clears the current conversation and opens a fresh chat.
+- `options.autoSend`: When `true`, submits `prompt` immediately instead of only pre-filling the composer.
 
 ### Hash Parameter Method
 
