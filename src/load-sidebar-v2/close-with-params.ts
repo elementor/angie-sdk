@@ -1,4 +1,5 @@
 import { getFirstInstance } from '../instance-registry';
+import type { AppState } from '../config';
 import type { CallbacksConfig } from './config';
 
 const callbacksMap = new Map<string, CallbacksConfig['onCloseWithParams']>();
@@ -12,6 +13,31 @@ export const registerCloseWithParamsCallback = (
 	}
 };
 
+/**
+ * Close Angie and invoke the onCloseWithParams callback for a specific instance.
+ * Internal: used by host bridge when it knows the source instance.
+ */
+export const closeAngieWithParamsForInstance = (
+	instance: AppState,
+	params: Record<string, unknown> = {}
+): void => {
+	const callback = callbacksMap.get( instance.instanceId );
+
+	try {
+		if ( callback ) {
+			callback( params );
+		}
+	} catch {
+		// Suppress callback errors but still close
+	} finally {
+		window.toggleAngieSidebar?.( false );
+	}
+};
+
+/**
+ * Close Angie and invoke the onCloseWithParams callback.
+ * Public API: host MCP tools call this directly.
+ */
 export const closeAngieWithParams = ( params: Record<string, unknown> = {} ): void => {
 	const instance = getFirstInstance();
 
@@ -19,13 +45,7 @@ export const closeAngieWithParams = ( params: Record<string, unknown> = {} ): vo
 		return;
 	}
 
-	const callback = callbacksMap.get( instance.instanceId );
-
-	if ( callback ) {
-		callback( params );
-	}
-
-	window.toggleAngieSidebar?.( false );
+	closeAngieWithParamsForInstance( instance, params );
 };
 
 export const resetCloseWithParamsForTests = (): void => {

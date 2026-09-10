@@ -2,7 +2,7 @@ import { sendErrorMessage, sendSuccessMessage } from '../utils';
 import { HostLocalStorageEventType } from '../types';
 import type { AppState } from '../config';
 import type { ExternalHeadersCallback, HostConfig, HostContextProvider } from './config';
-import { closeAngieWithParams } from './close-with-params';
+import { closeAngieWithParamsForInstance } from './close-with-params';
 
 export const GET_EXTERNAL_HEADERS_MESSAGE_TYPE = 'GET_EXTERNAL_HEADERS';
 
@@ -188,7 +188,7 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 		}
 
 		case CLOSE_WITH_PARAMS_MESSAGE_TYPE: {
-			closeAngieWithParams( event.data.params ?? {} );
+			closeAngieWithParamsForInstance( bridgeConfig.instance, event.data.params ?? {} );
 			break;
 		}
 

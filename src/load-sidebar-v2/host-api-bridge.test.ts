@@ -32,7 +32,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 	} );
 
 	it( 'should call closeAngieWithParams when receiving CLOSE_WITH_PARAMS_MESSAGE_TYPE', async () => {
-		const closeAngieWithParamsSpy = jest.spyOn( closeWithParams, 'closeAngieWithParams' );
+		const closeAngieWithParamsSpy = jest.spyOn( closeWithParams, 'closeAngieWithParamsForInstance' );
 
 		initHostApiBridge( {
 			iframeOrigin: IFRAME_ORIGIN,
@@ -47,7 +47,7 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 
 		await flushAsync();
 
-		expect( closeAngieWithParamsSpy ).toHaveBeenCalledWith( params );
+		expect( closeAngieWithParamsSpy ).toHaveBeenCalledWith( appState, params );
 	} );
 
 	it( 'should answer each instance with its own host config', async () => {

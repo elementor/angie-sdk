@@ -1,4 +1,4 @@
-import { AngieMcpSdk, LAYOUT_SIDEBAR, McpAppDisplayMode } from '../../dist/index.js';
+import { AngieMcpSdk, LAYOUT_SIDEBAR, McpAppDisplayMode, closeAngieWithParams } from '../../dist/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
@@ -108,18 +108,12 @@ const createCloseWithParamsServer = () => {
 			},
 		},
 		async ( { params } ) => {
-			window.parent.postMessage(
-				{
-					type: 'angie/close-with-params',
-					params,
-				},
-				ANGIE_ORIGIN
-			);
+			closeAngieWithParams( params );
 
 			return {
 				content: [ {
 					type: 'text',
-					text: 'Sent close-with-params message to host',
+					text: 'Closed Angie with params',
 				} ],
 			};
 		}

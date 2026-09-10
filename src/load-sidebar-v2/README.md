@@ -227,19 +227,16 @@ Providers may be async. A throw becomes an error reply.
 
 ### closeAngieWithParams
 
-MCP Apps can close Angie and pass params back to the host by posting a message:
+**For host MCP tools** (the common path): call `closeAngieWithParams` directly from your host-side MCP server.
 
 ```js
-window.parent.postMessage(
-  {
-    type: 'angie/close-with-params',
-    params: { reason: 'user-finished', orderId: '123' }
-  },
-  angieOrigin
-);
-```
+import { closeAngieWithParams } from '@elementor/angie-sdk';
 
-The host bridge invokes `callbacks.onCloseWithParams(params)` (when registered) and closes Angie via the existing close path.
+server.registerTool('close-task', ..., async ({ params }) => {
+  closeAngieWithParams(params);
+  return { content: [{ type: 'text', text: 'Closed' }] };
+});
+```
 
 Host-side usage:
 
@@ -253,6 +250,8 @@ await sdk.loadSidebarV2({
   }
 });
 ```
+
+**For nested MCP App → host postMessage** (future): Apps inside Angie can post `angie/close-with-params` to the Angie iframe, which forwards it to the host bridge. This path requires an Angie forwarder (follow-up); today only Angie-origin messages reach the host bridge.
 
 Working example: [`demo/load-sidebar-v2-close-with-params/`](../../demo/load-sidebar-v2-close-with-params/).
 
