@@ -38,6 +38,7 @@ Local demos:
 - [`demo/load-sidebar-v2-full-config/`](../../demo/load-sidebar-v2-full-config/) — full example (`aiContext`, custom CSS)
 - [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/) — `widgetConfig` presets (help center, visitor widget, sandbox)
 - [`demo/trigger-angie-prompt/`](../../demo/trigger-angie-prompt/) — `triggerAngie()` and `#angie-prompt=` deep links
+- [`demo/load-sidebar-v2-close-with-params/`](../../demo/load-sidebar-v2-close-with-params/) — `onCloseWithParams` callback and MCP App integration
 
 ## Layouts
 
@@ -58,7 +59,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
-| `callbacks` | `onClose`, `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership)) |
+| `callbacks` | `onClose`, `onCloseWithParams`, `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership) and [closeAngieWithParams](#closeangiewithparams)) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
@@ -207,6 +208,7 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
 - `angie/context/get-website-context` — `callbacks.getWebsiteContext()`, else host + document metadata
 - `angie/context/get-analytics-context` — `callbacks.getAnalyticsContext()`, else screen path + `host.analytics`
+- `angie/close-with-params` — closes Angie via `closeAngieWithParams()` and calls `callbacks.onCloseWithParams()`
 - Host localStorage get/set (V2 only; V1 uses [`localStorage.ts`](../localStorage.ts)). With `host.instanceId`, keys are scoped per widget (`logicalKey::__angie::<id>`); omit it for legacy unprefixed keys on a single widget.
 
 ### Message ownership
@@ -222,6 +224,37 @@ types — it races the bridge and usually loses the payload the host meant to se
 | Host localStorage | Bridge (do not add a get/set listener) |
 
 Providers may be async. A throw becomes an error reply.
+
+### closeAngieWithParams
+
+MCP Apps can close Angie and pass params back to the host by posting a message:
+
+```js
+window.parent.postMessage(
+  {
+    type: 'angie/close-with-params',
+    params: { reason: 'user-finished', orderId: '123' }
+  },
+  angieOrigin
+);
+```
+
+The host bridge invokes `callbacks.onCloseWithParams(params)` (when registered) and closes Angie via the existing close path.
+
+Host-side usage:
+
+```js
+await sdk.loadSidebarV2({
+  host: { appId: 'my-app' },
+  callbacks: {
+    onCloseWithParams: (params) => {
+      console.log('Angie closed with params:', params);
+    }
+  }
+});
+```
+
+Working example: [`demo/load-sidebar-v2-close-with-params/`](../../demo/load-sidebar-v2-close-with-params/).
 
 ### Host-owned container and styling
 

@@ -2,12 +2,15 @@ import { sendErrorMessage, sendSuccessMessage } from '../utils';
 import { HostLocalStorageEventType } from '../types';
 import type { AppState } from '../config';
 import type { ExternalHeadersCallback, HostConfig, HostContextProvider } from './config';
+import { closeAngieWithParams } from './close-with-params';
 
 export const GET_EXTERNAL_HEADERS_MESSAGE_TYPE = 'GET_EXTERNAL_HEADERS';
 
 export const GET_WEBSITE_CONTEXT_MESSAGE_TYPE = 'angie/context/get-website-context';
 
 export const GET_ANALYTICS_CONTEXT_MESSAGE_TYPE = 'angie/context/get-analytics-context';
+
+export const CLOSE_WITH_PARAMS_MESSAGE_TYPE = 'angie/close-with-params';
 
 type InitHostApiBridgeArgs = {
 	iframeOrigin: string;
@@ -181,6 +184,11 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 				bridgeConfig.getAnalyticsContext,
 				() => buildAnalyticsContextResponse( bridgeConfig.host ),
 			);
+			break;
+		}
+
+		case CLOSE_WITH_PARAMS_MESSAGE_TYPE: {
+			closeAngieWithParams( event.data.params ?? {} );
 			break;
 		}
 

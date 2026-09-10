@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Close with params preview</title>
+<style>
+	:root {
+		--card-bg: var( --color-background-primary, #ffffff );
+		--card-bg-soft: var( --color-background-secondary, #f9fafb );
+		--card-border: var( --color-border-primary, #e5e7eb );
+		--text: var( --color-text-primary, #111827 );
+		--text-soft: var( --color-text-secondary, #6b7280 );
+		--btn-bg: var( --color-background-inverse, #111827 );
+		--btn-text: var( --color-text-inverse, #ffffff );
+		--success: var( --color-text-success, #15803d );
+		--mono: var( --font-mono, ui-monospace, SFMono-Regular, Menlo, monospace );
+		--sans: var( --font-sans, system-ui, -apple-system, sans-serif );
+	}
+
+	* { box-sizing: border-box; }
+
+	html, body { margin: 0; padding: 0; background: transparent; }
+
+	body {
+		font-family: var( --sans );
+		color: var( --text );
+		font-size: 13px;
+	}
+
+	.card {
+		background: var( --card-bg );
+		border: 1px solid var( --card-border );
+		border-radius: 12px;
+		overflow: hidden;
+	}
+
+	.card-head {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 14px;
+	}
+
+	.title {
+		font-weight: 600;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.message {
+		padding: 0 14px 12px;
+		font-size: 12px;
+		color: var( --text-soft );
+	}
+
+	.params-wrap {
+		position: relative;
+		margin: 0 14px;
+		border: 1px solid var( --card-border );
+		border-radius: 8px;
+		background: var( --card-bg-soft );
+	}
+
+	pre {
+		margin: 0;
+		padding: 12px;
+		max-height: 200px;
+		overflow: auto;
+		font: 12px/1.55 var( --mono );
+		white-space: pre;
+		tab-size: 2;
+	}
+
+	.card-foot {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-top: 12px;
+		padding: 10px 14px;
+		border-top: 1px solid var( --card-border );
+	}
+
+	.meta {
+		flex: 1;
+		min-width: 0;
+		font-size: 11px;
+		color: var( --text-soft );
+	}
+
+	.meta.is-success { color: var( --success ); }
+
+	button {
+		font-family: var( --sans );
+		cursor: pointer;
+	}
+
+	.btn-primary {
+		padding: 7px 13px;
+		border: 0;
+		border-radius: 8px;
+		background: var( --btn-bg );
+		color: var( --btn-text );
+		font-size: 12px;
+		font-weight: 500;
+	}
+
+	.btn-primary:disabled {
+		opacity: 0.45;
+		cursor: default;
+	}
+
+	[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+	<div class="card">
+		<div class="card-head">
+			<span class="title" id="title">Task complete</span>
+		</div>
+
+		<div class="message" id="message">
+			Click the button below to close Angie and pass these params to the host.
+		</div>
+
+		<div class="params-wrap">
+			<pre><code id="params"></code></pre>
+		</div>
+
+		<div class="card-foot">
+			<span class="meta" id="meta">Ready to close</span>
+			<button class="btn-primary" id="close-btn" type="button">Close and pass params</button>
+		</div>
+	</div>
+
+<script>
+( () => {
+	'use strict';
+
+	const PROTOCOL_VERSION = '2026-01-26';
+
+	const el = ( id ) => document.getElementById( id );
+	const titleEl = el( 'title' );
+	const messageEl = el( 'message' );
+	const paramsEl = el( 'params' );
+	const metaEl = el( 'meta' );
+	const closeBtn = el( 'close-btn' );
+
+	const pending = new Map();
+	let nextId = 1;
+
+	const request = ( method, params ) => {
+		const id = nextId++;
+
+		return new Promise( ( resolve, reject ) => {
+			pending.set( id, { resolve, reject } );
+			parent.postMessage( { jsonrpc: '2.0', id, method, params: params || {} }, '*' );
+		} );
+	};
+
+	const notify = ( method, params ) => {
+		parent.postMessage( { jsonrpc: '2.0', method, params: params || {} }, '*' );
+	};
+
+	const respond = ( id, result ) => {
+		parent.postMessage( { jsonrpc: '2.0', id, result: result || {} }, '*' );
+	};
+
+	window.addEventListener( 'message', ( event ) => {
+		const msg = event.data;
+
+		if ( ! msg || msg.jsonrpc !== '2.0' ) {
+			return;
+		}
+
+		const isResponse = 'result' in msg || 'error' in msg;
+
+		if ( isResponse && pending.has( msg.id ) ) {
+			const entry = pending.get( msg.id );
+			pending.delete( msg.id );
+
+			if ( msg.error ) {
+				entry.reject( new Error( msg.error.message || 'Request failed' ) );
+			} else {
+				entry.resolve( msg.result );
+			}
+
+			return;
+		}
+
+		if ( ! msg.method ) {
+			return;
+		}
+
+		if ( msg.id !== undefined && msg.id !== null ) {
+			respond( msg.id, {} );
+			return;
+		}
+
+		if ( msg.method === 'ui/notifications/tool-result' ) {
+			renderParams( msg.params );
+		}
+	} );
+
+	let lastHeight = 0;
+
+	const reportHeight = () => {
+		const height = Math.ceil( document.documentElement.scrollHeight );
+
+		if ( height > 0 && height !== lastHeight ) {
+			lastHeight = height;
+			notify( 'ui/notifications/size-changed', { height } );
+		}
+	};
+
+	if ( window.ResizeObserver ) {
+		new ResizeObserver( reportHeight ).observe( document.documentElement );
+	}
+
+	let proposal = null;
+	let settled = false;
+
+	const setMeta = ( text, state ) => {
+		metaEl.textContent = text;
+		metaEl.className = 'meta' + ( state ? ' is-' + state : '' );
+	};
+
+	const readProposal = ( toolResult ) => {
+		if ( toolResult && toolResult.structuredContent ) {
+			return toolResult.structuredContent;
+		}
+
+		return null;
+	};
+
+	function renderParams( toolResult ) {
+		proposal = readProposal( toolResult );
+
+		if ( ! proposal || ! proposal.params ) {
+			titleEl.textContent = 'No params to pass';
+			messageEl.textContent = 'The tool result did not include params.';
+			closeBtn.hidden = true;
+			reportHeight();
+			return;
+		}
+
+		if ( proposal.message ) {
+			messageEl.textContent = proposal.message;
+		}
+
+		paramsEl.textContent = JSON.stringify( proposal.params, null, 2 );
+		reportHeight();
+	}
+
+	closeBtn.addEventListener( 'click', async () => {
+		if ( settled || ! proposal || ! proposal.params ) {
+			return;
+		}
+
+		closeBtn.disabled = true;
+		setMeta( 'Closing Angie…' );
+
+		try {
+			await request( 'tools/call', {
+				name: 'close-angie',
+				arguments: { params: proposal.params },
+			} );
+
+			settled = true;
+			closeBtn.textContent = 'Closed';
+			setMeta( 'Angie closed with params', 'success' );
+			reportHeight();
+		} catch ( error ) {
+			closeBtn.disabled = false;
+			setMeta( 'Could not close: ' + ( error.message || 'unknown error' ) );
+			reportHeight();
+		}
+	} );
+
+	const applyHostStyles = ( hostContext ) => {
+		const variables = hostContext && hostContext.styles && hostContext.styles.variables;
+
+		if ( ! variables ) {
+			return;
+		}
+
+		Object.keys( variables ).forEach( ( key ) => {
+			if ( variables[ key ] ) {
+				document.documentElement.style.setProperty( key, variables[ key ] );
+			}
+		} );
+	};
+
+	request( 'ui/initialize', {
+		appInfo: { name: 'Close with params preview', version: '1.0.0' },
+		appCapabilities: {},
+		protocolVersion: PROTOCOL_VERSION,
+	} ).then( ( result ) => {
+		applyHostStyles( result && result.hostContext );
+		notify( 'ui/notifications/initialized', {} );
+		reportHeight();
+	} ).catch( ( error ) => {
+		setMeta( error.message || 'Could not reach the Angie host' );
+		reportHeight();
+	} );
+} )();
+</script>
+</body>
+</html>

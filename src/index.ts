@@ -6,6 +6,8 @@ export {
 	type HostContextProvider,
 	type LoadSidebarV2Options,
 } from './load-sidebar-v2/config';
+export { closeAngieWithParams } from './load-sidebar-v2/close-with-params';
+export { CLOSE_WITH_PARAMS_MESSAGE_TYPE } from './load-sidebar-v2/host-api-bridge';
 export { AngieDetector } from './angie-detector';
 export { RegistrationQueue } from './registration-queue';
 export { ClientManager } from './client-manager';

@@ -21,6 +21,7 @@ import {
 import { resolveConfig, shouldBoot } from './resolve-config';
 import { registerSdkInstance, startSdkMessageRouting } from '../sdk';
 import { generateInstanceId } from '../utils';
+import { registerCloseWithParamsCallback } from './close-with-params';
 
 export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
 	handlePostConsentRedirect();
@@ -73,6 +74,8 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 
 	registerSdkInstance( instance );
 	startSdkMessageRouting();
+
+	registerCloseWithParamsCallback( instanceId, config.callbacks.onCloseWithParams );
 
 	initHostApiBridge( {
 		iframeOrigin: config.iframe.origin,

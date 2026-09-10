@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — closeAngieWithParams demo</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/server/mcp.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/server/mcp.js",
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod": "../../node_modules/zod/index.js",
+      "zod/v3": "../../node_modules/zod/v3/index.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js",
+      "zod/v4-mini": "../../node_modules/zod/v4-mini/index.js",
+      "zod-to-json-schema": "../../node_modules/zod-to-json-schema/dist/esm/index.js",
+      "ajv": "./ajv-shim.js",
+      "ajv-formats": "./ajv-formats-shim.js"
+    }
+  }
+  </script>
+
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #fff; color: #111827; }
+    .page { padding: 1rem; max-width: 40rem; }
+    .hint { color: #555; margin-bottom: 1rem; }
+    #demo-sidebar-toggle { padding: 0.5rem 1rem; font: inherit; cursor: pointer; }
+    h1 { margin: 2rem 0 1rem; }
+    .params-panel {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      margin-top: 1.5rem;
+    }
+    .params-panel-label {
+      padding: 0.5rem 0.75rem;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .params-panel pre {
+      margin: 0;
+      padding: 0.75rem;
+      overflow-x: auto;
+      font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #111827;
+    }
+    .empty-state {
+      padding: 1rem 0.75rem;
+      font-size: 0.85rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p><a href="../">← All demos</a></p>
+    
+    <h1>closeAngieWithParams demo</h1>
+    
+    <p class="hint">
+      This demo shows how MCP Apps can close Angie and pass params back to the host.
+      Open Angie, ask it to "finish the task", and watch the params appear below when Angie closes.
+    </p>
+
+    <p><button type="button" id="demo-sidebar-toggle">Open Angie</button></p>
+
+    <div class="params-panel">
+      <div class="params-panel-label">
+        Received params from Angie
+      </div>
+      <div id="params-display" class="empty-state">
+        No params received yet. Ask Angie to finish the task.
+      </div>
+    </div>
+  </main>
+
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>

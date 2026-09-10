@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { HostLocalStorageEventType } from '../types';
 import type { ExternalHeadersCallback } from './config';
 import {
+	CLOSE_WITH_PARAMS_MESSAGE_TYPE,
 	GET_ANALYTICS_CONTEXT_MESSAGE_TYPE,
 	GET_EXTERNAL_HEADERS_MESSAGE_TYPE,
 	GET_WEBSITE_CONTEXT_MESSAGE_TYPE,
@@ -10,6 +11,7 @@ import {
 } from './host-api-bridge';
 import { appState } from '../config';
 import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
+import * as closeWithParams from './close-with-params';
 
 const IFRAME_ORIGIN = 'http://localhost:4000';
 const SCOPED_KEY = ( key: string, instanceId: string ) => `${ key }::__angie::${ instanceId }`;
@@ -27,6 +29,43 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		jest.clearAllMocks();
 		resetHostApiBridgeForTests();
 		resetInstancesForTests();
+	} );
+
+	it( 'should call closeAngieWithParams when receiving CLOSE_WITH_PARAMS_MESSAGE_TYPE', async () => {
+		const closeAngieWithParamsSpy = jest.spyOn( closeWithParams, 'closeAngieWithParams' );
+
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			instance: appState,
+		} );
+
+		const params = { reason: 'user-finished', orderId: '123' };
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: CLOSE_WITH_PARAMS_MESSAGE_TYPE, params },
+			origin: IFRAME_ORIGIN,
+		} ) );
+
+		await flushAsync();
+
+		expect( closeAngieWithParamsSpy ).toHaveBeenCalledWith( params );
+	} );
+
+	it( 'should call closeAngieWithParams with empty object when params are missing', async () => {
+		const closeAngieWithParamsSpy = jest.spyOn( closeWithParams, 'closeAngieWithParams' );
+
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			instance: appState,
+		} );
+
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: CLOSE_WITH_PARAMS_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+		} ) );
+
+		await flushAsync();
+
+		expect( closeAngieWithParamsSpy ).toHaveBeenCalledWith( {} );
 	} );
 
 	it( 'should answer each instance with its own host config', async () => {
