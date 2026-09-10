@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>loadSidebarV2 — host_pays POC</title>
+  <title>loadSidebarV2 — anonymous POC</title>
   <script type="importmap">
   {
     "imports": {
@@ -21,17 +21,17 @@
 </head>
 <body>
   <p><a href="../">← All demos</a></p>
-  <h1>loadSidebarV2 — host_pays POC (AI-9487)</h1>
+  <h1>loadSidebarV2 — anonymous POC (AI-9421)</h1>
   <div class="info">
-    <p><strong>POC:</strong> Demonstrates <code>authMode: 'host_pays'</code> where the host app authenticates on behalf of its users (no Elementor OAuth required).</p>
+    <p><strong>POC:</strong> Demonstrates <code>authMode: 'anonymous'</code> where the host app authenticates on behalf of its users (no Elementor OAuth required).</p>
     <p><strong>Payload includes:</strong></p>
     <ul>
-      <li><code>authMode: 'host_pays'</code></li>
+      <li><code>authMode: 'anonymous'</code></li>
       <li><code>topOrigin</code> (for backend validation)</li>
     </ul>
     <p><strong>Restrictions:</strong> Rejects if running in iframe or from angie.elementor.com origin.</p>
   </div>
-  <button type="button" id="demo-sidebar-toggle">Open Angie (host_pays)</button>
+  <button type="button" id="demo-sidebar-toggle">Open Angie (anonymous)</button>
   <div id="angie-sidebar-container" aria-hidden="true"></div>
   <script type="module" src="./host.js"></script>
 </body>

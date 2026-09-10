@@ -63,15 +63,15 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
 
-### host.authMode (POC - AI-9487)
+### host.authMode (POC - AI-9421)
 
-**Experimental** `authMode: 'host_pays'` — embed Angie without requiring end-user OAuth login. The host app authenticates requests on behalf of its users.
+**Experimental** `authMode: 'anonymous'` — embed Angie without requiring end-user OAuth login. The host app authenticates requests on behalf of its users.
 
 ```typescript
 await sdk.loadSidebarV2({
   host: { 
     appId: 'my-saas-app',
-    authMode: 'host_pays'
+    authMode: 'anonymous'
   },
 });
 ```
@@ -81,10 +81,10 @@ await sdk.loadSidebarV2({
 - SDK **rejects** boot when top origin is an Angie domain (`angie.elementor.com` or staging variants)
 
 **Payload:**
-- `authMode: 'host_pays'` sent in embedded config
+- `authMode: 'anonymous'` sent in embedded config
 - `topOrigin` (top window's `location.origin`) sent in embedded config for backend validation
 
-**Status:** Draft POC. Backend minting (elementor-ai) and full auth flow tracked in parent ticket [AI-9421](https://elementor.atlassian.net/browse/AI-9421).
+**Status:** Draft POC. Backend minting (elementor-ai) and full auth flow tracked in [AI-9421](https://elementor.atlassian.net/browse/AI-9421).
 
 ### host.aiContext
 

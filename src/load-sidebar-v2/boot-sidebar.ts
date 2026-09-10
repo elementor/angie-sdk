@@ -40,10 +40,10 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		return;
 	}
 
-	if ( config.host.authMode === 'host_pays' ) {
+	if ( config.host.authMode === 'anonymous' ) {
 		if ( window !== window.top ) {
 			throw new Error(
-				'Angie SDK: authMode "host_pays" cannot be used inside an iframe. ' +
+				'Angie SDK: authMode "anonymous" cannot be used inside an iframe. ' +
 				'The SDK must run in the top window to capture the host origin.'
 			);
 		}
@@ -51,8 +51,8 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 		const topOrigin = window.location.origin;
 		if ( isAngieOrigin( topOrigin ) ) {
 			throw new Error(
-				`Angie SDK: authMode "host_pays" cannot be used from Angie origin (${ topOrigin }). ` +
-				'Host-pays authentication requires a third-party host origin.'
+				`Angie SDK: authMode "anonymous" cannot be used from Angie origin (${ topOrigin }). ` +
+				'Anonymous authentication requires a third-party host origin.'
 			);
 		}
 	}

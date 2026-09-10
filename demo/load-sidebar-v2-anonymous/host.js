@@ -4,8 +4,8 @@ const sdk = new AngieMcpSdk();
 
 await sdk.loadSidebarV2({
   host: {
-    appId: 'host-pays-demo',
-    authMode: 'host_pays',
+    appId: 'anonymous-demo',
+    authMode: 'anonymous',
   },
   container: {
     layout: LAYOUT_SIDEBAR,
@@ -19,4 +19,4 @@ await sdk.loadSidebarV2({
   },
 });
 
-console.log('✅ Host-pays sidebar loaded. Check network for authMode + topOrigin in iframe URL query or HOST_READY message.');
+console.log('✅ Anonymous sidebar loaded. Check network for authMode + topOrigin in iframe URL query or HOST_READY message.');
