@@ -292,6 +292,38 @@ describe('AngieMcpSdk', () => {
 
       postMessageSpy.mockRestore();
     });
+
+    it('should include autoSend in trigger options when requested', async () => {
+      const postMessageSpy = jest.spyOn(window, 'postMessage').mockImplementation((message: any) => {
+        if (message?.type === MessageEventType.SDK_TRIGGER_ANGIE) {
+          window.dispatchEvent(new MessageEvent('message', {
+            data: {
+              type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+              payload: {
+                success: true,
+                requestId: message.payload.requestId,
+              },
+            },
+          }));
+        }
+      });
+      mockAngieDetector.isReady.mockReturnValue(true);
+
+      await sdk.triggerAngie({
+        prompt: 'Send this now',
+        options: {
+          autoSend: true,
+        },
+      });
+
+      const triggerMessage = postMessageSpy.mock.calls.find(
+        ([message]) => message.type === MessageEventType.SDK_TRIGGER_ANGIE
+      )?.[0];
+
+      expect(triggerMessage.payload.options).toEqual({ autoSend: true });
+
+      postMessageSpy.mockRestore();
+    });
   });
 
   describe('waitForReady', () => {
