@@ -31,6 +31,31 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 		expect( mockToggle ).toHaveBeenCalledWith( false );
 	} );
 
+	it( 'should target the correct instance when instanceId is provided', () => {
+		const first = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'first-instance',
+			layout: 'sidebar',
+		} );
+
+		const second = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'second-instance',
+			layout: 'floatingChat',
+		} );
+
+		const firstCallback = jest.fn();
+		const secondCallback = jest.fn();
+		registerCloseWithParamsCallback( first.instanceId, firstCallback );
+		registerCloseWithParamsCallback( second.instanceId, secondCallback );
+
+		closeAngieWithParams( { target: 'second' }, 'second-instance' );
+
+		expect( secondCallback ).toHaveBeenCalledWith( { target: 'second' } );
+		expect( firstCallback ).not.toHaveBeenCalled();
+		expect( mockToggle ).toHaveBeenCalledWith( false );
+	} );
+
 	it( 'should invoke the callback for the correct instance in multi-instance scenario', () => {
 		const first = createAngieInstance( {
 			containerId: 'container-a',

@@ -208,7 +208,7 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
 - `angie/context/get-website-context` — `callbacks.getWebsiteContext()`, else host + document metadata
 - `angie/context/get-analytics-context` — `callbacks.getAnalyticsContext()`, else screen path + `host.analytics`
-- `angie/close-with-params` — closes Angie via `closeAngieWithParams()` and calls `callbacks.onCloseWithParams()`
+- `angie/close-with-params` — calls `closeAngieWithParamsForInstance(instance, params)` for the bridged instance and invokes `callbacks.onCloseWithParams()`
 - Host localStorage get/set (V2 only; V1 uses [`localStorage.ts`](../localStorage.ts)). With `host.instanceId`, keys are scoped per widget (`logicalKey::__angie::<id>`); omit it for legacy unprefixed keys on a single widget.
 
 ### Message ownership
@@ -233,7 +233,12 @@ Providers may be async. A throw becomes an error reply.
 import { closeAngieWithParams } from '@elementor/angie-sdk';
 
 server.registerTool('close-task', ..., async ({ params }) => {
+  // Single instance: omit instanceId
   closeAngieWithParams(params);
+  
+  // Multi-instance: pass instanceId to target specific instance
+  closeAngieWithParams(params, 'my-help-widget');
+  
   return { content: [{ type: 'text', text: 'Closed' }] };
 });
 ```
@@ -242,7 +247,7 @@ Host-side usage:
 
 ```js
 await sdk.loadSidebarV2({
-  host: { appId: 'my-app' },
+  host: { appId: 'my-app', instanceId: 'my-help-widget' },
   callbacks: {
     onCloseWithParams: (params) => {
       console.log('Angie closed with params:', params);
