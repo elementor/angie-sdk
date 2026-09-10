@@ -1,4 +1,4 @@
-import { AngieMcpSdk, LAYOUT_SIDEBAR, McpAppDisplayMode, getAngieIframe } from '../../dist/index.js';
+import { AngieMcpSdk, LAYOUT_SIDEBAR, McpAppDisplayMode, getAngieIframe, closeAngieWithParams } from '../../dist/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
@@ -15,6 +15,15 @@ const styleEl = document.getElementById( 'angie-custom-css' );
 const codeEl = document.getElementById( 'css-code' );
 const headingEl = document.querySelector( HEADING_SELECTOR );
 const aiButton = document.getElementById( 'css-ai-button' );
+const closeParamsDisplay = document.getElementById( 'close-params-display' );
+
+const displayReceivedParams = ( params ) => {
+	closeParamsDisplay.className = '';
+	const pre = document.createElement( 'pre' );
+	pre.textContent = JSON.stringify( params, null, 2 );
+	closeParamsDisplay.textContent = '';
+	closeParamsDisplay.appendChild( pre );
+};
 
 const getAppliedCss = () => styleEl.textContent.trim();
 
@@ -152,6 +161,27 @@ const createCssServer = () => {
 		}
 	);
 
+	server.registerTool(
+		'finish-and-close',
+		{
+			description: 'Finish styling and close Angie with params. The preview card calls this when the user is done.',
+			inputSchema: {
+				orderId: z.string().optional().describe( 'Sample order ID' ),
+			},
+		},
+		async ( { orderId } ) => {
+			closeAngieWithParams( {
+				reason: 'user-finished',
+				orderId: orderId || '123',
+				timestamp: new Date().toISOString(),
+			} );
+
+			return {
+				content: [ { type: 'text', text: 'Closed Angie with params' } ],
+			};
+		}
+	);
+
 	server.registerResource(
 		'css-preview-app',
 		PREVIEW_URI,
@@ -258,6 +288,12 @@ await sdk.loadSidebarV2( {
 		origin: ANGIE_ORIGIN,
 		path: 'angie/embedded',
 		uiTheme: 'light',
+	},
+	callbacks: {
+		onCloseWithParams: ( params ) => {
+			console.log( 'Received params from Angie:', params );
+			displayReceivedParams( params );
+		},
 	},
 	widgetConfig: {
 		title: 'Style this heading',

@@ -38,7 +38,7 @@ Local demos:
 - [`demo/load-sidebar-v2-full-config/`](../../demo/load-sidebar-v2-full-config/) — full example (`aiContext`, custom CSS)
 - [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/) — `widgetConfig` presets (help center, visitor widget, sandbox)
 - [`demo/trigger-angie-prompt/`](../../demo/trigger-angie-prompt/) — `triggerAngie()` and `#angie-prompt=` deep links
-- [`demo/load-sidebar-v2-close-with-params/`](../../demo/load-sidebar-v2-close-with-params/) — `onCloseWithParams` callback and MCP App integration
+- [`demo/load-sidebar-v2-css-mcp-app/`](../../demo/load-sidebar-v2-css-mcp-app/) — MCP App with CSS preview card, plus `closeAngieWithParams` demo
 
 ## Layouts
 
@@ -253,7 +253,7 @@ await sdk.loadSidebarV2({
 
 **For nested MCP App → host postMessage** (future): Apps inside Angie can post `angie/close-with-params` to the Angie iframe, which forwards it to the host bridge. This path requires an Angie forwarder (follow-up); today only Angie-origin messages reach the host bridge.
 
-Working example: [`demo/load-sidebar-v2-close-with-params/`](../../demo/load-sidebar-v2-close-with-params/).
+Working example: [`demo/load-sidebar-v2-css-mcp-app/`](../../demo/load-sidebar-v2-css-mcp-app/) — shows both CSS preview and close-with-params in one demo.
 
 ### Host-owned container and styling
 
