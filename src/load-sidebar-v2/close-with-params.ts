@@ -52,11 +52,7 @@ export const closeAngieWithParams = (
 	const instance = instanceId ? getInstanceById( instanceId ) : getFirstInstance();
 
 	if ( ! instance ) {
-		logger.warn(
-			instanceId
-				? `Cannot close: instance "${ instanceId }" not found`
-				: 'Cannot close: no instance registered'
-		);
+		logger.warn( 'Cannot close: no Angie instance found', { instanceId } );
 		return;
 	}
 
