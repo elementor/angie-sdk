@@ -55,6 +55,12 @@
     #css-ai-button:disabled { opacity: 0.5; cursor: default; }
     .code-panel pre { margin: 0; padding: 0.75rem; overflow-x: auto; }
     .code-panel code { font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: #111827; tab-size: 2; }
+    .empty-state {
+      padding: 1rem 0.75rem;
+      font-size: 0.85rem;
+      color: #6b7280;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -65,6 +71,10 @@
     Ask for a style change in the sidebar. Angie calls <code>propose-css</code>, which renders an MCP App
     preview card inside the chat. The CSS only reaches this page when you click <strong>Apply to page</strong>
     in that card — the button calls the <code>apply-css</code> tool directly.
+  </p>
+  <p class="hint">
+    Also demos <code>closeAngieWithParams</code>: click <strong>Finish and close</strong> in the preview card
+    to close Angie and pass params back to the host. The host MCP tool calls <code>closeAngieWithParams</code> directly.
   </p>
 
   <p><button type="button" id="demo-sidebar-toggle">Open Angie</button></p>
@@ -84,6 +94,15 @@
       </button>
     </div>
     <pre><code id="css-code"></code></pre>
+  </div>
+
+  <div class="code-panel" style="margin-top: 1.5rem;">
+    <div class="code-panel-label">
+      Received params from closeAngieWithParams <span class="chip">JSON</span>
+    </div>
+    <div id="close-params-display" class="empty-state">
+      No params received yet. Click "Finish and close" in the preview card.
+    </div>
   </div>
   </main>
 
