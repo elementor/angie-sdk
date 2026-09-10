@@ -273,6 +273,7 @@ export const openIframe = async (
 		sdkVersion: ANGIE_SDK_VERSION,
 		iframeElementId: instance.iframeElementId,
 		instanceId: instance.instanceId,
+		appId: instance.appId,
 	} );
 
 	instance.iframe = iframe;

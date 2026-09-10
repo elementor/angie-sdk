@@ -10,6 +10,7 @@ export type AppState = {
 	iframeUrlObject: URL | null;
 	containerId: string;
 	instanceId: string;
+	appId?: string;
 	layout: LoadSidebarV2Layout | '';
 	iframeElementId: string;
 };
@@ -20,6 +21,7 @@ export const createDefaultAppState = (): AppState => ( {
 	iframeUrlObject: null,
 	containerId: DEFAULT_CONTAINER_ID,
 	instanceId: '',
+	appId: undefined,
 	layout: '',
 	iframeElementId: DEFAULT_IFRAME_ELEMENT_ID,
 } );

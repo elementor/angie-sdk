@@ -77,6 +77,10 @@ export type WidgetConfig = {
   signInScreen?: SignInScreenConfig;
 };
 
+export type AngieMcpSdkConstructorOptions = {
+  appId?: string;
+};
+
 export type AngieMcpSdkOptions = {
   origin?: string;
   uiTheme?: string;
@@ -97,6 +101,7 @@ const DEFAULT_OPTIONS: Required<Omit<AngieMcpSdkOptions, 'widgetConfig'>> = {
 };
 
 export class AngieMcpSdk {
+  private appId?: string;
   private angieDetector: AngieDetector;
   private clientManager: ClientManager;
   private logger: Logger;
@@ -106,7 +111,8 @@ export class AngieMcpSdk {
   private sidebarV2BootPromise: Promise<void> | null = null;
   private promptHashListenerAttached = false;
 
-  constructor() {
+  constructor( options?: AngieMcpSdkConstructorOptions ) {
+    this.appId = options?.appId?.trim() || undefined;
     this.instanceId = generateInstanceId();
     this.logger = createChildLogger({ instanceId: this.instanceId });
     this.logger.log('Constructor called - initializing SDK');
@@ -127,6 +133,7 @@ export class AngieMcpSdk {
     const config = { ...DEFAULT_OPTIONS, ...rest };
     appState.containerId = config.containerId;
     appState.instanceId = this.instanceId;
+    appState.appId = this.appId;
     initAngieSidebar( { skipDefaultCss: config.skipDefaultCss } );
     const opened = await openIframe( config );
 
@@ -149,7 +156,7 @@ export class AngieMcpSdk {
       this.instanceId = options.host.instanceId;
     }
 
-    this.sidebarV2BootPromise = bootSidebar( { ...options, sdkInstanceId: this.instanceId } );
+    this.sidebarV2BootPromise = bootSidebar( { ...options, sdkInstanceId: this.instanceId, appId: this.appId } );
     this.setupPromptHashDetection();
     return this.sidebarV2BootPromise;
   }

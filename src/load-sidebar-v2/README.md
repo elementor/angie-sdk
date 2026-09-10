@@ -31,6 +31,16 @@ await sdk.loadSidebarV2({
 });
 ```
 
+**Angie App registry id** (optional). Not the same thing as `host.appId`: this is the `NG-...`
+id of a registered Angie App. Declare it on the constructor and it reaches the embedded app as
+the `appId` query parameter on the iframe URL.
+
+```typescript
+const sdk = new AngieMcpSdk( { appId: 'NG-XRLGFZE' } );
+```
+
+It belongs to the `AngieMcpSdk` object, so each instance on a page carries its own.
+
 Local demos:
 
 - [`demo/load-sidebar-v2-sidebar/`](../../demo/load-sidebar-v2-sidebar/) — minimal sidebar
@@ -219,6 +229,7 @@ types — it races the bridge and usually loses the payload the host meant to se
 | Static website/analytics fields | `host.website` / `host.analytics` |
 | Per-request context | `callbacks.getWebsiteContext` / `getAnalyticsContext` |
 | Auth headers | `callbacks.getExternalHeaders` |
+| Angie App registry id (`NG-...`) | `new AngieMcpSdk({ appId })` → iframe URL `?appId=` → in-memory in iframe (not `host.appId`) |
 | Host localStorage | Bridge (do not add a get/set listener) |
 
 Providers may be async. A throw becomes an error reply.

@@ -166,6 +166,44 @@ describe('openSaaSPage', () => {
       expect(resolved).toBe(true);
     });
 
+    it('should append appId to the iframe URL when provided', async () => {
+      const messagePromise = openSaaSPage({
+        ...defaultProps,
+        appId: 'NG-XRLGFZE',
+      });
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        data: { type: HostEventType.ANGIE_READY },
+      });
+
+      const result = await messagePromise;
+      const appendSpy = result.iframeUrlObject.searchParams.append as jest.MockedFunction<any>;
+      const appIdCall = appendSpy.mock.calls.find((call: any[]) => call[0] === 'appId');
+
+      expect(appIdCall?.[1]).toBe('NG-XRLGFZE');
+    });
+
+    it('should not add an appId param when none is provided', async () => {
+      const messagePromise = openSaaSPage(defaultProps);
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        data: { type: HostEventType.ANGIE_READY },
+      });
+
+      const result = await messagePromise;
+      const appendSpy = result.iframeUrlObject.searchParams.append as jest.MockedFunction<any>;
+
+      expect(appendSpy.mock.calls.find((call: any[]) => call[0] === 'appId')).toBeUndefined();
+    });
+
     it('should apply CSS styles correctly', async () => {
       const cssProps = {
         width: '400px',
