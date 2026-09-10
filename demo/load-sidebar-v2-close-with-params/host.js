@@ -14,7 +14,10 @@ const paramsDisplay = document.getElementById( 'params-display' );
 
 const displayReceivedParams = ( params ) => {
 	paramsDisplay.className = '';
-	paramsDisplay.innerHTML = '<pre>' + JSON.stringify( params, null, 2 ) + '</pre>';
+	const pre = document.createElement( 'pre' );
+	pre.textContent = JSON.stringify( params, null, 2 );
+	paramsDisplay.textContent = '';
+	paramsDisplay.appendChild( pre );
 };
 
 let previewHtmlPromise;
