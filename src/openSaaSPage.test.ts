@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
 import { openSaaSPage } from './openSaaSPage';
+import { createDefaultAppState } from './config';
 import { HostEventType } from './types';
 
 // Mock URL constructor
@@ -164,6 +165,41 @@ describe('openSaaSPage', () => {
       await messagePromise;
 
       expect(resolved).toBe(true);
+    });
+
+
+    it('stores the trigger token on the instance during the loaded handshake', async () => {
+      const instance = createDefaultAppState();
+      const ownWindow = { postMessage: jest.fn() };
+      Object.defineProperty(mockIframe, 'contentWindow', { value: ownWindow, writable: true });
+
+      const messagePromise = openSaaSPage({
+        ...defaultProps,
+        instance,
+      });
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        (call: any[]) => call[0] === 'message'
+      )?.[1];
+
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: {
+          type: HostEventType.ANGIE_LOADED,
+          payload: { triggerToken: 'session-trigger-token' },
+        },
+      });
+
+      messageListener({
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: { type: HostEventType.ANGIE_READY },
+      });
+
+      await messagePromise;
+
+      expect(instance.triggerToken).toBe('session-trigger-token');
     });
 
     it('should apply CSS styles correctly', async () => {

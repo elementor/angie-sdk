@@ -217,6 +217,14 @@ describe('AngieMcpSdk', () => {
   });
 
   describe('triggerAngie', () => {
+    beforeEach(() => {
+      appState.triggerToken = 'test-trigger-token';
+      jest.spyOn(instanceRegistry, 'getInstanceById').mockReturnValue({
+        ...appState,
+        triggerToken: 'test-trigger-token',
+      } as ReturnType<typeof instanceRegistry.getInstanceById>);
+    });
+
     it('should send a context attachment unchanged without requiring a prompt', async () => {
       const contextAttachment = {
         label: 'Selected error',
@@ -252,6 +260,7 @@ describe('AngieMcpSdk', () => {
 
       expect(triggerMessage.payload.prompt).toBeUndefined();
       expect(triggerMessage.payload.contextAttachment).toBe(contextAttachment);
+      expect(triggerMessage.payload.triggerToken).toBe('test-trigger-token');
       expect(triggerMessage.payload.context).toEqual({
         source: 'checkout-plugin',
         pageUrl: 'https://example.com/checkout',
