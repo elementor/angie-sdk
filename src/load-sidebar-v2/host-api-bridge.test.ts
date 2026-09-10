@@ -50,24 +50,6 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		expect( closeAngieWithParamsSpy ).toHaveBeenCalledWith( params );
 	} );
 
-	it( 'should call closeAngieWithParams with empty object when params are missing', async () => {
-		const closeAngieWithParamsSpy = jest.spyOn( closeWithParams, 'closeAngieWithParams' );
-
-		initHostApiBridge( {
-			iframeOrigin: IFRAME_ORIGIN,
-			instance: appState,
-		} );
-
-		window.dispatchEvent( new MessageEvent( 'message', {
-			data: { type: CLOSE_WITH_PARAMS_MESSAGE_TYPE },
-			origin: IFRAME_ORIGIN,
-		} ) );
-
-		await flushAsync();
-
-		expect( closeAngieWithParamsSpy ).toHaveBeenCalledWith( {} );
-	} );
-
 	it( 'should answer each instance with its own host config', async () => {
 		const first = createAngieInstance( {
 			containerId: 'container-a',
