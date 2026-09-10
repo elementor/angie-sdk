@@ -13,6 +13,7 @@ export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 export type HostConfig = {
 	appId: string;
 	instanceId?: string;
+	authMode?: 'host_pays';
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
 	analytics?: Record<string, unknown>;
@@ -90,8 +91,10 @@ export type ResolvedConfigV2 = {
 export type HostEmbeddedConfigPayload = {
 	aiContext?: Record<string, unknown>;
 	appId?: string;
+	authMode?: 'host_pays';
 	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
 	telemetry?: Record<string, unknown>;
+	topOrigin?: string;
 	website?: Record<string, unknown>;
 };
 
@@ -100,10 +103,12 @@ export const buildHostEmbeddedConfigPayload = (
 ): HostEmbeddedConfigPayload => ( {
 	aiContext: host.aiContext,
 	appId: host.appId,
+	...( host.authMode ? { authMode: host.authMode } : {} ),
 	configVersion: LOAD_SIDEBAR_V2_CONFIG_VERSION,
 	telemetry: {
 		screenPath: window.location.pathname,
 	},
+	...( host.authMode === 'host_pays' ? { topOrigin: window.top?.location.origin } : {} ),
 	website: {
 		docTitle: document.title,
 		homeUrl: window.location.origin,

@@ -22,6 +22,14 @@ import { resolveConfig, shouldBoot } from './resolve-config';
 import { registerSdkInstance, startSdkMessageRouting } from '../sdk';
 import { generateInstanceId } from '../utils';
 
+const ANGIE_ORIGINS = [
+	'https://angie.elementor.com',
+	'https://staging-angie.elementor.com',
+	'https://staging2-angie.elementor.com',
+];
+
+const isAngieOrigin = ( origin: string ): boolean => ANGIE_ORIGINS.includes( origin );
+
 export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void> => {
 	handlePostConsentRedirect();
 
@@ -30,6 +38,23 @@ export const bootSidebar = async ( options: LoadSidebarV2Options ): Promise<void
 
 	if ( ! shouldBoot( config, env ) ) {
 		return;
+	}
+
+	if ( config.host.authMode === 'host_pays' ) {
+		if ( window !== window.top ) {
+			throw new Error(
+				'Angie SDK: authMode "host_pays" cannot be used inside an iframe. ' +
+				'The SDK must run in the top window to capture the host origin.'
+			);
+		}
+
+		const topOrigin = window.location.origin;
+		if ( isAngieOrigin( topOrigin ) ) {
+			throw new Error(
+				`Angie SDK: authMode "host_pays" cannot be used from Angie origin (${ topOrigin }). ` +
+				'Host-pays authentication requires a third-party host origin.'
+			);
+		}
 	}
 
 	// Sidebar uses page-wide CSS and open state, so only one is supported.

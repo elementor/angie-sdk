@@ -208,4 +208,56 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		} );
 		expect( getFirstInstance()?.instanceId ).toBe( 'stable' );
 	} );
+
+	it( 'should reject host_pays authMode when running inside an iframe', async () => {
+		const originalTop = window.top;
+		Object.defineProperty( window, 'top', {
+			writable: true,
+			value: {},
+		} );
+
+		await expect( bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a', authMode: 'host_pays' },
+		} ) ).rejects.toThrow( /iframe/ );
+
+		Object.defineProperty( window, 'top', {
+			writable: true,
+			value: originalTop,
+		} );
+	} );
+
+	it( 'should reject host_pays authMode from angie.elementor.com origin', async () => {
+		const originalOrigin = window.location.origin;
+		delete ( window as { location?: unknown } ).location;
+		( window as { location: Partial<Location> } ).location = {
+			origin: 'https://angie.elementor.com',
+		} as Location;
+
+		await expect( bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a', authMode: 'host_pays' },
+		} ) ).rejects.toThrow( /Angie origin/ );
+
+		delete ( window as { location?: unknown } ).location;
+		( window as { location: Partial<Location> } ).location = {
+			origin: originalOrigin,
+		} as Location;
+	} );
+
+	it( 'should include authMode and topOrigin in embeddedConfig for host_pays', async () => {
+		await bootSidebar( {
+			container: { layout: LAYOUT_SIDEBAR },
+			host: { appId: 'app-a', authMode: 'host_pays' },
+		} );
+
+		expect( mockOpenEmbeddedIframe ).toHaveBeenCalledWith(
+			expect.objectContaining( {
+				embeddedConfig: expect.objectContaining( {
+					authMode: 'host_pays',
+					topOrigin: expect.any( String ),
+				} ),
+			} ),
+		);
+	} );
 } );

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>loadSidebarV2 — host_pays POC</title>
+  <script type="importmap">
+  {
+    "imports": {
+      "@modelcontextprotocol/sdk/types.js": "../../node_modules/@modelcontextprotocol/sdk/dist/esm/types.js",
+      "zod/v4": "../../node_modules/zod/v4/index.js"
+    }
+  }
+  </script>
+  <style>
+    body { margin: 0; padding: 1rem; font-family: system-ui, sans-serif; }
+    #demo-sidebar-toggle { padding: 0.5rem 1rem; cursor: pointer; }
+    .info { background: #f0f9ff; border: 1px solid #0284c7; padding: 1rem; margin: 1rem 0; border-radius: 4px; }
+    code { background: #e0e7ff; padding: 0.2rem 0.4rem; border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <p><a href="../">← All demos</a></p>
+  <h1>loadSidebarV2 — host_pays POC (AI-9487)</h1>
+  <div class="info">
+    <p><strong>POC:</strong> Demonstrates <code>authMode: 'host_pays'</code> where the host app authenticates on behalf of its users (no Elementor OAuth required).</p>
+    <p><strong>Payload includes:</strong></p>
+    <ul>
+      <li><code>authMode: 'host_pays'</code></li>
+      <li><code>topOrigin</code> (for backend validation)</li>
+    </ul>
+    <p><strong>Restrictions:</strong> Rejects if running in iframe or from angie.elementor.com origin.</p>
+  </div>
+  <button type="button" id="demo-sidebar-toggle">Open Angie (host_pays)</button>
+  <div id="angie-sidebar-container" aria-hidden="true"></div>
+  <script type="module" src="./host.js"></script>
+</body>
+</html>

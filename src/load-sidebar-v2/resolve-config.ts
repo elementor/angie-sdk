@@ -36,6 +36,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		host: {
 			appId: options.host.appId,
 			instanceId: options.host.instanceId,
+			authMode: options.host.authMode,
 			aiContext: options.host.aiContext,
 			website: options.host.website,
 			analytics: options.host.analytics,
