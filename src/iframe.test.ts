@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals
 import {
 	disableNavigationPrevention,
 	isValidPath,
+	openIframe,
 	registerIframeHostHandler,
 	resetIframeHostHandlersForTests,
 } from './iframe';
@@ -15,6 +16,24 @@ jest.mock( './logger', () => ( {
 		warn: jest.fn(),
 		error: jest.fn(),
 	} ) ),
+} ) );
+
+jest.mock( './openSaaSPage', () => ( {
+	openSaaSPage: jest.fn( () => Promise.resolve( {
+		iframe: document.createElement( 'iframe' ),
+		iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+	} ) ),
+} ) );
+
+jest.mock( './sdk', () => ( {
+	flushPendingSdkMessages: jest.fn(),
+	registerSdkInstance: jest.fn(),
+	startSdkMessageRouting: jest.fn(),
+} ) );
+
+jest.mock( './oauth', () => ( {
+	listenToOAuthFromIframe: jest.fn(),
+	setupOidcLoginFlowHandler: jest.fn(),
 } ) );
 
 describe( 'disableNavigationPrevention', () => {
@@ -191,6 +210,54 @@ describe( 'iframe host message routing', () => {
 			origin,
 		);
 		expect( sidebarWindow.postMessage ).not.toHaveBeenCalled();
+	} );
+} );
+
+describe( 'openIframe appId', () => {
+	let mockOpenSaaSPage: jest.Mock;
+
+	beforeEach( () => {
+		jest.clearAllMocks();
+		resetInstancesForTests();
+		resetIframeHostHandlersForTests();
+		// jsdom reports availWidth 0, which openIframe treats as mobile and skips.
+		Object.defineProperty( window.screen, 'availWidth', { value: 1280, configurable: true } );
+		document.body.innerHTML = '<div id="angie-sidebar-container"></div>';
+		mockOpenSaaSPage = require( './openSaaSPage' ).openSaaSPage as jest.Mock;
+	} );
+
+	afterEach( () => {
+		document.body.innerHTML = '';
+		resetIframeHostHandlersForTests();
+	} );
+
+	it( 'should forward the instance appId to the iframe url builder', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'angie-sidebar-container',
+			instanceId: 'demo-sidebar',
+			appId: 'NG-XRLGFZE',
+			layout: 'sidebar',
+		} );
+
+		await openIframe( { uiTheme: 'light', isRTL: false }, instance );
+
+		expect( mockOpenSaaSPage ).toHaveBeenCalledWith(
+			expect.objectContaining( { appId: 'NG-XRLGFZE' } ),
+		);
+	} );
+
+	it( 'should forward no appId when the instance has none', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'angie-sidebar-container',
+			instanceId: 'demo-sidebar',
+			layout: 'sidebar',
+		} );
+
+		await openIframe( { uiTheme: 'light', isRTL: false }, instance );
+
+		expect( mockOpenSaaSPage ).toHaveBeenCalledWith(
+			expect.objectContaining( { appId: undefined } ),
+		);
 	} );
 } );
 
