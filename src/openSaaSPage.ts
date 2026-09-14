@@ -1,6 +1,7 @@
 import { HostEventType } from "./types";
 import { generateInstanceId, isTrustedIframeMessage } from "./utils";
 import type { HostEmbeddedConfigPayload } from "./load-sidebar-v2/config";
+import type { AppState } from "./config";
 
 type OpenSaaSPageInput = {
 	origin: string;
@@ -16,6 +17,7 @@ type OpenSaaSPageInput = {
 	sdkVersion: string;
 	iframeElementId?: string;
 	instanceId?: string;
+	instance?: AppState;
 };
 
 type OpenSaaSPageOutput = {
@@ -79,13 +81,18 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 						iframeUrlObject,
 					} );
 					break;
-				case HostEventType.ANGIE_LOADED:
+				case HostEventType.ANGIE_LOADED: {
+					const triggerToken = event.data.payload?.triggerToken;
+					if ( props.instance && typeof triggerToken === 'string' ) {
+						props.instance.triggerToken = triggerToken;
+					}
 					iframe.contentWindow?.postMessage( {
 						type: HostEventType.HOST_READY,
 						instanceId,
 						...( props.embeddedConfig ? { embedded: props.embeddedConfig } : {} ),
 					}, iframeUrlObject.origin );
 					break;
+				}
 				default:
 					break;
 			}

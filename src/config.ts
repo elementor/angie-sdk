@@ -12,6 +12,7 @@ export type AppState = {
 	instanceId: string;
 	layout: LoadSidebarV2Layout | '';
 	iframeElementId: string;
+	triggerToken?: string;
 };
 
 export const createDefaultAppState = (): AppState => ( {

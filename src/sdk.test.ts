@@ -11,6 +11,7 @@ import {
 import { MessageEventType } from './types';
 
 const ANGIE_ORIGIN = 'https://angie.elementor.com';
+const TEST_TRIGGER_TOKEN = 'test-trigger-token';
 
 const registeredInstances: AppState[] = [];
 
@@ -24,6 +25,7 @@ const attachIframe = ( instance: AppState ) => {
 	const postMessage = jest.fn();
 	instance.iframeUrlObject = new URL( `${ ANGIE_ORIGIN }/angie/embedded` );
 	instance.iframe = { contentWindow: { postMessage } } as unknown as HTMLIFrameElement;
+	instance.triggerToken = TEST_TRIGGER_TOKEN;
 	return postMessage;
 };
 
@@ -70,7 +72,10 @@ describe( 'sdk', () => {
 		} );
 
 		expect( firstPostMessage ).toHaveBeenCalledWith(
-			expect.objectContaining( { type: MessageEventType.SDK_TRIGGER_ANGIE } ),
+			expect.objectContaining( {
+				type: MessageEventType.SDK_TRIGGER_ANGIE,
+				payload: expect.objectContaining( { triggerToken: TEST_TRIGGER_TOKEN } ),
+			} ),
 			ANGIE_ORIGIN,
 		);
 		expect( secondPostMessage ).not.toHaveBeenCalled();

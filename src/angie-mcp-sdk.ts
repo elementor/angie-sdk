@@ -355,6 +355,7 @@ export class AngieMcpSdk {
     }
 
     const requestId = this.generateRequestId();
+    const triggerToken = getInstanceById(this.instanceId)?.triggerToken;
     const timeout = request.options?.timeout || 30000;
 
     return new Promise((resolve, reject) => {
@@ -379,6 +380,7 @@ export class AngieMcpSdk {
         payload: {
           requestId,
           instanceId: this.instanceId,
+          triggerToken,
           prompt: request.prompt,
           options: request.options,
           contextAttachment: request.contextAttachment,
