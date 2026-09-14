@@ -75,7 +75,12 @@ export const shouldInstanceHandle = ( instance: AppState, instanceId?: string ):
 		return false;
 	}
 
-	// Missing id (old SDK) or unknown id (editor bundle): one iframe owner answers.
+	// Unknown instanceId with active registry: reject instead of falling through.
+	if ( instanceId && getInstanceById( instanceId ) === null && getInstanceCount() >= 1 ) {
+		return false;
+	}
+
+	// Missing id (old SDK) or unknown id (empty registry): one iframe owner answers.
 	return getFirstIframeInstance() === instance;
 };
 
