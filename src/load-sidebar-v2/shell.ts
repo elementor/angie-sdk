@@ -14,6 +14,7 @@ import {
 	wireToggleButton,
 } from './toggle-button';
 import { injectStyleThemeCss } from './inject-style-theme';
+import { notifyClose, registerInstanceCloser } from './close-with-params';
 
 export const initSidebarShell = (
 	container: ContainerConfig,
@@ -23,6 +24,17 @@ export const initSidebarShell = (
 	const toggleButtonSelector = container.chatToggleButton.enabled
 		? container.chatToggleButton.selector
 		: undefined;
+
+	// Set only for the duration of one synchronous close, and consumed by the
+	// `onToggle` below. Every other close reports `{}`.
+	let closeParams: Record<string, unknown> | undefined;
+
+	const consumeCloseParams = (): Record<string, unknown> => {
+		const params = closeParams ?? {};
+		closeParams = undefined;
+
+		return params;
+	};
 
 	initAngieSidebar( {
 		instance,
@@ -34,10 +46,24 @@ export const initSidebarShell = (
 
 			callbacks.onToggle?.( isOpen );
 
-			if ( ! isOpen && callbacks.onClose ) {
-				callbacks.onClose();
+			if ( ! isOpen ) {
+				notifyClose( callbacks.onClose, consumeCloseParams() );
 			}
 		},
+	} );
+
+	registerInstanceCloser( instance.instanceId, ( params ) => {
+		closeParams = params;
+
+		try {
+			window.toggleAngieSidebar?.( false );
+		} finally {
+			// The sidebar bails out when its container is missing, so deliver
+			// the result the host asked to send even if the UI never toggled.
+			if ( closeParams ) {
+				notifyClose( callbacks.onClose, consumeCloseParams() );
+			}
+		}
 	} );
 
 	injectStyleThemeCss( container.styleTheme );

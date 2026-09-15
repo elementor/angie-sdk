@@ -5,43 +5,52 @@ import { createChildLogger } from '../logger';
 
 const logger = createChildLogger( 'close-with-params' );
 
-const callbacksMap = new Map<string, CallbacksConfig['onCloseWithParams']>();
+/** Closes one instance's UI and reports `params` to its `onClose`. Owned by the layout shell. */
+type InstanceCloser = ( params: Record<string, unknown> ) => void;
 
-export const registerCloseWithParamsCallback = (
-	instanceId: string,
-	callback: CallbacksConfig['onCloseWithParams']
+const closers = new Map<string, InstanceCloser>();
+
+export const registerInstanceCloser = ( instanceId: string, closer: InstanceCloser ): void => {
+	closers.set( instanceId, closer );
+};
+
+/** A throwing host callback must not abort the close it was called from. */
+export const notifyClose = (
+	onClose: CallbacksConfig['onClose'],
+	params: Record<string, unknown>
 ): void => {
-	if ( callback ) {
-		callbacksMap.set( instanceId, callback );
+	try {
+		onClose?.( params );
+	} catch ( error ) {
+		logger.error( 'onClose callback threw:', error );
 	}
 };
 
 /**
- * Close Angie and invoke the onCloseWithParams callback for a specific instance.
+ * Close Angie with params for a specific instance.
  * Internal: used by host bridge when it knows the source instance.
  */
 export const closeAngieWithParamsForInstance = (
 	instance: AppState,
 	params: Record<string, unknown> = {}
 ): void => {
-	const callback = callbacksMap.get( instance.instanceId );
+	const closer = closers.get( instance.instanceId );
 
-	try {
-		if ( callback ) {
-			callback( params );
-		}
-	} catch ( error ) {
-		logger.error( 'onCloseWithParams callback threw:', error );
-	} finally {
-		window.toggleAngieSidebar?.( false );
+	if ( ! closer ) {
+		logger.warn( 'Cannot close: instance has no layout shell', {
+			instanceId: instance.instanceId,
+		} );
+		return;
 	}
+
+	closer( params );
 };
 
 /**
- * Close Angie and invoke the onCloseWithParams callback.
+ * Close Angie and pass params to `callbacks.onClose`.
  * Public API: host MCP tools call this directly.
  *
- * @param params - Parameters to pass to the onCloseWithParams callback
+ * @param params - Parameters to pass to onClose. Defaults to `{}`.
  * @param instanceId - Optional instance ID to target a specific Angie instance.
  *                     If omitted, targets the first registered instance.
  */
@@ -60,5 +69,5 @@ export const closeAngieWithParams = (
 };
 
 export const resetCloseWithParamsForTests = (): void => {
-	callbacksMap.clear();
+	closers.clear();
 };

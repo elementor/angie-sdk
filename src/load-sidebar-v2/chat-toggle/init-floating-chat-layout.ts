@@ -11,7 +11,7 @@ type InitFloatingChatLayoutArgs = {
 	iframeOrigin: string;
 	toggleButtonSelector: string;
 	injectToggleButton: boolean;
-	onClose?: () => void;
+	onClose?: ( params?: Record<string, unknown> ) => void;
 	instance: AppState;
 };
 

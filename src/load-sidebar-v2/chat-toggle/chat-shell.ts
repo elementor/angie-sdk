@@ -9,12 +9,13 @@ import {
 	CHAT_WIDGET_HIDDEN_CLASS,
 } from './constants';
 import { findToggleButton } from './toggle-button-element';
+import { notifyClose, registerInstanceCloser } from '../close-with-params';
 
 type InitChatShellArgs = {
 	containerId: string;
 	iframeOrigin: string;
 	toggleButtonSelector: string;
-	onClose?: () => void;
+	onClose?: ( params?: Record<string, unknown> ) => void;
 	instance: AppState;
 };
 
@@ -77,6 +78,10 @@ const isWidgetOpen = ( containerId: string ): boolean => {
 	return !! container && ! container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS );
 };
 
+const notifyOnClose = ( args: InitChatShellArgs ): void => {
+	notifyClose( args.onClose, {} );
+};
+
 const handleSidebarToggleMessage = (
 	args: InitChatShellArgs,
 	payload: { force?: boolean } | undefined,
@@ -87,7 +92,7 @@ const handleSidebarToggleMessage = (
 		setOpen( args, force );
 
 		if ( ! force ) {
-			args.onClose?.();
+			notifyOnClose( args );
 		}
 
 		return;
@@ -97,7 +102,7 @@ const handleSidebarToggleMessage = (
 	setOpen( args, ! wasOpen );
 
 	if ( wasOpen ) {
-		args.onClose?.();
+		notifyOnClose( args );
 	}
 };
 
@@ -111,7 +116,7 @@ const initToggleButton = ( args: InitChatShellArgs ): void => {
 			setOpen( args, ! wasOpen );
 
 			if ( wasOpen ) {
-				args.onClose?.();
+				notifyOnClose( args );
 			}
 		},
 	} );
@@ -158,6 +163,11 @@ const setupChatWidgetMessageListeners = ( args: InitChatShellArgs ): void => {
 export const initChatShell = ( args: InitChatShellArgs ): void => {
 	initToggleButton( args );
 	setupChatWidgetMessageListeners( args );
+
+	registerInstanceCloser( args.instance.instanceId, ( params ) => {
+		setOpen( args, false );
+		notifyClose( args.onClose, params );
+	} );
 
 	// Preserve the sidebar's global toggle when both layouts are used.
 	if ( ! hasSidebarLayoutInstance() ) {

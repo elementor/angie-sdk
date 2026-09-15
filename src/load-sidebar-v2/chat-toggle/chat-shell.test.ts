@@ -6,6 +6,7 @@ import { CHAT_WIDGET_HIDDEN_CLASS } from './constants';
 import { initChatShell, resetChatShellForTests, setChatWidgetOpen } from './chat-shell';
 import { createAngieInstance, resetInstancesForTests } from '../../instance-registry';
 import { resetHostMessageRouterForTests } from '../host-message-router';
+import { closeAngieWithParams, resetCloseWithParamsForTests } from '../close-with-params';
 
 jest.mock( '../../utils', () => ( {
 	...( jest.requireActual( '../../utils' ) as object ),
@@ -71,6 +72,7 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell multi-instance', () => {
 		resetChatShellForTests();
 		resetHostMessageRouterForTests();
 		resetInstancesForTests();
+		resetCloseWithParamsForTests();
 		document.body.innerHTML = `
 			<div id="chat-a" class="${ CHAT_WIDGET_HIDDEN_CLASS }"></div>
 			<div id="chat-b" class="${ CHAT_WIDGET_HIDDEN_CLASS }"></div>
@@ -116,6 +118,47 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell multi-instance', () => {
 		expect( document.getElementById( 'chat-b' )!.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) )
 			.toBe( false );
 		expect( document.getElementById( 'chat-a' )!.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) )
+			.toBe( true );
+	} );
+
+	it( 'should close only the targeted widget on close-with-params', () => {
+		const first = createAngieInstance( {
+			containerId: 'chat-a',
+			instanceId: 'aaaaaa',
+			layout: 'floatingChat',
+		} );
+		const second = createAngieInstance( {
+			containerId: 'chat-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+
+		const firstOnClose = jest.fn();
+		const secondOnClose = jest.fn();
+
+		initChatShell( {
+			containerId: 'chat-a',
+			iframeOrigin: IFRAME_ORIGIN,
+			toggleButtonSelector: '#toggle-a',
+			onClose: firstOnClose,
+			instance: first,
+		} );
+		initChatShell( {
+			containerId: 'chat-b',
+			iframeOrigin: IFRAME_ORIGIN,
+			toggleButtonSelector: '#toggle-b',
+			onClose: secondOnClose,
+			instance: second,
+		} );
+
+		document.getElementById( 'chat-b' )!.classList.remove( CHAT_WIDGET_HIDDEN_CLASS );
+
+		closeAngieWithParams( { reason: 'user-finished' }, 'bbbbbb' );
+
+		expect( secondOnClose ).toHaveBeenCalledTimes( 1 );
+		expect( secondOnClose ).toHaveBeenCalledWith( { reason: 'user-finished' } );
+		expect( firstOnClose ).not.toHaveBeenCalled();
+		expect( document.getElementById( 'chat-b' )!.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) )
 			.toBe( true );
 	} );
 

@@ -1,34 +1,28 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { closeAngieWithParams, closeAngieWithParamsForInstance, registerCloseWithParamsCallback, resetCloseWithParamsForTests } from './close-with-params';
+import { closeAngieWithParams, closeAngieWithParamsForInstance, registerInstanceCloser, resetCloseWithParamsForTests } from './close-with-params';
 import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
 
 describe( 'load-sidebar-v2/close-with-params', () => {
-	let mockToggle: jest.MockedFunction<typeof window.toggleAngieSidebar>;
-
 	beforeEach( () => {
 		jest.clearAllMocks();
 		resetCloseWithParamsForTests();
 		resetInstancesForTests();
-
-		mockToggle = jest.fn() as jest.MockedFunction<typeof window.toggleAngieSidebar>;
-		window.toggleAngieSidebar = mockToggle;
 	} );
 
-	it( 'should invoke the callback with params and then close', () => {
+	it( 'should close the first instance with the given params', () => {
 		const instance = createAngieInstance( {
 			containerId: 'container-a',
 			instanceId: 'test-instance',
 			layout: 'sidebar',
 		} );
 
-		const onCloseWithParams = jest.fn();
-		registerCloseWithParamsCallback( instance.instanceId, onCloseWithParams );
+		const closer = jest.fn();
+		registerInstanceCloser( instance.instanceId, closer );
 
 		const params = { reason: 'user-finished', orderId: '123' };
 		closeAngieWithParams( params );
 
-		expect( onCloseWithParams ).toHaveBeenCalledWith( params );
-		expect( mockToggle ).toHaveBeenCalledWith( false );
+		expect( closer ).toHaveBeenCalledWith( params );
 	} );
 
 	it( 'should target the correct instance when instanceId is provided', () => {
@@ -44,19 +38,18 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 			layout: 'floatingChat',
 		} );
 
-		const firstCallback = jest.fn();
-		const secondCallback = jest.fn();
-		registerCloseWithParamsCallback( first.instanceId, firstCallback );
-		registerCloseWithParamsCallback( second.instanceId, secondCallback );
+		const firstCloser = jest.fn();
+		const secondCloser = jest.fn();
+		registerInstanceCloser( first.instanceId, firstCloser );
+		registerInstanceCloser( second.instanceId, secondCloser );
 
 		closeAngieWithParams( { target: 'second' }, 'second-instance' );
 
-		expect( secondCallback ).toHaveBeenCalledWith( { target: 'second' } );
-		expect( firstCallback ).not.toHaveBeenCalled();
-		expect( mockToggle ).toHaveBeenCalledWith( false );
+		expect( secondCloser ).toHaveBeenCalledWith( { target: 'second' } );
+		expect( firstCloser ).not.toHaveBeenCalled();
 	} );
 
-	it( 'should invoke the callback for the correct instance in multi-instance scenario', () => {
+	it( 'should close the instance the bridge names', () => {
 		const first = createAngieInstance( {
 			containerId: 'container-a',
 			instanceId: 'first-instance',
@@ -69,35 +62,39 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 			layout: 'floatingChat',
 		} );
 
-		const firstCallback = jest.fn();
-		const secondCallback = jest.fn();
-		registerCloseWithParamsCallback( first.instanceId, firstCallback );
-		registerCloseWithParamsCallback( second.instanceId, secondCallback );
+		const firstCloser = jest.fn();
+		const secondCloser = jest.fn();
+		registerInstanceCloser( first.instanceId, firstCloser );
+		registerInstanceCloser( second.instanceId, secondCloser );
 
 		closeAngieWithParamsForInstance( second, { target: 'second' } );
 
-		expect( secondCallback ).toHaveBeenCalledWith( { target: 'second' } );
-		expect( firstCallback ).not.toHaveBeenCalled();
-		expect( mockToggle ).toHaveBeenCalledWith( false );
+		expect( secondCloser ).toHaveBeenCalledWith( { target: 'second' } );
+		expect( firstCloser ).not.toHaveBeenCalled();
 	} );
 
-	it( 'should close even when callback throws', () => {
+	it( 'should default to empty params', () => {
 		const instance = createAngieInstance( {
 			containerId: 'container-a',
 			instanceId: 'test-instance',
 			layout: 'sidebar',
 		} );
 
-		const onCloseWithParams = jest.fn( () => {
-			throw new Error( 'Callback error' );
+		const closer = jest.fn();
+		registerInstanceCloser( instance.instanceId, closer );
+
+		closeAngieWithParams();
+
+		expect( closer ).toHaveBeenCalledWith( {} );
+	} );
+
+	it( 'should not throw when the instance has no layout shell', () => {
+		createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'test-instance',
+			layout: 'sidebar',
 		} );
-		registerCloseWithParamsCallback( instance.instanceId, onCloseWithParams );
 
-		expect( () => {
-			closeAngieWithParams( { test: 'value' } );
-		} ).not.toThrow();
-
-		expect( onCloseWithParams ).toHaveBeenCalledWith( { test: 'value' } );
-		expect( mockToggle ).toHaveBeenCalledWith( false );
+		expect( () => closeAngieWithParams( { test: 'value' } ) ).not.toThrow();
 	} );
 } );

@@ -60,8 +60,8 @@ export type HostContextProvider = () =>
 	| Promise<Record<string, unknown>>;
 
 export type CallbacksConfig = {
-	onClose?: () => void;
-	onCloseWithParams?: ( params: Record<string, unknown> ) => void;
+	/** Dismiss passes `{}`. Close-with-result passes the result object. */
+	onClose?: ( params?: Record<string, unknown> ) => void;
 	/** Sidebar only. Floating chat uses `onClose`. */
 	onToggle?: ( isOpen: boolean ) => void;
 	getExternalHeaders?: ExternalHeadersCallback;

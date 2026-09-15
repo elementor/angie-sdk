@@ -59,7 +59,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
-| `callbacks` | `onClose`, `onCloseWithParams`, `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership) and [closeAngieWithParams](#closeangiewithparams)) |
+| `callbacks` | `onClose` (dismiss passes `{}`; close-with-result passes params), `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership) and [closeAngieWithParams](#closeangiewithparams)) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 
 Embedded config uses `configVersion: 2` (`LOAD_SIDEBAR_V2_CONFIG_VERSION`).
@@ -208,7 +208,7 @@ Full reference: [Hash Parameter Method](../../README.md#hash-parameter-method).
 - `GET_EXTERNAL_HEADERS` — `callbacks.getExternalHeaders()`
 - `angie/context/get-website-context` — `callbacks.getWebsiteContext()`, else host + document metadata
 - `angie/context/get-analytics-context` — `callbacks.getAnalyticsContext()`, else screen path + `host.analytics`
-- `angie/close-with-params` — calls `closeAngieWithParamsForInstance(instance, params)` for the bridged instance and invokes `callbacks.onCloseWithParams()`
+- `angie/close-with-params` — calls `closeAngieWithParamsForInstance(instance, params)` for the bridged instance and invokes `callbacks.onClose(params)`
 - Host localStorage get/set (V2 only; V1 uses [`localStorage.ts`](../localStorage.ts)). With `host.instanceId`, keys are scoped per widget (`logicalKey::__angie::<id>`); omit it for legacy unprefixed keys on a single widget.
 
 ### Message ownership
@@ -249,8 +249,8 @@ Host-side usage:
 await sdk.loadSidebarV2({
   host: { appId: 'my-app', instanceId: 'my-help-widget' },
   callbacks: {
-    onCloseWithParams: (params) => {
-      console.log('Angie closed with params:', params);
+    onClose: (params = {}) => {
+      console.log('Angie closed:', params);
     }
   }
 });

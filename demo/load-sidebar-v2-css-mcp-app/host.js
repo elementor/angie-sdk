@@ -290,7 +290,11 @@ await sdk.loadSidebarV2( {
 		uiTheme: 'light',
 	},
 	callbacks: {
-		onCloseWithParams: ( params ) => {
+		onClose: ( params ) => {
+			if ( ! params || Object.keys( params ).length === 0 ) {
+				return;
+			}
+
 			console.log( 'Received params from Angie:', params );
 			displayReceivedParams( params );
 		},

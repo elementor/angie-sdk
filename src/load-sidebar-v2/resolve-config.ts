@@ -64,7 +64,6 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 		},
 		callbacks: {
 			onClose: callbacks.onClose,
-			onCloseWithParams: callbacks.onCloseWithParams,
 			onToggle: callbacks.onToggle,
 			getExternalHeaders: callbacks.getExternalHeaders,
 			getWebsiteContext: callbacks.getWebsiteContext,
