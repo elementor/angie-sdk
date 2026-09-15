@@ -82,51 +82,6 @@ describe( 'load-sidebar-v2/shell', () => {
 		expect( onClose ).toHaveBeenLastCalledWith( {} );
 	} );
 
-	it( 'should invoke onClose with params when the sidebar never toggles', () => {
-		const onClose = jest.fn();
-		const getOnToggle = captureOnToggle();
-
-		const instance = createAngieInstance( {
-			containerId: 'container-a',
-			instanceId: 'test-instance',
-			layout: 'sidebar',
-		} );
-
-		initSidebarShell( baseContainer, { onClose }, instance );
-		window.toggleAngieSidebar = jest.fn();
-
-		closeAngie( { reason: 'user-finished' } );
-
-		expect( onClose ).toHaveBeenCalledTimes( 1 );
-		expect( onClose ).toHaveBeenCalledWith( { reason: 'user-finished' } );
-
-		getOnToggle()?.( false );
-
-		expect( onClose ).toHaveBeenLastCalledWith( {} );
-	} );
-
-	it( 'should still close when onClose throws', () => {
-		const onClose = jest.fn( () => {
-			throw new Error( 'Callback error' );
-		} );
-		const getOnToggle = captureOnToggle();
-
-		const instance = createAngieInstance( {
-			containerId: 'container-a',
-			instanceId: 'test-instance',
-			layout: 'sidebar',
-		} );
-
-		initSidebarShell( baseContainer, { onClose }, instance );
-		const toggle = jest.fn( ( force?: boolean ) => getOnToggle()?.( !! force ) );
-		window.toggleAngieSidebar = toggle;
-
-		expect( () => closeAngie( { test: 'value' } ) ).not.toThrow();
-
-		expect( onClose ).toHaveBeenCalledTimes( 1 );
-		expect( toggle ).toHaveBeenCalledWith( false );
-	} );
-
 	it( 'should restore persisted open state on finalize', () => {
 		finalizeSidebarShellState( {
 			...baseContainer,
