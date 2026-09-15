@@ -6,7 +6,7 @@ import { CHAT_WIDGET_HIDDEN_CLASS } from './constants';
 import { initChatShell, resetChatShellForTests, setChatWidgetOpen } from './chat-shell';
 import { createAngieInstance, resetInstancesForTests } from '../../instance-registry';
 import { resetHostMessageRouterForTests } from '../host-message-router';
-import { closeAngieWithParams, resetCloseWithParamsForTests } from '../close-with-params';
+import { closeAngie, resetCloseForTests } from '../close';
 
 jest.mock( '../../utils', () => ( {
 	...( jest.requireActual( '../../utils' ) as object ),
@@ -72,7 +72,7 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell multi-instance', () => {
 		resetChatShellForTests();
 		resetHostMessageRouterForTests();
 		resetInstancesForTests();
-		resetCloseWithParamsForTests();
+		resetCloseForTests();
 		document.body.innerHTML = `
 			<div id="chat-a" class="${ CHAT_WIDGET_HIDDEN_CLASS }"></div>
 			<div id="chat-b" class="${ CHAT_WIDGET_HIDDEN_CLASS }"></div>
@@ -121,7 +121,7 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell multi-instance', () => {
 			.toBe( true );
 	} );
 
-	it( 'should close only the targeted widget on close-with-params', () => {
+	it( 'should close only the targeted widget on closeAngie', () => {
 		const first = createAngieInstance( {
 			containerId: 'chat-a',
 			instanceId: 'aaaaaa',
@@ -153,7 +153,7 @@ describe( 'load-sidebar-v2/chat-toggle/chat-shell multi-instance', () => {
 
 		document.getElementById( 'chat-b' )!.classList.remove( CHAT_WIDGET_HIDDEN_CLASS );
 
-		closeAngieWithParams( { reason: 'user-finished' }, 'bbbbbb' );
+		closeAngie( { reason: 'user-finished' }, 'bbbbbb' );
 
 		expect( secondOnClose ).toHaveBeenCalledTimes( 1 );
 		expect( secondOnClose ).toHaveBeenCalledWith( { reason: 'user-finished' } );

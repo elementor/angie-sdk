@@ -1,4 +1,4 @@
-import { AngieMcpSdk, LAYOUT_SIDEBAR, McpAppDisplayMode, getAngieIframe, closeAngieWithParams } from '../../dist/index.js';
+import { AngieMcpSdk, LAYOUT_SIDEBAR, McpAppDisplayMode, getAngieIframe, closeAngie } from '../../dist/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
@@ -170,7 +170,7 @@ const createCssServer = () => {
 			},
 		},
 		async ( { orderId } ) => {
-			closeAngieWithParams( {
+			closeAngie( {
 				reason: 'user-finished',
 				orderId: orderId || '123',
 				timestamp: new Date().toISOString(),

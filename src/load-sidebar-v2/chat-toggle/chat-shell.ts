@@ -9,7 +9,7 @@ import {
 	CHAT_WIDGET_HIDDEN_CLASS,
 } from './constants';
 import { findToggleButton } from './toggle-button-element';
-import { notifyClose, registerInstanceCloser } from '../close-with-params';
+import { notifyClose, registerInstanceCloser } from '../close';
 
 type InitChatShellArgs = {
 	containerId: string;
@@ -78,10 +78,6 @@ const isWidgetOpen = ( containerId: string ): boolean => {
 	return !! container && ! container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS );
 };
 
-const notifyOnClose = ( args: InitChatShellArgs ): void => {
-	notifyClose( args.onClose, {} );
-};
-
 const handleSidebarToggleMessage = (
 	args: InitChatShellArgs,
 	payload: { force?: boolean } | undefined,
@@ -92,7 +88,7 @@ const handleSidebarToggleMessage = (
 		setOpen( args, force );
 
 		if ( ! force ) {
-			notifyOnClose( args );
+			notifyClose( args.onClose, {} );
 		}
 
 		return;
@@ -102,7 +98,7 @@ const handleSidebarToggleMessage = (
 	setOpen( args, ! wasOpen );
 
 	if ( wasOpen ) {
-		notifyOnClose( args );
+		notifyClose( args.onClose, {} );
 	}
 };
 
@@ -116,7 +112,7 @@ const initToggleButton = ( args: InitChatShellArgs ): void => {
 			setOpen( args, ! wasOpen );
 
 			if ( wasOpen ) {
-				notifyOnClose( args );
+				notifyClose( args.onClose, {} );
 			}
 		},
 	} );

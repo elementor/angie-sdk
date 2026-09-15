@@ -3,7 +3,7 @@ import type { AppState } from '../config';
 import type { CallbacksConfig } from './config';
 import { createChildLogger } from '../logger';
 
-const logger = createChildLogger( 'close-with-params' );
+const logger = createChildLogger( 'close' );
 
 /** Closes one instance's UI and reports `params` to its `onClose`. Owned by the layout shell. */
 type InstanceCloser = ( params: Record<string, unknown> ) => void;
@@ -27,10 +27,10 @@ export const notifyClose = (
 };
 
 /**
- * Close Angie with params for a specific instance.
+ * Close Angie for a specific instance.
  * Internal: used by host bridge when it knows the source instance.
  */
-export const closeAngieWithParamsForInstance = (
+export const closeAngieForInstance = (
 	instance: AppState,
 	params: Record<string, unknown> = {}
 ): void => {
@@ -54,7 +54,7 @@ export const closeAngieWithParamsForInstance = (
  * @param instanceId - Optional instance ID to target a specific Angie instance.
  *                     If omitted, targets the first registered instance.
  */
-export const closeAngieWithParams = (
+export const closeAngie = (
 	params: Record<string, unknown> = {},
 	instanceId?: string
 ): void => {
@@ -65,9 +65,9 @@ export const closeAngieWithParams = (
 		return;
 	}
 
-	closeAngieWithParamsForInstance( instance, params );
+	closeAngieForInstance( instance, params );
 };
 
-export const resetCloseWithParamsForTests = (): void => {
+export const resetCloseForTests = (): void => {
 	closers.clear();
 };

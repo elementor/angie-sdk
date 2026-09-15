@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { closeAngieWithParams, closeAngieWithParamsForInstance, registerInstanceCloser, resetCloseWithParamsForTests } from './close-with-params';
+import { closeAngie, closeAngieForInstance, registerInstanceCloser, resetCloseForTests } from './close';
 import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
 
-describe( 'load-sidebar-v2/close-with-params', () => {
+describe( 'load-sidebar-v2/close', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
-		resetCloseWithParamsForTests();
+		resetCloseForTests();
 		resetInstancesForTests();
 	} );
 
@@ -20,7 +20,7 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 		registerInstanceCloser( instance.instanceId, closer );
 
 		const params = { reason: 'user-finished', orderId: '123' };
-		closeAngieWithParams( params );
+		closeAngie( params );
 
 		expect( closer ).toHaveBeenCalledWith( params );
 	} );
@@ -43,7 +43,7 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 		registerInstanceCloser( first.instanceId, firstCloser );
 		registerInstanceCloser( second.instanceId, secondCloser );
 
-		closeAngieWithParams( { target: 'second' }, 'second-instance' );
+		closeAngie( { target: 'second' }, 'second-instance' );
 
 		expect( secondCloser ).toHaveBeenCalledWith( { target: 'second' } );
 		expect( firstCloser ).not.toHaveBeenCalled();
@@ -67,7 +67,7 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 		registerInstanceCloser( first.instanceId, firstCloser );
 		registerInstanceCloser( second.instanceId, secondCloser );
 
-		closeAngieWithParamsForInstance( second, { target: 'second' } );
+		closeAngieForInstance( second, { target: 'second' } );
 
 		expect( secondCloser ).toHaveBeenCalledWith( { target: 'second' } );
 		expect( firstCloser ).not.toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 		const closer = jest.fn();
 		registerInstanceCloser( instance.instanceId, closer );
 
-		closeAngieWithParams();
+		closeAngie();
 
 		expect( closer ).toHaveBeenCalledWith( {} );
 	} );
@@ -95,6 +95,6 @@ describe( 'load-sidebar-v2/close-with-params', () => {
 			layout: 'sidebar',
 		} );
 
-		expect( () => closeAngieWithParams( { test: 'value' } ) ).not.toThrow();
+		expect( () => closeAngie( { test: 'value' } ) ).not.toThrow();
 	} );
 } );

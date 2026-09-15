@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { initAngieSidebar, initializeResize, loadState } from '../sidebar';
 import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
 import { initSidebarShell, finalizeSidebarShellState } from './shell';
-import { closeAngieWithParams, resetCloseWithParamsForTests } from './close-with-params';
+import { closeAngie, resetCloseForTests } from './close';
 
 jest.mock( '../sidebar', () => ( {
 	ANGIE_SIDEBAR_STATE_CLOSED: 'closed',
@@ -28,7 +28,7 @@ const baseContainer = {
 describe( 'load-sidebar-v2/shell', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
-		resetCloseWithParamsForTests();
+		resetCloseForTests();
 		resetInstancesForTests();
 		delete ( window as Partial<Window> ).toggleAngieSidebar;
 	} );
@@ -57,7 +57,7 @@ describe( 'load-sidebar-v2/shell', () => {
 		expect( initializeResize ).not.toHaveBeenCalled();
 	} );
 
-	it( 'should invoke onClose once with params on close-with-params', () => {
+	it( 'should invoke onClose once with params on closeAngie', () => {
 		const onClose = jest.fn();
 		const getOnToggle = captureOnToggle();
 
@@ -70,7 +70,7 @@ describe( 'load-sidebar-v2/shell', () => {
 		initSidebarShell( baseContainer, { onClose }, instance );
 		window.toggleAngieSidebar = jest.fn( ( force?: boolean ) => getOnToggle()?.( !! force ) );
 
-		closeAngieWithParams( { reason: 'user-finished' } );
+		closeAngie( { reason: 'user-finished' } );
 
 		expect( onClose ).toHaveBeenCalledTimes( 1 );
 		expect( onClose ).toHaveBeenCalledWith( { reason: 'user-finished' } );
@@ -95,7 +95,7 @@ describe( 'load-sidebar-v2/shell', () => {
 		initSidebarShell( baseContainer, { onClose }, instance );
 		window.toggleAngieSidebar = jest.fn();
 
-		closeAngieWithParams( { reason: 'user-finished' } );
+		closeAngie( { reason: 'user-finished' } );
 
 		expect( onClose ).toHaveBeenCalledTimes( 1 );
 		expect( onClose ).toHaveBeenCalledWith( { reason: 'user-finished' } );
@@ -121,7 +121,7 @@ describe( 'load-sidebar-v2/shell', () => {
 		const toggle = jest.fn( ( force?: boolean ) => getOnToggle()?.( !! force ) );
 		window.toggleAngieSidebar = toggle;
 
-		expect( () => closeAngieWithParams( { test: 'value' } ) ).not.toThrow();
+		expect( () => closeAngie( { test: 'value' } ) ).not.toThrow();
 
 		expect( onClose ).toHaveBeenCalledTimes( 1 );
 		expect( toggle ).toHaveBeenCalledWith( false );

@@ -14,7 +14,7 @@ import {
 	wireToggleButton,
 } from './toggle-button';
 import { injectStyleThemeCss } from './inject-style-theme';
-import { notifyClose, registerInstanceCloser } from './close-with-params';
+import { notifyClose, registerInstanceCloser } from './close';
 
 export const initSidebarShell = (
 	container: ContainerConfig,
