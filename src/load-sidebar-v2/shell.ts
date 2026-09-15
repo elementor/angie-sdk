@@ -25,13 +25,14 @@ export const initSidebarShell = (
 		? container.chatToggleButton.selector
 		: undefined;
 
-	// Set only for the duration of one synchronous close, and consumed by the
-	// `onToggle` below. Every other close reports `{}`.
-	let closeParams: Record<string, unknown> | undefined;
+	// closeAngie reuses toggleAngieSidebar(false) so UI, onToggle, and persist
+	// stay in sync. That ends in onToggle(false), same as a user dismiss: write
+	// the result here, take it once. Empty slot → onClose({}).
+	let pendingOnCloseParams: Record<string, unknown> | undefined;
 
-	const consumeCloseParams = (): Record<string, unknown> => {
-		const params = closeParams ?? {};
-		closeParams = undefined;
+	const takeOnCloseParams = (): Record<string, unknown> => {
+		const params = pendingOnCloseParams ?? {};
+		pendingOnCloseParams = undefined;
 
 		return params;
 	};
@@ -47,21 +48,20 @@ export const initSidebarShell = (
 			callbacks.onToggle?.( isOpen );
 
 			if ( ! isOpen ) {
-				notifyClose( callbacks.onClose, consumeCloseParams() );
+				notifyClose( callbacks.onClose, takeOnCloseParams() );
 			}
 		},
 	} );
 
 	registerInstanceCloser( instance.instanceId, ( params ) => {
-		closeParams = params;
+		pendingOnCloseParams = params;
 
 		try {
 			window.toggleAngieSidebar?.( false );
 		} finally {
-			// The sidebar bails out when its container is missing, so deliver
-			// the result the host asked to send even if the UI never toggled.
-			if ( closeParams ) {
-				notifyClose( callbacks.onClose, consumeCloseParams() );
+			// No container → toggle skips onToggle. Still deliver the result.
+			if ( pendingOnCloseParams ) {
+				notifyClose( callbacks.onClose, takeOnCloseParams() );
 			}
 		}
 	} );
