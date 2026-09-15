@@ -15,6 +15,19 @@ const styleEl = document.getElementById( 'angie-custom-css' );
 const codeEl = document.getElementById( 'css-code' );
 const headingEl = document.querySelector( HEADING_SELECTOR );
 const aiButton = document.getElementById( 'css-ai-button' );
+const hostClosePanel = document.getElementById( 'host-close-panel' );
+const hostClosePayload = document.getElementById( 'host-close-payload' );
+
+const showCloseOnHost = ( payload ) => {
+	console.log( 'close-chat', payload );
+
+	if ( ! hostClosePanel || ! hostClosePayload ) {
+		return;
+	}
+
+	hostClosePayload.textContent = JSON.stringify( payload, null, 2 );
+	hostClosePanel.hidden = false;
+};
 
 const getAppliedCss = () => styleEl.textContent.trim();
 
@@ -73,6 +86,7 @@ const createCssServer = () => {
 				'The CSS that is currently applied arrives as page context or as an attachment on the user message — there is no tool for reading it.',
 				'Call propose-css with the full replacement stylesheet. That renders a preview card in the chat where the user reviews the code.',
 				'Do not call apply-css yourself. The user applies the CSS from the preview card.',
+				'When the user is done, call close-chat with a short reason. That closes the sidebar and sends the reason to the host page.',
 			].join( ' ' ),
 		}
 	);
@@ -112,6 +126,24 @@ const createCssServer = () => {
 					appliedCss: getAppliedCss(),
 					version: appliedVersion,
 				},
+			};
+		}
+	);
+
+	server.registerTool(
+		'close-chat',
+		{
+			description: 'Close the Angie sidebar and send a reason to the host page.',
+			inputSchema: {
+				reason: z.string().describe( 'The reason for closing the chat' ),
+			},
+		},
+		async ( { reason } ) => {
+			window.toggleAngieSidebar?.( false );
+			showCloseOnHost( { reason } );
+
+			return {
+				content: [ { type: 'text', text: 'Chat closed' } ],
 			};
 		}
 	);
@@ -181,6 +213,7 @@ const buildAiContext = () => ( {
 	},
 	whatUserCanDo: [
 		'Ask for a new heading style, review the proposed CSS in the preview card, and apply it',
+		'Ask Angie to close the chat when finished; the host receives the close reason',
 	],
 } );
 

@@ -55,6 +55,13 @@
     #css-ai-button:disabled { opacity: 0.5; cursor: default; }
     .code-panel pre { margin: 0; padding: 0.75rem; overflow-x: auto; }
     .code-panel code { font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: #111827; tab-size: 2; }
+    #host-close-panel {
+      margin-top: 1rem; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.5rem;
+      background: #f9fafb;
+    }
+    #host-close-panel[hidden] { display: none; }
+    #host-close-panel h2 { margin: 0 0 0.5rem; font-size: 0.85rem; color: #374151; }
+    #host-close-payload { margin: 0; font: 0.8rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; }
   </style>
 </head>
 <body>
@@ -65,6 +72,8 @@
     Ask for a style change in the sidebar. Angie calls <code>propose-css</code>, which renders an MCP App
     preview card inside the chat. The CSS only reaches this page when you click <strong>Apply to page</strong>
     in that card — the button calls the <code>apply-css</code> tool directly.
+    When you are done, ask Angie to close. It calls <code>close-chat</code>, which uses
+    <code>toggleAngieSidebar(false)</code> and writes the reason onto this page.
   </p>
 
   <p><button type="button" id="demo-sidebar-toggle">Open Angie</button></p>
@@ -85,6 +94,11 @@
     </div>
     <pre><code id="css-code"></code></pre>
   </div>
+
+  <section id="host-close-panel" hidden>
+    <h2>Last close-chat payload</h2>
+    <pre id="host-close-payload"></pre>
+  </section>
   </main>
 
   <div id="angie-sidebar-container" aria-hidden="true"></div>
