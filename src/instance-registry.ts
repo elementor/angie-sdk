@@ -6,7 +6,7 @@ import {
 } from './config';
 import { LAYOUT_SIDEBAR, type LoadSidebarV2Layout } from './load-sidebar-v2/config';
 
-export type CreateAngieInstanceArgs = Pick<AppState, 'containerId' | 'instanceId'> & {
+export type CreateAngieInstanceArgs = Pick<AppState, 'containerId' | 'instanceId' | 'appId'> & {
 	layout: LoadSidebarV2Layout;
 };
 

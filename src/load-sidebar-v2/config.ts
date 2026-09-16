@@ -76,6 +76,7 @@ export type LoadSidebarV2Options = {
 	callbacks?: CallbacksConfig;
 	widgetConfig?: WidgetConfig;
 	sdkInstanceId?: string;
+	appId?: string;
 };
 
 export type ResolvedConfigV2 = {
