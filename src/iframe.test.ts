@@ -235,14 +235,14 @@ describe( 'openIframe appId', () => {
 		const instance = createAngieInstance( {
 			containerId: 'angie-sidebar-container',
 			instanceId: 'demo-sidebar',
-			appId: 'NG-XRLGFZE',
+			appId: 'NG-ab35bf57',
 			layout: 'sidebar',
 		} );
 
 		await openIframe( { uiTheme: 'light', isRTL: false }, instance );
 
 		expect( mockOpenSaaSPage ).toHaveBeenCalledWith(
-			expect.objectContaining( { appId: 'NG-XRLGFZE' } ),
+			expect.objectContaining( { appId: 'NG-ab35bf57' } ),
 		);
 	} );
 

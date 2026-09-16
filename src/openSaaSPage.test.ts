@@ -169,7 +169,7 @@ describe('openSaaSPage', () => {
     it('should append appId to the iframe URL when provided', async () => {
       const messagePromise = openSaaSPage({
         ...defaultProps,
-        appId: 'NG-XRLGFZE',
+        appId: 'NG-ab35bf57',
       });
 
       const messageListener = mockWindow.addEventListener.mock.calls.find(
@@ -184,7 +184,7 @@ describe('openSaaSPage', () => {
       const appendSpy = result.iframeUrlObject.searchParams.append as jest.MockedFunction<any>;
       const appIdCall = appendSpy.mock.calls.find((call: any[]) => call[0] === 'appId');
 
-      expect(appIdCall?.[1]).toBe('NG-XRLGFZE');
+      expect(appIdCall?.[1]).toBe('NG-ab35bf57');
     });
 
     it('should not add an appId param when none is provided', async () => {

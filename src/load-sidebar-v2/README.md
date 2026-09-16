@@ -36,7 +36,7 @@ id of a registered Angie App. Declare it on the constructor and it reaches the e
 the `appId` query parameter on the iframe URL.
 
 ```typescript
-const sdk = new AngieMcpSdk( { appId: 'NG-XRLGFZE' } );
+const sdk = new AngieMcpSdk( { appId: 'NG-ab35bf57' } );
 ```
 
 It belongs to the `AngieMcpSdk` object, so each instance on a page carries its own.

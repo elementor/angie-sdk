@@ -92,10 +92,10 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },
 			host: { appId: 'editor-lite' },
-			appId: 'NG-XRLGFZE',
+			appId: 'NG-ab35bf57',
 		} );
 
-		expect( getFirstInstance()?.appId ).toBe( 'NG-XRLGFZE' );
+		expect( getFirstInstance()?.appId ).toBe( 'NG-ab35bf57' );
 	} );
 
 	it( 'should leave the instance appId unset when the sdk has none', async () => {
@@ -111,23 +111,23 @@ describe( 'load-sidebar-v2/boot-sidebar', () => {
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },
 			host: { appId: 'app-a', instanceId: 'first' },
-			appId: 'NG-XRLGFXYZ',
+			appId: 'NG-d31f8ede',
 		} );
 		await bootSidebar( {
 			container: { id: 'second-container', layout: LAYOUT_FLOATING_CHAT },
 			host: { appId: 'app-b', instanceId: 'second' },
-			appId: 'NG-XRLGFZRX',
+			appId: 'NG-dcd96e2f',
 		} );
 
-		expect( getInstanceById( 'first' )?.appId ).toBe( 'NG-XRLGFXYZ' );
-		expect( getInstanceById( 'second' )?.appId ).toBe( 'NG-XRLGFZRX' );
+		expect( getInstanceById( 'first' )?.appId ).toBe( 'NG-d31f8ede' );
+		expect( getInstanceById( 'second' )?.appId ).toBe( 'NG-dcd96e2f' );
 	} );
 
 	it( 'should not leak an appId to a sibling instance that declares none', async () => {
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },
 			host: { appId: 'app-a', instanceId: 'first' },
-			appId: 'NG-XRLGFXYZ',
+			appId: 'NG-d31f8ede',
 		} );
 		await bootSidebar( {
 			container: { id: 'second-container', layout: LAYOUT_FLOATING_CHAT },
