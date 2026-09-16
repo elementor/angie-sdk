@@ -48,7 +48,6 @@ describe( 'instance-registry host-to-host routing', () => {
 		first.iframe = fakeIframe();
 
 		expect( shouldInstanceHandle( first, 'bbbbbb' ) ).toBe( false );
-		expect( shouldInstanceHandle( first, 'unknown-editor-id' ) ).toBe( true );
 	} );
 
 	it( 'should let exactly one iframe owner handle an unaddressed message', () => {
@@ -88,5 +87,48 @@ describe( 'instance-registry host-to-host routing', () => {
 		second.iframe = fakeIframe();
 
 		expect( shouldInstanceHandle( second, 'unknown-editor-id' ) ).toBe( false );
+	} );
+
+	describe( 'unknown instanceId with active registry', () => {
+		it( 'should reject unknown instanceId when registry has instances', () => {
+			const first = createAngieInstance( SIDEBAR_ARGS );
+			const second = createAngieInstance( CHAT_ARGS );
+			first.iframe = fakeIframe();
+
+			expect( shouldInstanceHandle( first, 'unknown-id' ) ).toBe( false );
+			expect( shouldInstanceHandle( second, 'unknown-id' ) ).toBe( false );
+		} );
+
+		it( 'should reject unknown instanceId even when only one instance exists', () => {
+			const first = createAngieInstance( SIDEBAR_ARGS );
+			first.iframe = fakeIframe();
+
+			expect( shouldInstanceHandle( first, 'unknown-id' ) ).toBe( false );
+		} );
+
+		it( 'should still handle messages addressed to self', () => {
+			const first = createAngieInstance( SIDEBAR_ARGS );
+			first.iframe = fakeIframe();
+
+			expect( shouldInstanceHandle( first, 'aaaaaa' ) ).toBe( true );
+		} );
+
+		it( 'should still reject known sibling instanceId', () => {
+			const first = createAngieInstance( SIDEBAR_ARGS );
+			const second = createAngieInstance( CHAT_ARGS );
+			first.iframe = fakeIframe();
+
+			expect( shouldInstanceHandle( first, 'bbbbbb' ) ).toBe( false );
+		} );
+
+		it( 'should still handle unaddressed messages with legacy first-iframe behavior', () => {
+			const first = createAngieInstance( SIDEBAR_ARGS );
+			const second = createAngieInstance( CHAT_ARGS );
+			first.iframe = fakeIframe();
+			second.iframe = fakeIframe();
+
+			expect( shouldInstanceHandle( first, undefined ) ).toBe( true );
+			expect( shouldInstanceHandle( second, undefined ) ).toBe( false );
+		} );
 	} );
 } );
