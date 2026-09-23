@@ -1,6 +1,9 @@
-import { HostEventType } from "./types";
+import { HostEventType, MessageEventType } from "./types";
 import { generateInstanceId, isTrustedIframeMessage } from "./utils";
 import type { HostEmbeddedConfigPayload } from "./load-sidebar-v2/config";
+import { ensureEmbedToken } from "./embed-token";
+import type { EmbedTokenPayload } from "./types";
+import logger from "./logger";
 
 type OpenSaaSPageInput = {
 	origin: string;
@@ -22,6 +25,7 @@ type OpenSaaSPageInput = {
 type OpenSaaSPageOutput = {
 	iframe: HTMLIFrameElement;
 	iframeUrlObject: URL;
+	embedToken?: EmbedTokenPayload;
 };
 
 export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaSPageOutput> => {
@@ -30,6 +34,16 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 	// e.g. "text-to-elementor-vm2qhj"
 	const instanceSuffix = props.instanceId || generateInstanceId();
 	const instanceId = pathUrl.pathname.slice( 1 ).replace( /\//, '--' ) + '-' + instanceSuffix;
+
+	let embedToken: EmbedTokenPayload | undefined;
+
+	if ( props.appId ) {
+		try {
+			embedToken = await ensureEmbedToken( props.appId, origin );
+		} catch ( error ) {
+			logger.warn( 'Failed to mint embed session token:', error instanceof Error ? error.message : String( error ) );
+		}
+	}
 
 	return new Promise( ( resolve ) => {
 		const iframeUrlObject = new URL( origin );
@@ -79,9 +93,16 @@ export const openSaaSPage = async ( props: OpenSaaSPageInput ): Promise<OpenSaaS
 
 			switch ( event.data.type ) {
 				case HostEventType.ANGIE_READY:
+					if ( embedToken ) {
+						iframe.contentWindow?.postMessage( {
+							type: MessageEventType.ANGIE_EMBED_TOKEN_SET,
+							payload: embedToken,
+						}, iframeUrlObject.origin );
+					}
 					resolve( {
 						iframe,
 						iframeUrlObject,
+						embedToken,
 					} );
 					break;
 				case HostEventType.ANGIE_LOADED:

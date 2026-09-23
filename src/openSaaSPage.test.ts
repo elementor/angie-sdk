@@ -1,6 +1,19 @@
 import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
 import { openSaaSPage } from './openSaaSPage';
-import { HostEventType } from './types';
+import { HostEventType, MessageEventType } from './types';
+import * as embedToken from './embed-token';
+import logger from './logger';
+
+jest.mock( './embed-token' );
+jest.mock( './logger', () => ( {
+	__esModule: true,
+	default: {
+		warn: jest.fn(),
+		error: jest.fn(),
+		info: jest.fn(),
+		debug: jest.fn(),
+	},
+} ) );
 
 // Mock URL constructor
 const originalURL = global.URL;
@@ -41,6 +54,12 @@ describe('openSaaSPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // Mock embed token by default
+    ( embedToken.ensureEmbedToken as jest.MockedFunction<typeof embedToken.ensureEmbedToken> ).mockResolvedValue( {
+      embedToken: 'mock-token',
+      exp: Math.floor( Date.now() / 1000 ) + 300,
+    } );
+
     // Mock window object
     mockWindow = {
       matchMedia: jest.fn().mockReturnValue({ matches: false }),
@@ -60,6 +79,7 @@ describe('openSaaSPage', () => {
       setAttribute: jest.fn(),
       id: '',
       getAttribute: jest.fn(),
+      contentWindow: null,
     } as any;
 
     mockDocument = {
@@ -172,6 +192,8 @@ describe('openSaaSPage', () => {
         appId: 'NG-ab35bf57',
       });
 
+      await new Promise( ( resolve ) => setTimeout( resolve, 10 ) );
+
       const messageListener = mockWindow.addEventListener.mock.calls.find(
         (call: any[]) => call[0] === 'message'
       )?.[1];
@@ -234,5 +256,154 @@ describe('openSaaSPage', () => {
       expect(styleValue).toContain('width: 400px');
       expect(styleValue).toContain('height: 300px');
     });
+
+    it( 'should mint embed token when appId is provided', async () => {
+      const ownWindow = { postMessage: jest.fn() };
+      Object.defineProperty( mockIframe, 'contentWindow', { value: ownWindow, writable: true } );
+
+      const messagePromise = openSaaSPage( {
+        ...defaultProps,
+        appId: 'NG-test-123',
+      } );
+
+      await new Promise( ( resolve ) => setTimeout( resolve, 10 ) );
+
+      expect( embedToken.ensureEmbedToken ).toHaveBeenCalledWith(
+        'NG-test-123',
+        'https://angie.elementor.com'
+      );
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        ( call: any[] ) => call[ 0 ] === 'message'
+      )?.[1];
+
+      messageListener( {
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: { type: HostEventType.ANGIE_READY },
+      } );
+
+      const result = await messagePromise;
+      expect( result.embedToken ).toEqual( {
+        embedToken: 'mock-token',
+        exp: expect.any( Number ),
+      } );
+    } );
+
+    it( 'should send embed token to iframe on ANGIE_READY', async () => {
+      const ownWindow = { postMessage: jest.fn() };
+      Object.defineProperty( mockIframe, 'contentWindow', { value: ownWindow, writable: true } );
+
+      const messagePromise = openSaaSPage( {
+        ...defaultProps,
+        appId: 'NG-test-123',
+      } );
+
+      await new Promise( ( resolve ) => setTimeout( resolve, 10 ) );
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        ( call: any[] ) => call[ 0 ] === 'message'
+      )?.[1];
+
+      messageListener( {
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: { type: HostEventType.ANGIE_READY },
+      } );
+
+      await messagePromise;
+
+      expect( ownWindow.postMessage ).toHaveBeenCalledWith(
+        {
+          type: MessageEventType.ANGIE_EMBED_TOKEN_SET,
+          payload: {
+            embedToken: 'mock-token',
+            exp: expect.any( Number ),
+          },
+        },
+        'https://angie.elementor.com'
+      );
+    } );
+
+    it( 'should not mint embed token when appId is not provided', async () => {
+      const messagePromise = openSaaSPage( defaultProps );
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        ( call: any[] ) => call[ 0 ] === 'message'
+      )?.[1];
+
+      messageListener( {
+        origin: 'https://angie.elementor.com',
+        data: { type: HostEventType.ANGIE_READY },
+      } );
+
+      const result = await messagePromise;
+
+      expect( embedToken.ensureEmbedToken ).not.toHaveBeenCalled();
+      expect( result.embedToken ).toBeUndefined();
+    } );
+
+    it( 'should handle embed token mint failure gracefully', async () => {
+      ( embedToken.ensureEmbedToken as jest.MockedFunction<typeof embedToken.ensureEmbedToken> )
+        .mockRejectedValue( new Error( 'Mint failed' ) );
+
+      const messagePromise = openSaaSPage( {
+        ...defaultProps,
+        appId: 'NG-test-123',
+      } );
+
+      await new Promise( ( resolve ) => setTimeout( resolve, 10 ) );
+
+      expect( logger.warn ).toHaveBeenCalledWith(
+        'Failed to mint embed session token:',
+        'Mint failed'
+      );
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        ( call: any[] ) => call[ 0 ] === 'message'
+      )?.[1];
+
+      messageListener( {
+        origin: 'https://angie.elementor.com',
+        data: { type: HostEventType.ANGIE_READY },
+      } );
+
+      const result = await messagePromise;
+      expect( result.embedToken ).toBeUndefined();
+    } );
+
+    it( 'should not send embed token when mint fails', async () => {
+      ( embedToken.ensureEmbedToken as jest.MockedFunction<typeof embedToken.ensureEmbedToken> )
+        .mockRejectedValue( new Error( 'Mint failed' ) );
+
+      const ownWindow = { postMessage: jest.fn() };
+      Object.defineProperty( mockIframe, 'contentWindow', { value: ownWindow, writable: true } );
+
+      const messagePromise = openSaaSPage( {
+        ...defaultProps,
+        appId: 'NG-test-123',
+      } );
+
+      await new Promise( ( resolve ) => setTimeout( resolve, 10 ) );
+
+      const messageListener = mockWindow.addEventListener.mock.calls.find(
+        ( call: any[] ) => call[ 0 ] === 'message'
+      )?.[1];
+
+      messageListener( {
+        origin: 'https://angie.elementor.com',
+        source: ownWindow,
+        data: { type: HostEventType.ANGIE_READY },
+      } );
+
+      await messagePromise;
+
+      expect( ownWindow.postMessage ).not.toHaveBeenCalledWith(
+        expect.objectContaining( {
+          type: MessageEventType.ANGIE_EMBED_TOKEN_SET,
+        } ),
+        expect.any( String )
+      );
+    } );
   });
 });
