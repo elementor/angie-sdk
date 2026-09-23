@@ -25,7 +25,7 @@ Each of these examples demonstrates different WordPress tasks:
 
 ### Prerequisites
 
-- Node.js (version 16 or higher)
+- Node.js (version 24 or higher)
 - npm or yarn
 - Docker (for wp-env WordPress environment)
 

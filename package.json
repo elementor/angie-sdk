@@ -34,6 +34,9 @@
   ],
   "author": "Elementor",
   "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "dependencies": {
     "@elementor/angie-logger": "^0.3.1",
     "@elementor/oidc-auth": "^0.1.0"
@@ -45,7 +48,7 @@
     "@eslint/js": "^8.0.0",
     "@modelcontextprotocol/sdk": "1.27.0",
     "@types/jest": "^29.5.12",
-    "@types/node": "^20.19.0",
+    "@types/node": "^24",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
     "eslint": "^8.56.0",
