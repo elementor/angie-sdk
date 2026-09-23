@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { HostLocalStorageEventType } from '../types';
+import { HostLocalStorageEventType, MessageEventType } from '../types';
 import type { ExternalHeadersCallback } from './config';
 import {
 	GET_ANALYTICS_CONTEXT_MESSAGE_TYPE,
@@ -10,6 +10,19 @@ import {
 } from './host-api-bridge';
 import { appState } from '../config';
 import { createAngieInstance, resetInstancesForTests } from '../instance-registry';
+import * as embedToken from '../embed-token';
+import logger from '../logger';
+
+jest.mock( '../embed-token' );
+jest.mock( '../logger', () => ( {
+	__esModule: true,
+	default: {
+		warn: jest.fn(),
+		error: jest.fn(),
+		info: jest.fn(),
+		debug: jest.fn(),
+	},
+} ) );
 
 const IFRAME_ORIGIN = 'http://localhost:4000';
 const SCOPED_KEY = ( key: string, instanceId: string ) => `${ key }::__angie::${ instanceId }`;
@@ -27,6 +40,11 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		jest.clearAllMocks();
 		resetHostApiBridgeForTests();
 		resetInstancesForTests();
+
+		( embedToken.ensureEmbedToken as jest.MockedFunction<typeof embedToken.ensureEmbedToken> ).mockResolvedValue( {
+			embedToken: 'mock-token',
+			exp: Math.floor( Date.now() / 1000 ) + 300,
+		} );
 	} );
 
 	it( 'should answer each instance with its own host config', async () => {
@@ -545,5 +563,154 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		window.localStorage.removeItem(
 			SCOPED_KEY( 'angie_active_chat_id', 'context-menu' ),
 		);
+	} );
+
+	describe( 'embed token handling', () => {
+		it( 'should handle embed token request and send token to iframe', async () => {
+			const ownWindow = { postMessage: jest.fn() } as unknown as Window;
+			const instance = createAngieInstance( {
+				containerId: 'container-a',
+				instanceId: 'test-instance',
+				layout: 'sidebar',
+			} );
+			instance.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
+			instance.appId = 'NG-test-123';
+
+			initHostApiBridge( {
+				iframeOrigin: IFRAME_ORIGIN,
+				host: { appId: 'NG-test-123' },
+				instance,
+			} );
+
+			window.dispatchEvent( new MessageEvent( 'message', {
+				data: { type: MessageEventType.ANGIE_EMBED_TOKEN_REQUEST },
+				origin: IFRAME_ORIGIN,
+				source: ownWindow,
+			} ) );
+
+			await flushAsync();
+
+			expect( embedToken.ensureEmbedToken ).toHaveBeenCalledWith( 'NG-test-123', IFRAME_ORIGIN );
+			expect( ownWindow.postMessage ).toHaveBeenCalledWith(
+				{
+					type: MessageEventType.ANGIE_EMBED_TOKEN_SET,
+					payload: {
+						embedToken: 'mock-token',
+						exp: expect.any( Number ),
+					},
+				},
+				IFRAME_ORIGIN
+			);
+		} );
+
+		it( 'should use appId from instance when not in host config', async () => {
+			const ownWindow = { postMessage: jest.fn() } as unknown as Window;
+			const instance = createAngieInstance( {
+				containerId: 'container-a',
+				instanceId: 'test-instance',
+				layout: 'sidebar',
+			} );
+			instance.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
+			instance.appId = 'NG-from-instance';
+
+			initHostApiBridge( {
+				iframeOrigin: IFRAME_ORIGIN,
+				instance,
+			} );
+
+			window.dispatchEvent( new MessageEvent( 'message', {
+				data: { type: MessageEventType.ANGIE_EMBED_TOKEN_REQUEST },
+				origin: IFRAME_ORIGIN,
+				source: ownWindow,
+			} ) );
+
+			await flushAsync();
+
+			expect( embedToken.ensureEmbedToken ).toHaveBeenCalledWith( 'NG-from-instance', IFRAME_ORIGIN );
+		} );
+
+		it( 'should not handle embed token request when appId is missing', async () => {
+			const ownWindow = { postMessage: jest.fn() } as unknown as Window;
+			const instance = createAngieInstance( {
+				containerId: 'container-a',
+				instanceId: 'test-instance',
+				layout: 'sidebar',
+			} );
+			instance.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
+
+			initHostApiBridge( {
+				iframeOrigin: IFRAME_ORIGIN,
+				instance,
+			} );
+
+			window.dispatchEvent( new MessageEvent( 'message', {
+				data: { type: MessageEventType.ANGIE_EMBED_TOKEN_REQUEST },
+				origin: IFRAME_ORIGIN,
+				source: ownWindow,
+			} ) );
+
+			await flushAsync();
+
+			expect( embedToken.ensureEmbedToken ).not.toHaveBeenCalled();
+			expect( ownWindow.postMessage ).not.toHaveBeenCalled();
+			expect( logger.warn ).toHaveBeenCalledWith( 'Cannot remint embed token: appId not available' );
+		} );
+
+		it( 'should not handle embed token request when iframe window is unavailable', async () => {
+			const instance = createAngieInstance( {
+				containerId: 'container-a',
+				instanceId: 'test-instance',
+				layout: 'sidebar',
+			} );
+			instance.appId = 'NG-test-123';
+
+			initHostApiBridge( {
+				iframeOrigin: IFRAME_ORIGIN,
+				host: { appId: 'NG-test-123' },
+				instance,
+			} );
+
+			window.dispatchEvent( new MessageEvent( 'message', {
+				data: { type: MessageEventType.ANGIE_EMBED_TOKEN_REQUEST },
+				origin: IFRAME_ORIGIN,
+			} ) );
+
+			await flushAsync();
+
+			expect( embedToken.ensureEmbedToken ).not.toHaveBeenCalled();
+			expect( logger.warn ).toHaveBeenCalledWith( 'Cannot remint embed token: iframe window not available' );
+		} );
+
+		it( 'should handle embed token mint error gracefully', async () => {
+			( embedToken.ensureEmbedToken as jest.MockedFunction<typeof embedToken.ensureEmbedToken> )
+				.mockRejectedValue( new Error( 'Mint failed' ) );
+
+			const ownWindow = { postMessage: jest.fn() } as unknown as Window;
+			const instance = createAngieInstance( {
+				containerId: 'container-a',
+				instanceId: 'test-instance',
+				layout: 'sidebar',
+			} );
+			instance.iframe = { contentWindow: ownWindow } as HTMLIFrameElement;
+			instance.appId = 'NG-test-123';
+
+			initHostApiBridge( {
+				iframeOrigin: IFRAME_ORIGIN,
+				host: { appId: 'NG-test-123' },
+				instance,
+			} );
+
+			window.dispatchEvent( new MessageEvent( 'message', {
+				data: { type: MessageEventType.ANGIE_EMBED_TOKEN_REQUEST },
+				origin: IFRAME_ORIGIN,
+				source: ownWindow,
+			} ) );
+
+			await flushAsync();
+
+			expect( embedToken.ensureEmbedToken ).toHaveBeenCalled();
+			expect( ownWindow.postMessage ).not.toHaveBeenCalled();
+			expect( logger.error ).toHaveBeenCalledWith( 'Failed to remint embed token:', 'Mint failed' );
+		} );
 	} );
 } );

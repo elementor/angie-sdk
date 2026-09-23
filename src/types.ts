@@ -159,8 +159,14 @@ export enum MessageEventType {
   ANGIE_DISABLE_NAVIGATION_PREVENTION = 'angie/disable-navigation-prevention',
   ANGIE_NAVIGATE_AFTER_RESPONSE = 'angie/navigate-after-response',
   ANGIE_SET_INTERACTION_MODE = 'angie/set-interaction-mode',
+  ANGIE_EMBED_TOKEN_SET = 'angie/embed-token/set',
+  ANGIE_EMBED_TOKEN_REQUEST = 'angie/embed-token/request',
 }
 
+export interface EmbedTokenPayload {
+  embedToken: string;
+  exp: number;
+}
 
 export enum HostLocalStorageEventType {
 	SET = 'ANGIE_SET_LOCALSTORAGE',

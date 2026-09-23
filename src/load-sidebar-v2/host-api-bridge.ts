@@ -1,7 +1,9 @@
 import { sendErrorMessage, sendSuccessMessage } from '../utils';
-import { HostLocalStorageEventType } from '../types';
+import { HostLocalStorageEventType, MessageEventType } from '../types';
 import type { AppState } from '../config';
 import type { ExternalHeadersCallback, HostConfig, HostContextProvider } from './config';
+import { ensureEmbedToken } from '../embed-token';
+import logger from '../logger';
 
 export const GET_EXTERNAL_HEADERS_MESSAGE_TYPE = 'GET_EXTERNAL_HEADERS';
 
@@ -141,6 +143,34 @@ const setScopedHostStorage = (
 	}
 };
 
+const handleEmbedTokenRequest = async (
+	event: MessageEvent,
+	bridgeConfig: InitHostApiBridgeArgs,
+): Promise<void> => {
+	const appId = bridgeConfig.host?.appId || bridgeConfig.instance.appId;
+
+	if ( ! appId ) {
+		logger.warn( 'Cannot remint embed token: appId not available' );
+		return;
+	}
+
+	if ( ! bridgeConfig.instance.iframe?.contentWindow ) {
+		logger.warn( 'Cannot remint embed token: iframe window not available' );
+		return;
+	}
+
+	try {
+		const embedToken = await ensureEmbedToken( appId, bridgeConfig.iframeOrigin );
+
+		bridgeConfig.instance.iframe.contentWindow.postMessage( {
+			type: MessageEventType.ANGIE_EMBED_TOKEN_SET,
+			payload: embedToken,
+		}, bridgeConfig.iframeOrigin );
+	} catch ( error ) {
+		logger.error( 'Failed to remint embed token:', error instanceof Error ? error.message : String( error ) );
+	}
+};
+
 const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 	const bridgeConfig = findBridge( event );
 
@@ -203,6 +233,11 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 				event.data.value,
 				bridgeConfig.host?.instanceId,
 			);
+			break;
+		}
+
+		case MessageEventType.ANGIE_EMBED_TOKEN_REQUEST: {
+			await handleEmbedTokenRequest( event, bridgeConfig );
 			break;
 		}
 	}
