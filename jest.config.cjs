@@ -3,7 +3,8 @@ const config = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
-  testMatch: ['**/*.test.ts'],
+  testMatch: ['<rootDir>/src/**/*.test.ts'],
+  testPathIgnorePatterns: ['<rootDir>/vendor/'],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
@@ -20,7 +21,6 @@ const config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css)\\?raw$': '<rootDir>/src/__mocks__/cssRawMock.js',
-    '^@elementor/oidc-auth$': '<rootDir>/src/__mocks__/oidc-auth.js',
   },
 };
 
