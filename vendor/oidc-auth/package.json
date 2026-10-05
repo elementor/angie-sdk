@@ -1,0 +1,70 @@
+{
+    "name": "@elementor/oidc-auth",
+    "version": "0.1.2",
+    "description": "OAuth/OIDC auth library with standard and cross-window flow support",
+    "main": "dist/index.cjs",
+    "module": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "scripts": {
+        "build": "npm run build:bundle && npm run build:types",
+        "build:types": "tsc -p tsconfig.declarations.json",
+        "build:bundle": "webpack --mode=production",
+        "build:watch": "npm run build:types && webpack --mode=development --watch",
+        "dev": "tsc --watch",
+        "test": "jest",
+        "lint": "eslint src/**/*.ts",
+        "lint:fix": "eslint src/**/*.ts --fix",
+        "prepublishOnly": "npm run build"
+    },
+    "keywords": [
+        "oidc",
+        "oauth",
+        "auth",
+        "elementor"
+    ],
+    "author": "Elementor",
+    "license": "MIT",
+    "dependencies": {
+        "oidc-client-ts": "^3.4.1",
+        "@elementor/angie-logger": "^0.3.1"
+    },
+    "devDependencies": {
+        "@jest/globals": "^29.7.0",
+        "@types/jest": "^29.5.12",
+        "@types/node": "^20.19.0",
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "jest-fetch-mock": "^3.0.3",
+        "raw-loader": "^4.0.2",
+        "ts-jest": "^29.3.2",
+        "ts-loader": "^9.5.1",
+        "typescript": "^5.3.3",
+        "webpack": "^5.89.0",
+        "webpack-cli": "^5.1.4"
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/elementor/elementor-ai.git",
+        "directory": "packages/oidc-auth"
+    },
+    "homepage": "https://github.com/elementor/elementor-ai/tree/master/packages/oidc-auth",
+    "bugs": {
+        "url": "https://github.com/elementor/elementor-ai/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": false
+    }
+}
