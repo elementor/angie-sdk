@@ -5,14 +5,34 @@ import {
 	it,
 } from '@jest/globals';
 
-import { getSafeOrigin, isSafeOrigin, isOidcFlowInUrl } from './oidc-auth-utils';
+import { oidcAuthConfig } from './OidcAuthConfig';
+import { getSafeOrigin, isSafeOrigin, isOidcFlowInUrl, validateOAuthAuthorizeUrl } from './oidc-auth-utils';
+
+function buildValidAuthorizeUrl( overrides: Record<string, string> = {} ): string {
+	const params = new URLSearchParams( {
+		client_id: 'test-client-id',
+		redirect_uri: 'https://angie.example/login/oauth-callback',
+		response_type: 'code',
+		code_challenge_method: 'S256',
+		code_challenge: 'test-challenge',
+		state: 'oidc-state-id',
+		scope: 'openid offline_access',
+		...overrides,
+	} );
+	return `https://test.auth.com/oauth2/auth?${ params.toString() }`;
+}
 
 describe( 'oidc-auth-utils', () => {
 	beforeEach( () => {
 		Object.defineProperty( window, 'location', {
-			value: { search: '' },
+			value: { origin: 'https://angie.example', search: '' },
 			writable: true,
 			configurable: true,
+		} );
+		oidcAuthConfig.configure( {
+			clientId: 'test-client-id',
+			authEndpoint: 'https://test.auth.com/oauth2/auth',
+			authOrigin: 'https://test.auth.com',
 		} );
 	} );
 
@@ -133,6 +153,40 @@ describe( 'oidc-auth-utils', () => {
 
 			// Act & Assert
 			expect( isOidcFlowInUrl() ).toBe( false );
+		} );
+	} );
+
+	describe( 'validateOAuthAuthorizeUrl', () => {
+		it( 'should accept a valid authorize URL', () => {
+			const result = validateOAuthAuthorizeUrl( buildValidAuthorizeUrl() );
+			expect( result.valid ).toBe( true );
+		} );
+
+		it( 'should reject javascript: URLs', () => {
+			const result = validateOAuthAuthorizeUrl( 'javascript:alert(1)' );
+			expect( result.valid ).toBe( false );
+		} );
+
+		it( 'should reject a foreign authorization host', () => {
+			const result = validateOAuthAuthorizeUrl(
+				buildValidAuthorizeUrl().replace( 'https://test.auth.com', 'https://evil.example' ),
+			);
+			expect( result.valid ).toBe( false );
+		} );
+
+		it( 'should reject a mismatched redirect_uri', () => {
+			const result = validateOAuthAuthorizeUrl(
+				buildValidAuthorizeUrl( { redirect_uri: 'https://evil.example/callback' } ),
+			);
+			expect( result.valid ).toBe( false );
+		} );
+
+		it( 'should reject a missing code_challenge', () => {
+			const url = buildValidAuthorizeUrl();
+			const parsed = new URL( url );
+			parsed.searchParams.delete( 'code_challenge' );
+			const result = validateOAuthAuthorizeUrl( parsed.toString() );
+			expect( result.valid ).toBe( false );
 		} );
 	} );
 } );

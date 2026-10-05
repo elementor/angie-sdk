@@ -28,7 +28,13 @@ export type {
     OidcUserState,
 } from './oidc-auth-types';
 
-export { getLogoutUrl, getWindowOrigin, isOidcFlowInUrl } from './oidc-auth-utils';
+export {
+	getLogoutUrl,
+	getWindowOrigin,
+	isOidcFlowInUrl,
+	validateOAuthAuthorizeUrl,
+} from './oidc-auth-utils';
+export type { ValidateOAuthAuthorizeUrlResult } from './oidc-auth-utils';
 export {
     assertRedirectUrlHasNoTokens,
     buildOAuthCodeHandoffRedirectUrl,
