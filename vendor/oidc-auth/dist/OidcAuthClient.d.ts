@@ -25,13 +25,14 @@ declare class OidcAuthClient {
     getUserData(): OidcUserData | null;
     isAuthenticated(): Promise<boolean>;
     signinRedirect(stateData?: OidcStateData): Promise<void>;
-    signinRedirectWithExternalPkce(stateData: OidcStateData, codeChallenge: string): Promise<void>;
-    readSigninRedirectCallback(): Promise<{
-        authorizationCode: string;
-        customState: OidcStateData;
+    private ensureOidcConfigured;
+    private createIframeSigninOidcClient;
+    private createIframeSigninUserManager;
+    createIframeOwnedSigninRequest(stateData: OidcStateData): Promise<{
+        authorizeUrl: string;
+        oidcStateId: string;
     }>;
-    private decodeIdTokenProfile;
-    private exchangeAuthorizationCode;
+    signinCallbackFromAuthorizationResponse(authorizationCode: string, oidcStateId: string): Promise<User>;
     signinCallback(): Promise<User>;
     /**
      * Refreshes the access token via the token endpoint using the refresh_token.

@@ -16,8 +16,7 @@ export const OIDC_AUTH_URL_PARAMS = {
     LOGIN_SUCCESS: 'oauth2_login_success',
     STATE: 'oauth2_state',
     CODE: 'oauth2_code',
-    PKCE_CHALLENGE: 'oauth2_pkce_challenge',
-    PKCE_CLIENT_STATE: 'oauth2_pkce_state',
+    AUTHORIZE_URL: 'oauth2_authorize_url',
     START_OAUTH: 'start-oauth',
 } as const;
 

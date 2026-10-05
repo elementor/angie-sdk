@@ -10,7 +10,7 @@ declare class OidcAuthConfig {
     getSettings(): OidcAuthSettings;
     getAuthOrigin(): string;
     isAccessTokenProactiveRefreshEnabled(): boolean;
-    getOidcSettings(): UserManagerSettings;
+    getOidcSettings(stateStore?: Storage, userStore?: Storage): UserManagerSettings;
     getAccessTokenExpiringNotificationTimeInSeconds(): number;
     getAccessTokenFreshnessThresholdInSeconds(): number;
     getAllowedParentOrigins(): string[] | undefined;

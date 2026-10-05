@@ -46,6 +46,7 @@ const mockGetLogoutUrl = getLogoutUrl as jest.MockedFunction<typeof getLogoutUrl
 const mockGetSafeOrigin = getSafeOrigin as jest.MockedFunction<typeof getSafeOrigin>;
 const mockIsSafeOrigin = isSafeOrigin as jest.MockedFunction<typeof isSafeOrigin>;
 
+import { UserManager } from 'oidc-client-ts';
 import OidcAuthClient, { OIDC_AUTH_MESSAGE_TYPES, OIDC_AUTH_URL_PARAMS, oidcAuthClient } from './OidcAuthClient';
 import { askHost } from './oidc-auth-host-api';
 import { oidcAuthConfig } from './OidcAuthConfig';
@@ -394,6 +395,11 @@ describe('OidcAuthClient', () => {
                 .mockResolvedValueOnce(undefined as never);
 
             // Act
+            jest.spyOn(client, 'createIframeOwnedSigninRequest').mockResolvedValue({
+                authorizeUrl: 'https://test.auth.com/oauth2/auth?client_id=test',
+                oidcStateId: 'oidc-state-id',
+            });
+
             await client.triggerLoginFlowViaParent({ loginPath: '/login/start', windowPath: '/wp-admin/' });
 
             // Assert
@@ -408,8 +414,41 @@ describe('OidcAuthClient', () => {
             expect(redirectUrl.pathname).toBe('/login/start');
             expect(redirectUrl.searchParams.get('oauth2_top_origin')).toBe('https://example.com');
             expect(redirectUrl.searchParams.get('oauth2_top_wp_url')).toBe('https://example.com/wp-admin/');
-            expect(redirectUrl.searchParams.get('oauth2_pkce_challenge')).toBeTruthy();
-            expect(redirectUrl.searchParams.get('oauth2_pkce_state')).toBeTruthy();
+            expect(redirectUrl.searchParams.get('oauth2_authorize_url')).toContain('https://test.auth.com');
+        });
+    });
+
+    describe('signinCallbackFromAuthorizationResponse', () => {
+        it('should exchange the code via UserManager.signinCallback and return a user with profile', async () => {
+            client.initialize();
+            const mockUser = {
+                profile: { sub: 'user-123' },
+                state: { data: { [OIDC_AUTH_URL_PARAMS.TOP_ORIGIN]: 'https://example.com' } },
+            };
+            const signinCallbackSpy = jest.spyOn(UserManager.prototype, 'signinCallback').mockResolvedValue(mockUser as never);
+
+            const user = await client.signinCallbackFromAuthorizationResponse('auth-code', 'oidc-state-id');
+
+            expect(signinCallbackSpy).toHaveBeenCalledWith(
+                expect.stringContaining('code=auth-code'),
+            );
+            expect(signinCallbackSpy).toHaveBeenCalledWith(
+                expect.stringContaining('state=oidc-state-id'),
+            );
+            expect(user.profile?.sub).toBe('user-123');
+
+            signinCallbackSpy.mockRestore();
+        });
+
+        it('should fail when signinCallback returns no user', async () => {
+            client.initialize();
+            const signinCallbackSpy = jest.spyOn(UserManager.prototype, 'signinCallback').mockResolvedValue(undefined);
+
+            await expect(
+                client.signinCallbackFromAuthorizationResponse('auth-code', 'oidc-state-id'),
+            ).rejects.toThrow('Signin callback failed');
+
+            signinCallbackSpy.mockRestore();
         });
     });
 

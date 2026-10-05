@@ -1,6 +1,6 @@
 import type { OidcAuthAppWindow, OidcAuthExtractRedirectInfoArgs, OidcAuthExtractRedirectInfoResult } from './oidc-auth-types';
 export declare function assertRedirectUrlHasNoTokens(redirectUrl: string): void;
-export declare function buildOAuthCodeHandoffRedirectUrl(topWpUrl: string, authorizationCode: string, clientState: string): string;
+export declare function buildOAuthCodeHandoffRedirectUrl(topWpUrl: string, authorizationCode: string, oidcStateId: string): string;
 type OAuthReturnParams = {
     loginSuccess: boolean;
     authorizationCode?: string;

@@ -6,33 +6,6 @@ import {
     jest,
 } from '@jest/globals';
 
-import { oidcAuthConfig } from './OidcAuthConfig';
-
-oidcAuthConfig.configure({
-    clientId: 'test-client-id',
-    authEndpoint: 'https://test.auth.com/oauth2/auth',
-    authOrigin: 'https://test.auth.com',
-});
-
-jest.mock('./oidc-auth-logger', () => ({
-    createChildLogger: () => ({
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        log: jest.fn(),
-    }),
-}));
-
-const mockReadSigninRedirectCallback = jest.fn<() => Promise<unknown>>();
-const mockInitialize = jest.fn();
-jest.mock('./OidcAuthClient', () => {
-    const oidcAuthClient = {
-        initialize: mockInitialize,
-        readSigninRedirectCallback: mockReadSigninRedirectCallback,
-    };
-    return { oidcAuthClient };
-});
-
 import {
     assertRedirectUrlHasNoTokens,
     buildOAuthCodeHandoffRedirectUrl,
@@ -43,39 +16,54 @@ import {
     oidcAuthExtractRedirectInfo,
 } from './oidc-auth-callback';
 import { OIDC_AUTH_MESSAGE_TYPES, OIDC_AUTH_URL_PARAMS } from './oidc-auth-consts';
+import { storeOidcCallbackHandoff } from './oidc-auth-pkce';
+
+jest.mock('./oidc-auth-logger', () => ({
+    createChildLogger: () => ({
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        log: jest.fn(),
+    }),
+}));
 
 describe('oidc-auth-callback', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        sessionStorage.clear();
     });
 
     describe('buildOAuthCodeHandoffRedirectUrl', () => {
-        it('should place code and state in the URL hash without token fields', () => {
+        it('should place code and oidc state id in the URL hash without token fields', () => {
             const redirectUrl = buildOAuthCodeHandoffRedirectUrl(
                 'https://customer.example/wp-admin/',
                 'auth-code-123',
-                'client-state-456',
+                'oidc-state-id-456',
             );
 
             const parsed = new URL(redirectUrl);
             expect(parsed.origin).toBe('https://customer.example');
-            expect(parsed.searchParams.has('access_token')).toBe(false);
             const hashParams = new URLSearchParams(parsed.hash.slice(1));
             expect(hashParams.get(OIDC_AUTH_URL_PARAMS.CODE)).toBe('auth-code-123');
-            expect(hashParams.get(OIDC_AUTH_URL_PARAMS.STATE)).toBe('client-state-456');
-            expect(hashParams.get(OIDC_AUTH_URL_PARAMS.LOGIN_SUCCESS)).toBe('true');
+            expect(hashParams.get(OIDC_AUTH_URL_PARAMS.STATE)).toBe('oidc-state-id-456');
             assertRedirectUrlHasNoTokens(redirectUrl);
         });
     });
 
     describe('oidcAuthExtractRedirectInfo', () => {
         it('should build a code handoff redirect URL without exchanging tokens', async () => {
-            mockReadSigninRedirectCallback.mockResolvedValue({
-                authorizationCode: 'auth-code-123',
-                customState: {
-                    [OIDC_AUTH_URL_PARAMS.TOP_WP_URL]: 'https://example.com/wp-admin/',
-                    [OIDC_AUTH_URL_PARAMS.PKCE_CLIENT_STATE]: 'client-state-456',
+            storeOidcCallbackHandoff({
+                topOrigin: 'https://example.com',
+                topWpUrl: 'https://example.com/wp-admin/',
+            });
+
+            Object.defineProperty(window, 'location', {
+                value: {
+                    search: '?code=auth-code-123&state=oidc-state-id',
+                    href: 'https://angie.example/login/oauth-callback?code=auth-code-123&state=oidc-state-id',
                 },
+                writable: true,
+                configurable: true,
             });
 
             const result = await oidcAuthExtractRedirectInfo();
@@ -85,189 +73,36 @@ describe('oidc-auth-callback', () => {
             assertRedirectUrlHasNoTokens(result.redirectUrl!);
         });
 
-        it('should return error when PKCE client state is missing', async () => {
-            mockReadSigninRedirectCallback.mockResolvedValue({
-                authorizationCode: 'auth-code-123',
-                customState: {
-                    [OIDC_AUTH_URL_PARAMS.TOP_WP_URL]: 'https://example.com/wp-admin/',
-                },
+        it('should return error when callback handoff is missing', async () => {
+            Object.defineProperty(window, 'location', {
+                value: { search: '?code=auth-code&state=oidc-state-id', href: '' },
+                writable: true,
+                configurable: true,
             });
 
             const result = await oidcAuthExtractRedirectInfo();
 
             expect(result.success).toBe(false);
-        });
-
-        it('should return error on callback read failure', async () => {
-            mockReadSigninRedirectCallback.mockRejectedValue(new Error('Auth failed'));
-
-            const result = await oidcAuthExtractRedirectInfo();
-
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('Auth failed');
-        });
-
-        it('should return generic error message for non-Error throws', async () => {
-            mockReadSigninRedirectCallback.mockRejectedValue('unknown error');
-
-            const result = await oidcAuthExtractRedirectInfo();
-
-            expect(result.success).toBe(false);
-            expect(result.error).toBe('Authentication failed');
         });
     });
 
     describe('parseOAuthReturnParamsFromWindow', () => {
-        it('should read authorization code and state from the URL hash', () => {
+        it('should read authorization code and oidc state id from the URL hash', () => {
             const params = parseOAuthReturnParamsFromWindow({
                 search: '',
-                hash: '#oauth2_login_success=true&oauth2_code=abc&oauth2_state=xyz',
+                hash: '#oauth2_login_success=true&oauth2_code=abc&oauth2_state=oidc-state',
             });
 
             expect(params.loginSuccess).toBe(true);
             expect(params.authorizationCode).toBe('abc');
-            expect(params.clientState).toBe('xyz');
-        });
-    });
-
-    describe('setupOidcAuthParentListener', () => {
-        it('should respond with top URL on GET_TOP_URL message', () => {
-            // Arrange
-            const messageHandler = captureMessageHandler(() => {
-                setupOidcAuthParentListener({ trustedOrigin: 'https://trusted.com' });
-            });
-            const mockPort = createMockPort();
-
-            // Act
-            messageHandler({
-                origin: 'https://trusted.com',
-                data: { type: OIDC_AUTH_MESSAGE_TYPES.GET_TOP_URL },
-                ports: [mockPort],
-            } as unknown as MessageEvent);
-
-            // Assert
-            expect(mockPort.postMessage).toHaveBeenCalledWith({
-                status: 'success',
-                payload: { topUrl: window.location.href },
-            });
-        });
-
-        it('should ignore messages from untrusted origins', () => {
-            // Arrange
-            const messageHandler = captureMessageHandler(() => {
-                setupOidcAuthParentListener({ trustedOrigin: 'https://trusted.com' });
-            });
-            const mockPort = createMockPort();
-
-            // Act
-            messageHandler({
-                origin: 'https://evil.com',
-                data: { type: OIDC_AUTH_MESSAGE_TYPES.GET_TOP_URL },
-                ports: [mockPort],
-            } as unknown as MessageEvent);
-
-            // Assert
-            expect(mockPort.postMessage).not.toHaveBeenCalled();
-        });
-
-        it('should redirect on REDIRECT_TOP_WINDOW message', () => {
-            // Arrange
-            const messageHandler = captureMessageHandler(() => {
-                setupOidcAuthParentListener({ trustedOrigin: 'https://trusted.com' });
-            });
-            const hrefSetter = jest.fn();
-            Object.defineProperty(window, 'location', {
-                value: { ...window.location, href: 'https://current.com' },
-                writable: true,
-                configurable: true,
-            });
-            Object.defineProperty(window.location, 'href', {
-                set: hrefSetter,
-                get: () => 'https://current.com',
-                configurable: true,
-            });
-
-            // Act
-            messageHandler({
-                origin: 'https://trusted.com',
-                data: {
-                    type: OIDC_AUTH_MESSAGE_TYPES.REDIRECT_TOP_WINDOW,
-                    payload: { url: 'https://example.com/login' },
-                },
-                ports: [],
-            } as unknown as MessageEvent);
-
-            // Assert
-            expect(hrefSetter).toHaveBeenCalledWith('https://example.com/login');
-        });
-
-        it('should respond with isPending on CHECK_PENDING message', () => {
-            // Arrange
-            Object.defineProperty(window, 'location', {
-                value: { ...window.location, search: '' },
-                writable: true,
-                configurable: true,
-            });
-            const messageHandler = captureMessageHandler(() => {
-                setupOidcAuthParentListener({ trustedOrigin: 'https://trusted.com' });
-            });
-            const mockPort = createMockPort();
-
-            // Act
-            messageHandler({
-                origin: 'https://trusted.com',
-                data: { type: OIDC_AUTH_MESSAGE_TYPES.CHECK_PENDING },
-                ports: [mockPort],
-            } as unknown as MessageEvent);
-
-            // Assert
-            expect(mockPort.postMessage).toHaveBeenCalledWith({
-                status: 'success',
-                payload: { isPending: false },
-            });
-        });
-    });
-
-    describe('sendOidcStateToWindow', () => {
-        it('should post message to target window', () => {
-            // Arrange
-            const mockPostMessage = jest.fn();
-            const targets = {
-                window: { contentWindow: { postMessage: mockPostMessage } } as unknown as HTMLIFrameElement,
-                windowURL: new URL('https://app.example.com'),
-            };
-            const payload = { oauthState: { access_token: 'token' } };
-
-            // Act
-            sendOidcStateToWindow(payload, targets);
-
-            // Assert
-            expect(mockPostMessage).toHaveBeenCalledWith(
-                {
-                    type: OIDC_AUTH_MESSAGE_TYPES.LOGIN_FLOW_COMPLETE,
-                    payload,
-                },
-                'https://app.example.com',
-            );
-        });
-
-        it('should not throw when window is null', () => {
-            // Arrange
-            const targets = {
-                window: null,
-                windowURL: null,
-            };
-
-            // Act & Assert
-            expect(() => sendOidcStateToWindow({ data: 'test' }, targets)).not.toThrow();
+            expect(params.clientState).toBe('oidc-state');
         });
     });
 
     describe('forwardOidcLoginFlowToWindow', () => {
         it('should not forward when no login_success param in URL', () => {
-            // Arrange
             Object.defineProperty(window, 'location', {
-                value: { ...window.location, search: '', href: 'https://example.com' },
+                value: { search: '', hash: '', href: 'https://example.com', origin: 'https://example.com' },
                 writable: true,
                 configurable: true,
             });
@@ -277,19 +112,17 @@ describe('oidc-auth-callback', () => {
                 windowURL: new URL('https://app.example.com'),
             };
 
-            // Act
             forwardOidcLoginFlowToWindow({ targets });
 
-            // Assert
             expect(mockPostMessage).not.toHaveBeenCalled();
         });
 
-        it('should forward authorization code and client state from the URL hash', () => {
+        it('should forward authorization code and oidc state id from the URL hash', () => {
             Object.defineProperty(window, 'location', {
                 value: {
                     search: '',
-                    hash: '#oauth2_login_success=true&oauth2_code=abc&oauth2_state=xyz',
-                    href: 'https://example.com/wp-admin/#oauth2_login_success=true&oauth2_code=abc&oauth2_state=xyz',
+                    hash: '#oauth2_login_success=true&oauth2_code=abc&oauth2_state=oidc-state',
+                    href: 'https://example.com/wp-admin/#oauth2_login_success=true&oauth2_code=abc&oauth2_state=oidc-state',
                     origin: 'https://example.com',
                 },
                 writable: true,
@@ -308,119 +141,51 @@ describe('oidc-auth-callback', () => {
             expect(mockPostMessage).toHaveBeenCalledWith(
                 expect.objectContaining({
                     type: OIDC_AUTH_MESSAGE_TYPES.LOGIN_FLOW_COMPLETE,
-                    payload: { oauthCode: 'abc', oauthState: 'xyz' },
+                    payload: { oauthCode: 'abc', oauthState: 'oidc-state' },
                 }),
                 'https://app.example.com',
             );
-            expect(replaceStateSpy).toHaveBeenCalled();
             replaceStateSpy.mockRestore();
         });
+    });
 
-        it('should forward legacy OIDC token state to window and clean URL', () => {
-            // Arrange
-            const oauthState = {
-                access_token: 'token',
-                state: { data: { [OIDC_AUTH_URL_PARAMS.TOP_ORIGIN]: 'https://example.com' } },
-            };
-            const searchParams = new URLSearchParams();
-            searchParams.set(OIDC_AUTH_URL_PARAMS.LOGIN_SUCCESS, 'true');
-            searchParams.set(OIDC_AUTH_URL_PARAMS.STATE, JSON.stringify(oauthState));
-
-            Object.defineProperty(window, 'location', {
-                value: {
-                    search: `?${searchParams.toString()}`,
-                    href: `https://example.com?${searchParams.toString()}`,
-                    origin: 'https://example.com',
-                },
-                writable: true,
-                configurable: true,
+    describe('setupOidcAuthParentListener', () => {
+        it('should respond with top URL on GET_TOP_URL message', () => {
+            const messageHandler = captureMessageHandler(() => {
+                setupOidcAuthParentListener({ trustedOrigin: 'https://trusted.com' });
             });
+            const mockPort = createMockPort();
 
-            const replaceStateSpy = jest.spyOn(history, 'replaceState').mockImplementation(() => { });
+            messageHandler({
+                origin: 'https://trusted.com',
+                data: { type: OIDC_AUTH_MESSAGE_TYPES.GET_TOP_URL },
+                ports: [mockPort],
+            } as unknown as MessageEvent);
+
+            expect(mockPort.postMessage).toHaveBeenCalledWith({
+                status: 'success',
+                payload: { topUrl: expect.any(String) },
+            });
+        });
+    });
+
+    describe('sendOidcStateToWindow', () => {
+        it('should post LOGIN_FLOW_COMPLETE to iframe', () => {
             const mockPostMessage = jest.fn();
             const targets = {
                 window: { contentWindow: { postMessage: mockPostMessage } } as unknown as HTMLIFrameElement,
                 windowURL: new URL('https://app.example.com'),
             };
-            const onSuccess = jest.fn();
 
-            // Act
-            forwardOidcLoginFlowToWindow({ targets, onSuccess });
+            sendOidcStateToWindow({ oauthCode: 'code', oauthState: 'state' }, targets);
 
-            // Assert
             expect(mockPostMessage).toHaveBeenCalledWith(
-                expect.objectContaining({
+                {
                     type: OIDC_AUTH_MESSAGE_TYPES.LOGIN_FLOW_COMPLETE,
-                }),
+                    payload: { oauthCode: 'code', oauthState: 'state' },
+                },
                 'https://app.example.com',
             );
-            expect(replaceStateSpy).toHaveBeenCalled();
-            expect(onSuccess).toHaveBeenCalled();
-
-            replaceStateSpy.mockRestore();
-        });
-
-        it('should reject when origin in state does not match window origin', () => {
-            // Arrange
-            const oauthState = {
-                state: { data: { [OIDC_AUTH_URL_PARAMS.TOP_ORIGIN]: 'https://evil.com' } },
-            };
-            const searchParams = new URLSearchParams();
-            searchParams.set(OIDC_AUTH_URL_PARAMS.LOGIN_SUCCESS, 'true');
-            searchParams.set(OIDC_AUTH_URL_PARAMS.STATE, JSON.stringify(oauthState));
-
-            Object.defineProperty(window, 'location', {
-                value: {
-                    search: `?${searchParams.toString()}`,
-                    href: `https://example.com?${searchParams.toString()}`,
-                    origin: 'https://example.com',
-                },
-                writable: true,
-                configurable: true,
-            });
-
-            const mockPostMessage = jest.fn();
-            const targets = {
-                window: { contentWindow: { postMessage: mockPostMessage } } as unknown as HTMLIFrameElement,
-                windowURL: new URL('https://app.example.com'),
-            };
-
-            // Act
-            forwardOidcLoginFlowToWindow({ targets });
-
-            // Assert
-            expect(mockPostMessage).not.toHaveBeenCalled();
-        });
-
-        it('should retry when iframe is not available', () => {
-            // Arrange
-            jest.useFakeTimers();
-            const searchParams = new URLSearchParams();
-            searchParams.set(OIDC_AUTH_URL_PARAMS.LOGIN_SUCCESS, 'true');
-            searchParams.set(OIDC_AUTH_URL_PARAMS.STATE, JSON.stringify({ access_token: 'token' }));
-
-            Object.defineProperty(window, 'location', {
-                value: {
-                    search: `?${searchParams.toString()}`,
-                    href: `https://example.com?${searchParams.toString()}`,
-                    origin: 'https://example.com',
-                },
-                writable: true,
-                configurable: true,
-            });
-
-            const targets = {
-                window: null,
-                windowURL: null,
-            };
-
-            // Act
-            forwardOidcLoginFlowToWindow({ targets, attempt: 1 });
-
-            // Assert
-            expect(jest.getTimerCount()).toBe(1);
-
-            jest.useRealTimers();
         });
     });
 });

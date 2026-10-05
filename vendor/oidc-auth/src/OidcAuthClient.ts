@@ -1,4 +1,4 @@
-import { Log, User, UserManager, type IdTokenClaims, type OidcClient } from 'oidc-client-ts';
+import { Log, OidcClient, User, UserManager } from 'oidc-client-ts';
 import { createChildLogger } from './oidc-auth-logger';
 import { askHost } from './oidc-auth-host-api';
 import { oidcAuthConfig } from './OidcAuthConfig';
@@ -31,15 +31,6 @@ import type {
 } from './oidc-auth-types';
 import { OidcAuthTimer } from './OidcAuthTimer';
 import { OidcAuthTelemetry, OidcAuthTelemetryContext } from './oidc-auth-telemetry';
-import {
-    assertOidcPkceSessionMatches,
-    clearOidcPkceSession,
-    generateCodeChallenge,
-    generateCodeVerifier,
-    generateOAuthClientState,
-    loadOidcPkceSession,
-    storeOidcPkceSession,
-} from './oidc-auth-pkce';
 
 const logger = createChildLogger('oidc-auth:OidcAuthClient');
 
@@ -239,107 +230,54 @@ class OidcAuthClient {
         });
     }
 
-    async signinRedirectWithExternalPkce(stateData: OidcStateData, codeChallenge: string): Promise<void> {
-        const manager = this.ensureInitialized();
-        await manager.signinRedirect({
+    private ensureOidcConfigured(): void {
+        if (!this.initialized && !oidcAuthConfig.isConfigured()) {
+            throw new Error('OidcAuthClient not initialized. Call initialize() first.');
+        }
+    }
+
+    private createIframeSigninOidcClient(): OidcClient {
+        this.ensureOidcConfigured();
+        const settings = oidcAuthConfig.getOidcSettings(window.sessionStorage, window.localStorage);
+        return new OidcClient(settings);
+    }
+
+    private createIframeSigninUserManager(): UserManager {
+        this.ensureOidcConfigured();
+        const settings = oidcAuthConfig.getOidcSettings(window.sessionStorage, window.localStorage);
+        return new UserManager(settings);
+    }
+
+    async createIframeOwnedSigninRequest(stateData: OidcStateData): Promise<{ authorizeUrl: string; oidcStateId: string }> {
+        const client = this.createIframeSigninOidcClient();
+        const signinRequest = await client.createSigninRequest({
             state: { data: stateData },
             prompt: 'login',
-            disablePKCE: true,
-            extraQueryParams: {
-                code_challenge: codeChallenge,
-                code_challenge_method: 'S256',
-            },
-        } as Parameters<UserManager['signinRedirect']>[0] & { disablePKCE: boolean });
-    }
+        });
 
-    async readSigninRedirectCallback(): Promise<{ authorizationCode: string; customState: OidcStateData }> {
-        const manager = this.ensureInitialized();
-        const client = (manager as UserManager & { _client: OidcClient })._client;
-        const { state, response } = await client.readSigninResponseState(window.location.href, true);
-
-        if (!response.code) {
-            throw new Error('Authorization code missing from OAuth callback');
-        }
-
-        const customState = (state?.data ?? {}) as OidcStateData;
         return {
-            authorizationCode: response.code,
-            customState,
+            authorizeUrl: signinRequest.url,
+            oidcStateId: signinRequest.state.id,
         };
     }
 
-    private decodeIdTokenProfile(idToken?: string): IdTokenClaims | Record<string, never> {
-        if (!idToken) {
-            return {};
-        }
-
-        try {
-            const payloadSegment = idToken.split('.')[1];
-            if (!payloadSegment) {
-                return {};
-            }
-            const normalized = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
-            const json = atob(normalized);
-            return JSON.parse(json) as IdTokenClaims;
-        } catch {
-            return {};
-        }
-    }
-
-    private async exchangeAuthorizationCode(authorizationCode: string, codeVerifier: string): Promise<User> {
-        const manager = this.ensureInitialized();
-        const tokenEndpoint = manager.settings.metadata?.token_endpoint;
-        const clientId = manager.settings.client_id;
+    async signinCallbackFromAuthorizationResponse(authorizationCode: string, oidcStateId: string): Promise<User> {
+        const manager = this.createIframeSigninUserManager();
         const redirectUri = manager.settings.redirect_uri;
-
-        if (!tokenEndpoint || !clientId || !redirectUri) {
-            throw new Error('OIDC token endpoint is not configured');
+        if (!redirectUri) {
+            throw new Error('OIDC redirect_uri is not configured');
         }
 
-        const body = new URLSearchParams({
-            grant_type: 'authorization_code',
-            code: authorizationCode,
-            redirect_uri: redirectUri,
-            client_id: clientId,
-            code_verifier: codeVerifier,
-        });
+        const syntheticCallbackUrl = new URL(redirectUri);
+        syntheticCallbackUrl.searchParams.set('code', authorizationCode);
+        syntheticCallbackUrl.searchParams.set('state', oidcStateId);
 
-        const response = await fetch(tokenEndpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            credentials: 'include',
-            body,
-        });
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Token exchange failed: ${response.status} ${errorBody}`);
+        const user = await manager.signinCallback(syntheticCallbackUrl.toString());
+        if (!user) {
+            throw new Error('Signin callback failed: no user returned');
         }
 
-        const tokenResponse = await response.json() as {
-            access_token: string;
-            refresh_token?: string;
-            id_token?: string;
-            token_type?: string;
-            scope?: string;
-            expires_in?: number;
-        };
-
-        const expiresAt = tokenResponse.expires_in
-            ? Math.floor(Date.now() / 1000) + tokenResponse.expires_in
-            : undefined;
-
-        const profile = this.decodeIdTokenProfile(tokenResponse.id_token);
-
-        return new User({
-            id_token: tokenResponse.id_token,
-            access_token: tokenResponse.access_token,
-            refresh_token: tokenResponse.refresh_token,
-            token_type: tokenResponse.token_type ?? 'Bearer',
-            scope: tokenResponse.scope,
-            profile: profile as IdTokenClaims,
-            expires_at: expiresAt,
-        });
+        return user;
     }
 
     async signinCallback(): Promise<User> {
@@ -581,21 +519,16 @@ class OidcAuthClient {
         const topOrigin = new URL(topUrl).origin;
         const topWpUrl = `${topOrigin}${windowPath}`;
 
-        const codeVerifier = generateCodeVerifier();
-        const codeChallenge = await generateCodeChallenge(codeVerifier);
-        const clientState = generateOAuthClientState();
-
-        storeOidcPkceSession({
-            codeVerifier,
-            clientState,
-            expectedTopOrigin: topOrigin,
-        });
+        const stateData: OidcStateData = {
+            [OIDC_AUTH_URL_PARAMS.TOP_ORIGIN]: topOrigin,
+            [OIDC_AUTH_URL_PARAMS.TOP_WP_URL]: topWpUrl,
+        };
+        const { authorizeUrl } = await this.createIframeOwnedSigninRequest(stateData);
 
         const startLoginUrl = new URL(`${window.location.origin}${loginPath}`);
         startLoginUrl.searchParams.set(OIDC_AUTH_URL_PARAMS.TOP_ORIGIN, topOrigin);
         startLoginUrl.searchParams.set(OIDC_AUTH_URL_PARAMS.TOP_WP_URL, topWpUrl);
-        startLoginUrl.searchParams.set(OIDC_AUTH_URL_PARAMS.PKCE_CHALLENGE, codeChallenge);
-        startLoginUrl.searchParams.set(OIDC_AUTH_URL_PARAMS.PKCE_CLIENT_STATE, clientState);
+        startLoginUrl.searchParams.set(OIDC_AUTH_URL_PARAMS.AUTHORIZE_URL, authorizeUrl);
 
         logger.info('OIDC: triggerLoginFlowViaParent() - redirecting parent to:', startLoginUrl.toString());
 
@@ -612,26 +545,21 @@ class OidcAuthClient {
         const topWindowOrigin = this.getWindowOriginParam();
 
         if (typeof payload.oauthCode === 'string' && typeof payload.oauthState === 'string') {
-            const session = loadOidcPkceSession();
-            if (!session) {
-                throw new Error('Missing PKCE session for authorization code redemption');
-            }
-
-            assertOidcPkceSessionMatches(session, payload.oauthState);
-
-            if (topWindowOrigin !== session.expectedTopOrigin) {
-                logger.error('OIDC: handleLoginFlowComplete - origin mismatch:', topWindowOrigin, '!==', session.expectedTopOrigin);
-                throw new Error('Invalid origin in OAuth state');
-            }
-
             try {
-                const user = await this.exchangeAuthorizationCode(payload.oauthCode, session.codeVerifier);
-                clearOidcPkceSession();
+                const user = await this.signinCallbackFromAuthorizationResponse(payload.oauthCode, payload.oauthState);
+                const stateData = user.state as { data?: Record<string, string> } | undefined;
+                const oauthStateTopOrigin = stateData?.data?.[OIDC_AUTH_URL_PARAMS.TOP_ORIGIN];
+
+                if (topWindowOrigin !== oauthStateTopOrigin) {
+                    logger.error('OIDC: handleLoginFlowComplete - origin mismatch:', topWindowOrigin, '!==', oauthStateTopOrigin);
+                    throw new Error('Invalid origin in OAuth state');
+                }
+
                 await this.storeUser(user);
                 this.initAccessTokenExpiringTimer();
                 window.dispatchEvent(new CustomEvent(OIDC_AUTH_COMPLETE_EVENT));
             } catch (error) {
-                logger.error('OIDC: handleLoginFlowComplete - PKCE redemption FAILED:', error);
+                logger.error('OIDC: handleLoginFlowComplete - signinCallbackFromAuthorizationResponse FAILED:', error);
                 await this.triggerLoginFlowViaParent(loginParams);
             }
             return;

@@ -1,6 +1,6 @@
 import { OIDC_AUTH_MESSAGE_TYPES, OIDC_AUTH_URL_PARAMS } from './oidc-auth-consts';
-import { oidcAuthClient } from './OidcAuthClient';
 import { createChildLogger } from './oidc-auth-logger';
+import { loadOidcCallbackHandoff } from './oidc-auth-pkce';
 import type { OidcAuthAppWindow, OidcAuthExtractRedirectInfoArgs, OidcAuthExtractRedirectInfoResult } from './oidc-auth-types';
 
 const logger = createChildLogger('oidc-auth:oidc-auth-redirect');
@@ -20,12 +20,12 @@ export function assertRedirectUrlHasNoTokens( redirectUrl: string ): void {
 	}
 }
 
-export function buildOAuthCodeHandoffRedirectUrl( topWpUrl: string, authorizationCode: string, clientState: string ): string {
+export function buildOAuthCodeHandoffRedirectUrl( topWpUrl: string, authorizationCode: string, oidcStateId: string ): string {
 	const url = new URL( topWpUrl );
 	const hashParams = new URLSearchParams();
 	hashParams.set( OIDC_AUTH_URL_PARAMS.LOGIN_SUCCESS, 'true' );
 	hashParams.set( OIDC_AUTH_URL_PARAMS.CODE, authorizationCode );
-	hashParams.set( OIDC_AUTH_URL_PARAMS.STATE, clientState );
+	hashParams.set( OIDC_AUTH_URL_PARAMS.STATE, oidcStateId );
 	url.hash = hashParams.toString();
 	const result = url.toString();
 	assertRedirectUrlHasNoTokens( result );
@@ -73,20 +73,34 @@ export function parseOAuthReturnParamsFromWindow( locationLike: Pick<Location, '
 
 export async function oidcAuthExtractRedirectInfo(_args: OidcAuthExtractRedirectInfoArgs = {}): Promise<OidcAuthExtractRedirectInfoResult> {
 	try {
-		oidcAuthClient.initialize();
-		const { authorizationCode, customState } = await oidcAuthClient.readSigninRedirectCallback();
+		const callbackParams = new URLSearchParams(window.location.search);
+		const authorizationCode = callbackParams.get('code');
+		const oidcStateId = callbackParams.get('state');
+		const handoff = loadOidcCallbackHandoff();
 
-		const topWpUrl = customState[ OIDC_AUTH_URL_PARAMS.TOP_WP_URL ];
-		const clientState = customState[ OIDC_AUTH_URL_PARAMS.PKCE_CLIENT_STATE ];
-
-		if ( ! topWpUrl || ! clientState ) {
+		if ( ! authorizationCode || ! oidcStateId || ! handoff?.topWpUrl ) {
 			return {
 				success: false,
-				error: 'Missing sign-in destination or OAuth state.',
+				error: 'Missing authorization response or sign-in destination.',
 			};
 		}
 
-		const redirectUrl = buildOAuthCodeHandoffRedirectUrl( topWpUrl, authorizationCode, clientState );
+		try {
+			const handoffOrigin = new URL(handoff.topWpUrl).origin;
+			if ( handoff.topOrigin !== handoffOrigin ) {
+				return {
+					success: false,
+					error: 'Sign-in destination does not match the expected site origin.',
+				};
+			}
+		} catch {
+			return {
+				success: false,
+				error: 'Invalid sign-in destination.',
+			};
+		}
+
+		const redirectUrl = buildOAuthCodeHandoffRedirectUrl( handoff.topWpUrl, authorizationCode, oidcStateId );
 
 		return { success: true, redirectUrl };
 	} catch ( error ) {

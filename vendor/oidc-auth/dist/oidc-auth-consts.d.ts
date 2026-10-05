@@ -14,8 +14,7 @@ export declare const OIDC_AUTH_URL_PARAMS: {
     readonly LOGIN_SUCCESS: "oauth2_login_success";
     readonly STATE: "oauth2_state";
     readonly CODE: "oauth2_code";
-    readonly PKCE_CHALLENGE: "oauth2_pkce_challenge";
-    readonly PKCE_CLIENT_STATE: "oauth2_pkce_state";
+    readonly AUTHORIZE_URL: "oauth2_authorize_url";
     readonly START_OAUTH: "start-oauth";
 };
 export declare const OIDC_SITE_CONSENT_ANONYMOUS_USER_SUB = "__site__";

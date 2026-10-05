@@ -39,16 +39,12 @@ export {
     setupOidcAuthParentListener,
 } from './oidc-auth-callback';
 export {
-    assertOidcPkceSessionMatches,
-    clearOidcPkceSession,
-    generateCodeChallenge,
-    generateCodeVerifier,
-    generateOAuthClientState,
-    loadOidcPkceSession,
-    OIDC_PKCE_SESSION_STORAGE_KEY,
-    storeOidcPkceSession,
+    clearOidcCallbackHandoff,
+    loadOidcCallbackHandoff,
+    OIDC_CALLBACK_HANDOFF_STORAGE_KEY,
+    storeOidcCallbackHandoff,
 } from './oidc-auth-pkce';
-export type { OidcPkceSession } from './oidc-auth-pkce';
+export type { OidcCallbackHandoff } from './oidc-auth-pkce';
 export type {
     OidcAuthAppWindow,
     OidcAuthExtractRedirectInfoResult,

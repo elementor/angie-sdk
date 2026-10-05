@@ -40,14 +40,19 @@ class OidcAuthConfig {
         return this.settings?.accessTokenProactiveRefreshEnabled ?? true;
     }
 
-    getOidcSettings(): UserManagerSettings {
+    getOidcSettings(stateStore?: Storage, userStore?: Storage): UserManagerSettings {
         const origin = getWindowOrigin();
         const { clientId, authEndpoint } = this.getSettings();
         const authOrigin = this.getAuthOrigin();
 
+        const defaultStore = typeof window !== 'undefined' ? window.localStorage : undefined;
         const store = typeof window !== 'undefined'
-            ? new WebStorageStateStore({ store: window.localStorage })
+            ? new WebStorageStateStore({ store: stateStore ?? defaultStore! })
             : undefined;
+        const userStorage = userStore ?? defaultStore;
+        const userStateStore = typeof window !== 'undefined' && userStorage
+            ? new WebStorageStateStore({ store: userStorage })
+            : store;
 
         const { accessTokenExpiringNotificationTimeInSeconds = DEFAULT_TOKEN_EXPIRING_NOTIFICATION_SECONDS } = this.getSettings();
 
@@ -61,7 +66,7 @@ class OidcAuthConfig {
             automaticSilentRenew: false,
             accessTokenExpiringNotificationTimeInSeconds,
             stateStore: store,
-            userStore: store,
+            userStore: userStateStore,
             metadata: {
                 issuer: authOrigin,
                 authorization_endpoint: authEndpoint,
