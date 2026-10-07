@@ -53,3 +53,27 @@ jobs:
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Mirrors the npmjs publish above onto Google Artifact Registry. Auth is via
+      # Workload Identity Federation, scoped to a pool whose attribute_condition only
+      # issues tokens for release events or pushes to master on this repo (see
+      # elementor-cloud-iac, gcp-iam/variables/infra/prod.tfvars, "public-repos-pool")
+      # — no long-lived GCP credentials are stored in this repo.
+      - name: Authenticate to Google Artifact Registry
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
+        id: gcp-auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: 'projects/165476505383/locations/global/workloadIdentityPools/public-repos-pool/providers/github-provider'
+          service_account: 'github-actions-public-sa@elementor-infra.iam.gserviceaccount.com'
+          token_format: access_token
+
+      - name: Publish to Artifact Registry
+        if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish == 'true')
+        env:
+          GAR_REGISTRY: https://us-npm.pkg.dev/elementor-infra/npm-packages/
+        run: |
+          rm -f .npmrc
+          npm config set --location user "@elementor:registry" "$GAR_REGISTRY"
+          npm config set --location user "${GAR_REGISTRY#https:}:_authToken" "${{ steps.gcp-auth.outputs.access_token }}"
+          npm publish --registry="$GAR_REGISTRY" --access public
