@@ -143,10 +143,12 @@ export enum AngieInteractionMode {
 
 export enum MessageEventType {
   SDK_ANGIE_READY_PING = 'sdk-angie-ready-ping',
+  SDK_ANGIE_READY_LISTENER = 'sdk-angie-ready-listener',
   SDK_ANGIE_REFRESH_PING = 'sdk-angie-refresh-ping',
   SDK_ANGIE_ALL_SERVERS_REGISTERED = 'sdk-angie-all-servers-registered',
   SDK_REQUEST_CLIENT_CREATION = 'sdk-request-client-creation',
   SDK_REQUEST_INIT_SERVER = 'sdk-request-init-server',
+  SDK_INIT_TRIGGER_ANGIE = 'sdk-init-trigger-angie',
   SDK_TRIGGER_ANGIE = 'sdk-trigger-angie',
   SDK_TRIGGER_ANGIE_RESPONSE = 'sdk-trigger-angie-response',
 

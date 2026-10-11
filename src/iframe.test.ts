@@ -26,6 +26,7 @@ jest.mock( './openSaaSPage', () => ( {
 } ) );
 
 jest.mock( './sdk', () => ( {
+	bindAngieTriggerChannel: jest.fn(),
 	flushPendingSdkMessages: jest.fn(),
 	registerSdkInstance: jest.fn(),
 	startSdkMessageRouting: jest.fn(),
@@ -258,6 +259,77 @@ describe( 'openIframe appId', () => {
 		expect( mockOpenSaaSPage ).toHaveBeenCalledWith(
 			expect.objectContaining( { appId: undefined } ),
 		);
+	} );
+} );
+
+describe( 'openIframe trigger channel', () => {
+	let mockOpenSaaSPage: jest.Mock;
+	let mockBindAngieTriggerChannel: jest.Mock;
+	let mockStartSdkMessageRouting: jest.Mock;
+	let mockRegisterSdkInstance: jest.Mock;
+
+	beforeEach( () => {
+		jest.clearAllMocks();
+		resetInstancesForTests();
+		resetIframeHostHandlersForTests();
+		Object.defineProperty( window.screen, 'availWidth', { value: 1280, configurable: true } );
+		document.body.innerHTML = '<div id="angie-sidebar-container"></div>';
+		mockOpenSaaSPage = require( './openSaaSPage' ).openSaaSPage as jest.Mock;
+		mockBindAngieTriggerChannel = require( './sdk' ).bindAngieTriggerChannel as jest.Mock;
+		mockStartSdkMessageRouting = require( './sdk' ).startSdkMessageRouting as jest.Mock;
+		mockRegisterSdkInstance = require( './sdk' ).registerSdkInstance as jest.Mock;
+	} );
+
+	afterEach( () => {
+		document.body.innerHTML = '';
+		resetIframeHostHandlersForTests();
+	} );
+
+	it( 'should open the trigger port when angie/ready resolves', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'angie-sidebar-container',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const iframe = document.createElement( 'iframe' );
+		const contentWindow = { postMessage: jest.fn() };
+		Object.defineProperty( iframe, 'contentWindow', { value: contentWindow } );
+		iframe.setAttribute( 'src', 'https://angie.elementor.com/angie/embedded' );
+
+		let resolveOpen: ( value: { iframe: HTMLIFrameElement; iframeUrlObject: URL } ) => void = () => {};
+		mockOpenSaaSPage.mockImplementation( ( ...args: unknown[] ) => {
+			const props = args[ 0 ] as { insertCallback?: ( frame: HTMLIFrameElement ) => void };
+			props.insertCallback?.( iframe );
+			return new Promise( ( resolve ) => {
+				resolveOpen = resolve;
+			} );
+		} );
+
+		const pending = openIframe( { uiTheme: 'light', isRTL: false }, instance );
+
+		expect( instance.iframe ).toBeNull();
+		expect( mockRegisterSdkInstance ).not.toHaveBeenCalled();
+		expect( mockStartSdkMessageRouting ).not.toHaveBeenCalled();
+
+		window.dispatchEvent( new MessageEvent( 'message', {
+			origin: 'https://angie.elementor.com',
+			source: contentWindow as unknown as Window,
+			data: { type: MessageEventType.SDK_ANGIE_READY_LISTENER },
+		} ) );
+
+		expect( mockBindAngieTriggerChannel ).not.toHaveBeenCalled();
+
+		resolveOpen( {
+			iframe,
+			iframeUrlObject: new URL( iframe.src ),
+		} );
+		await pending;
+
+		expect( instance.iframe ).toBe( iframe );
+		expect( mockBindAngieTriggerChannel ).toHaveBeenCalledTimes( 1 );
+		expect( mockBindAngieTriggerChannel ).toHaveBeenCalledWith( instance );
+		expect( mockRegisterSdkInstance ).toHaveBeenCalledWith( instance );
+		expect( mockStartSdkMessageRouting ).toHaveBeenCalled();
 	} );
 } );
 

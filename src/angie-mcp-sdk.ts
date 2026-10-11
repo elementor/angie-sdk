@@ -12,6 +12,7 @@ import { RegistrationQueue } from './registration-queue';
 import { getInstanceById, getInstanceCount } from './instance-registry';
 import { generateInstanceId } from './utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
+import { triggerAngieOnInstance } from './sdk';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
 import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse, PromptSuggestion } from './types';
 
@@ -402,6 +403,35 @@ export class AngieMcpSdk {
       this.logger.log(`Triggering Angie with prompt (Request ID: ${requestId})`);
       window.postMessage(message, window.location.origin);
     });
+  }
+
+  /**
+   * Triggers Angie through the private port opened by sdk-init-trigger-angie.
+   * A page script that can only call window.postMessage cannot use this.
+   */
+  public async triggerAngieSecure(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
+    if (!this.isAngieReady()) {
+      throw new Error('Angie is not ready. Please wait for Angie to be available before triggering.');
+    }
+
+    const requestId = this.generateRequestId();
+    const instance = getInstanceById( this.instanceId ) ?? appState;
+
+    this.logger.log(`Triggering Angie on the private port (Request ID: ${requestId})`);
+
+    return triggerAngieOnInstance( instance, {
+      requestId,
+      instanceId: this.instanceId,
+      prompt: request.prompt,
+      options: request.options,
+      contextAttachment: request.contextAttachment,
+      suggestions: request.suggestions,
+      context: {
+        pageUrl: window.location.href,
+        pageTitle: document.title,
+        ...request.context,
+      },
+    } );
   }
 
   
