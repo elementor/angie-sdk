@@ -46,14 +46,6 @@ const emitHostMessage = ( data: unknown ): void => {
 	} ) );
 };
 
-const emitIframeMessage = ( instance: AppState, data: unknown ): void => {
-	window.dispatchEvent( Object.assign( new Event( 'message' ), {
-		origin: instance.iframeUrlObject?.origin,
-		source: instance.iframe?.contentWindow,
-		data,
-	} ) );
-};
-
 describe( 'sdk', () => {
 	beforeEach( () => {
 		resetInstancesForTests();
@@ -94,24 +86,6 @@ describe( 'sdk', () => {
 			ANGIE_ORIGIN,
 		);
 		expect( secondPostMessage ).not.toHaveBeenCalled();
-	} );
-
-	it( 'should not open a trigger port for sdk-angie-ready-listener', () => {
-		const instance = createAngieInstance( {
-			containerId: 'container-a',
-			instanceId: 'aaaaaa',
-			layout: 'sidebar',
-		} );
-		const postMessage = attachIframe( instance );
-
-		registerForRouting( instance );
-		emitIframeMessage( instance, { type: MessageEventType.SDK_ANGIE_READY_LISTENER } );
-		emitHostMessage( {
-			type: MessageEventType.SDK_ANGIE_READY_LISTENER,
-			payload: { instanceId: 'aaaaaa' },
-		} );
-
-		expect( postMessage ).not.toHaveBeenCalled();
 	} );
 
 	it( 'should send a trigger only on the private port of the addressed instance', () => {

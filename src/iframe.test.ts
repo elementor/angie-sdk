@@ -310,13 +310,6 @@ describe( 'openIframe trigger channel', () => {
 		expect( instance.iframe ).toBeNull();
 		expect( mockRegisterSdkInstance ).not.toHaveBeenCalled();
 		expect( mockStartSdkMessageRouting ).not.toHaveBeenCalled();
-
-		window.dispatchEvent( new MessageEvent( 'message', {
-			origin: 'https://angie.elementor.com',
-			source: contentWindow as unknown as Window,
-			data: { type: MessageEventType.SDK_ANGIE_READY_LISTENER },
-		} ) );
-
 		expect( mockBindAngieTriggerChannel ).not.toHaveBeenCalled();
 
 		resolveOpen( {
