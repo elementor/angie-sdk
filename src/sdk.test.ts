@@ -3,9 +3,12 @@ import type { AppState } from './config';
 import { appState } from './config';
 import { createAngieInstance, resetInstancesForTests } from './instance-registry';
 import {
+	bindAngieTriggerChannel,
 	flushPendingSdkMessages,
 	registerSdkInstance,
+	resetTriggerChannelsForTests,
 	startSdkMessageRouting,
+	triggerAngieOnInstance,
 	unregisterSdkInstance,
 } from './sdk';
 import { MessageEventType } from './types';
@@ -27,6 +30,26 @@ const attachIframe = ( instance: AppState ) => {
 	return postMessage;
 };
 
+const latestTriggerPort = (): { postMessage: jest.Mock; onmessage: ( ( event: MessageEvent ) => void ) | null } => {
+	const results = ( global.MessageChannel as jest.Mock ).mock.results;
+	const channel = results[ results.length - 1 ]?.value as { port1: { postMessage: jest.Mock; onmessage: ( ( event: MessageEvent ) => void ) | null } };
+
+	return channel.port1;
+};
+
+const replyToTrigger = ( requestId: string ): void => {
+	latestTriggerPort().onmessage?.( {
+		data: {
+			type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+			payload: {
+				success: true,
+				requestId,
+				response: 'Angie triggered successfully',
+			},
+		},
+	} as MessageEvent );
+};
+
 const emitHostMessage = ( data: unknown ): void => {
 	window.dispatchEvent( Object.assign( new Event( 'message' ), {
 		origin: window.location.origin,
@@ -46,9 +69,11 @@ describe( 'sdk', () => {
 		for ( const instance of registeredInstances.splice( 0 ) ) {
 			unregisterSdkInstance( instance );
 		}
+
+		resetTriggerChannelsForTests();
 	} );
 
-	it( 'should forward a trigger request only to the addressed instance', () => {
+	it( 'should forward a window trigger to the matching iframe', () => {
 		const first = createAngieInstance( {
 			containerId: 'container-a',
 			instanceId: 'aaaaaa',
@@ -76,29 +101,70 @@ describe( 'sdk', () => {
 		expect( secondPostMessage ).not.toHaveBeenCalled();
 	} );
 
-	it( 'should relay a context attachment unchanged to the Angie iframe', () => {
+	it( 'should send a trigger only on the private port of the addressed instance', async () => {
+		const first = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const second = createAngieInstance( {
+			containerId: 'container-b',
+			instanceId: 'bbbbbb',
+			layout: 'floatingChat',
+		} );
+		const firstPostMessage = attachIframe( first );
+		const secondPostMessage = attachIframe( second );
+		bindAngieTriggerChannel( first );
+
+		const pending = triggerAngieOnInstance( first, {
+			requestId: 'req-2',
+			instanceId: 'aaaaaa',
+			prompt: 'hello',
+		} );
+		replyToTrigger( 'req-2' );
+
+		await expect( pending ).resolves.toEqual( {
+			success: true,
+			requestId: 'req-2',
+			response: 'Angie triggered successfully',
+		} );
+		expect( firstPostMessage ).toHaveBeenCalledTimes( 1 );
+		expect( firstPostMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( { type: MessageEventType.SDK_INIT_TRIGGER_ANGIE } ),
+			ANGIE_ORIGIN,
+			expect.any( Array ),
+		);
+		expect( secondPostMessage ).not.toHaveBeenCalled();
+		expect( latestTriggerPort().postMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( {
+				type: MessageEventType.SDK_TRIGGER_ANGIE,
+				payload: expect.objectContaining( { prompt: 'hello', instanceId: 'aaaaaa' } ),
+			} ),
+		);
+	} );
+
+	it( 'should relay a context attachment unchanged on the private port', async () => {
 		const instance = createAngieInstance( {
 			containerId: 'container-a',
 			instanceId: 'aaaaaa',
 			layout: 'sidebar',
 		} );
-		const postMessage = attachIframe( instance );
+		attachIframe( instance );
+		bindAngieTriggerChannel( instance );
 		const contextAttachment = {
 			label: 'Selected error',
 			content: 'Checkout failed with error code PAYMENT_DECLINED.',
 		};
 
-		registerForRouting( instance );
-		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: {
-				instanceId: 'aaaaaa',
-				requestId: 'request-123',
-				contextAttachment,
-			},
+		const pending = triggerAngieOnInstance( instance, {
+			requestId: 'request-123',
+			instanceId: 'aaaaaa',
+			contextAttachment,
 		} );
+		replyToTrigger( 'request-123' );
+		await pending;
 
-		const relayedMessage = postMessage.mock.calls[ 0 ][ 0 ] as {
+		const relayedMessage = latestTriggerPort().postMessage.mock.calls[ 0 ][ 0 ] as {
 			payload: {
 				contextAttachment?: typeof contextAttachment;
 				prompt?: string;
@@ -109,30 +175,68 @@ describe( 'sdk', () => {
 		expect( relayedMessage.payload.prompt ).toBeUndefined();
 	} );
 
-	it( 'should relay conversation-starter suggestions to the Angie iframe', () => {
+	it( 'should relay conversation-starter suggestions on the private port', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		attachIframe( instance );
+		bindAngieTriggerChannel( instance );
+		const suggestions = { items: [ { label: 'Make it longer', value: 'Make it longer' } ] };
+
+		const pending = triggerAngieOnInstance( instance, {
+			requestId: 'request-123',
+			instanceId: 'aaaaaa',
+			suggestions,
+		} );
+		replyToTrigger( 'request-123' );
+		await pending;
+
+		const relayedMessage = latestTriggerPort().postMessage.mock.calls[ 0 ][ 0 ] as {
+			payload: { suggestions?: typeof suggestions };
+		};
+
+		expect( relayedMessage.payload.suggestions ).toBe( suggestions );
+	} );
+
+	it( 'should reuse the same port for a second trigger', async () => {
 		const instance = createAngieInstance( {
 			containerId: 'container-a',
 			instanceId: 'aaaaaa',
 			layout: 'sidebar',
 		} );
 		const postMessage = attachIframe( instance );
-		const suggestions = { items: [ { label: 'Make it longer', value: 'Make it longer' } ] };
+		bindAngieTriggerChannel( instance );
 
-		registerForRouting( instance );
-		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: {
-				instanceId: 'aaaaaa',
-				requestId: 'request-123',
-				suggestions,
-			},
+		const firstTrigger = triggerAngieOnInstance( instance, { requestId: 'req-1', instanceId: 'aaaaaa', prompt: 'one' } );
+		const secondTrigger = triggerAngieOnInstance( instance, { requestId: 'req-2', instanceId: 'aaaaaa', prompt: 'two' } );
+		replyToTrigger( 'req-1' );
+		replyToTrigger( 'req-2' );
+		await Promise.all( [ firstTrigger, secondTrigger ] );
+
+		expect( postMessage ).toHaveBeenCalledTimes( 1 );
+		expect( latestTriggerPort().postMessage ).toHaveBeenCalledTimes( 2 );
+	} );
+
+	it( 'should report failure when the iframe is missing', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
 		} );
 
-		const relayedMessage = postMessage.mock.calls[ 0 ][ 0 ] as {
-			payload: { suggestions?: typeof suggestions };
-		};
+		const response = await triggerAngieOnInstance( instance, {
+			requestId: 'req-missing',
+			instanceId: 'aaaaaa',
+			prompt: 'hello',
+		} );
 
-		expect( relayedMessage.payload.suggestions ).toBe( suggestions );
+		expect( response ).toEqual( {
+			success: false,
+			requestId: 'req-missing',
+			error: 'Iframe not found',
+		} );
 	} );
 
 	it( 'should not forward client creation to a sibling while the addressed instance is still booting', () => {
@@ -208,8 +312,16 @@ describe( 'sdk', () => {
 		registerForRouting( instance );
 		registerSdkInstance( instance );
 		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: { instanceId: 'aaaaaa', requestId: 'req-2', prompt: 'hello' },
+			type: MessageEventType.SDK_REQUEST_CLIENT_CREATION,
+			payload: {
+				instanceId: 'aaaaaa',
+				serverId: 'server-1',
+				serverName: 'Test Server',
+				description: 'A test server',
+				serverVersion: '1.0.0',
+				transport: 'postMessage',
+				requestId: 'req-2',
+			},
 		} );
 
 		expect( postMessage ).toHaveBeenCalledTimes( 1 );
@@ -221,13 +333,21 @@ describe( 'sdk', () => {
 
 		registerForRouting( appState );
 		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: { requestId: 'req-v1', prompt: 'hello' },
+			type: MessageEventType.SDK_REQUEST_CLIENT_CREATION,
+			payload: {
+				serverId: 'server-1',
+				serverName: 'Test Server',
+				description: 'A test server',
+				serverVersion: '1.0.0',
+				transport: 'postMessage',
+				requestId: 'req-v1',
+			},
 		} );
 
 		expect( postMessage ).toHaveBeenCalledWith(
-			expect.objectContaining( { type: MessageEventType.SDK_TRIGGER_ANGIE } ),
+			expect.objectContaining( { type: MessageEventType.SDK_REQUEST_CLIENT_CREATION } ),
 			ANGIE_ORIGIN,
+			expect.any( Array ),
 		);
 	} );
 
@@ -250,18 +370,35 @@ describe( 'sdk', () => {
 		unregisterSdkInstance( first );
 		registeredInstances.splice( registeredInstances.indexOf( first ), 1 );
 		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: { instanceId: 'aaaaaa', requestId: 'req-2', prompt: 'hello' },
+			type: MessageEventType.SDK_REQUEST_CLIENT_CREATION,
+			payload: {
+				instanceId: 'aaaaaa',
+				serverId: 'server-1',
+				serverName: 'Test Server',
+				description: 'A test server',
+				serverVersion: '1.0.0',
+				transport: 'postMessage',
+				requestId: 'req-2',
+			},
 		} );
 		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: { instanceId: 'bbbbbb', requestId: 'req-3', prompt: 'hello' },
+			type: MessageEventType.SDK_REQUEST_CLIENT_CREATION,
+			payload: {
+				instanceId: 'bbbbbb',
+				serverId: 'server-1',
+				serverName: 'Test Server',
+				description: 'A test server',
+				serverVersion: '1.0.0',
+				transport: 'postMessage',
+				requestId: 'req-3',
+			},
 		} );
 
 		expect( firstPostMessage ).not.toHaveBeenCalled();
 		expect( secondPostMessage ).toHaveBeenCalledWith(
-			expect.objectContaining( { type: MessageEventType.SDK_TRIGGER_ANGIE } ),
+			expect.objectContaining( { type: MessageEventType.SDK_REQUEST_CLIENT_CREATION } ),
 			ANGIE_ORIGIN,
+			expect.any( Array ),
 		);
 	} );
 
@@ -277,10 +414,79 @@ describe( 'sdk', () => {
 		unregisterSdkInstance( instance );
 		registeredInstances.length = 0;
 		emitHostMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload: { instanceId: 'aaaaaa', requestId: 'req-2', prompt: 'hello' },
+			type: MessageEventType.SDK_REQUEST_CLIENT_CREATION,
+			payload: {
+				instanceId: 'aaaaaa',
+				serverId: 'server-1',
+				serverName: 'Test Server',
+				description: 'A test server',
+				serverVersion: '1.0.0',
+				transport: 'postMessage',
+				requestId: 'req-2',
+			},
 		} );
 
 		expect( postMessage ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should hand a replaced iframe a fresh port', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		const firstPostMessage = attachIframe( instance );
+		bindAngieTriggerChannel( instance );
+
+		const firstTrigger = triggerAngieOnInstance( instance, { requestId: 'req-1', instanceId: 'aaaaaa', prompt: 'one' } );
+		replyToTrigger( 'req-1' );
+		await firstTrigger;
+
+		const secondPostMessage = attachIframe( instance );
+		bindAngieTriggerChannel( instance );
+
+		const secondTrigger = triggerAngieOnInstance( instance, { requestId: 'req-2', instanceId: 'aaaaaa', prompt: 'two' } );
+		replyToTrigger( 'req-2' );
+		await secondTrigger;
+
+		expect( firstPostMessage ).toHaveBeenCalledTimes( 1 );
+		expect( secondPostMessage ).toHaveBeenCalledTimes( 1 );
+		expect( secondPostMessage ).toHaveBeenCalledWith(
+			expect.objectContaining( { type: MessageEventType.SDK_INIT_TRIGGER_ANGIE } ),
+			ANGIE_ORIGIN,
+			expect.any( Array ),
+		);
+	} );
+
+	it( 'should report failure when the private port send throws', async () => {
+		const instance = createAngieInstance( {
+			containerId: 'container-a',
+			instanceId: 'aaaaaa',
+			layout: 'sidebar',
+		} );
+		attachIframe( instance );
+		( global.MessageChannel as jest.Mock ).mockImplementationOnce( () => ( {
+			port1: {
+				postMessage: () => {
+					throw new Error( 'port failed' );
+				},
+				close: jest.fn(),
+				start: jest.fn(),
+			},
+			port2: { postMessage: jest.fn(), close: jest.fn(), start: jest.fn() },
+		} ) );
+		bindAngieTriggerChannel( instance );
+
+		const response = await triggerAngieOnInstance( instance, {
+			requestId: 'req-throw',
+			instanceId: 'aaaaaa',
+			prompt: 'hello',
+		} );
+
+		expect( response ).toEqual( {
+			success: false,
+			requestId: 'req-throw',
+			error: 'port failed',
+		} );
 	} );
 } );

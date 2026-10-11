@@ -1,7 +1,7 @@
 import { createChildLogger } from './logger';
 import { isTrustedIframeMessage, sendSuccessMessage } from './utils';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
-import { MessageEventType } from './types';
+import { AngieTriggerRequest, AngieTriggerResponse, MessageEventType } from './types';
 import { AppState } from './config';
 import { shouldInstanceHandle } from './instance-registry';
 
@@ -25,6 +25,139 @@ const pendingMessages = new Map<AppState, Array<() => void>>();
 const routingInstances: AppState[] = [];
 let routingListener: ( ( event: MessageEvent ) => void ) | null = null;
 
+type TriggerChannel = {
+	iframe: HTMLIFrameElement;
+	port: MessagePort;
+};
+
+const triggerChannels = new Map<AppState, TriggerChannel>();
+
+const DEFAULT_TRIGGER_TIMEOUT_MS = 30000;
+
+export type AngieTriggerDelivery = {
+	requestId: string;
+	instanceId: string;
+	prompt?: string;
+	context?: AngieTriggerRequest[ 'context' ];
+	contextAttachment?: AngieTriggerRequest[ 'contextAttachment' ];
+	suggestions?: AngieTriggerRequest[ 'suggestions' ];
+	options?: AngieTriggerRequest[ 'options' ];
+};
+
+const closeTriggerChannel = ( instance: AppState ): void => {
+	const channel = triggerChannels.get( instance );
+
+	if ( ! channel ) {
+		return;
+	}
+
+	channel.port.close();
+	triggerChannels.delete( instance );
+};
+
+export const resetTriggerChannelsForTests = (): void => {
+	for ( const instance of triggerChannels.keys() ) {
+		closeTriggerChannel( instance );
+	}
+};
+
+export const bindAngieTriggerChannel = ( instance: AppState ): MessagePort | null => {
+	const iframe = instance.iframe;
+	const origin = instance.iframeUrlObject?.origin;
+
+	if ( ! iframe?.contentWindow || ! origin ) {
+		return null;
+	}
+
+	const current = triggerChannels.get( instance );
+
+	if ( current?.iframe === iframe ) {
+		return current.port;
+	}
+
+	closeTriggerChannel( instance );
+
+	const channel = new MessageChannel();
+	triggerChannels.set( instance, { iframe, port: channel.port1 } );
+
+	try {
+		iframe.contentWindow.postMessage( {
+			type: MessageEventType.SDK_INIT_TRIGGER_ANGIE,
+			payload: { instanceId: instance.instanceId },
+			timestamp: Date.now(),
+		}, origin, [ channel.port2 ] );
+	} catch ( error ) {
+		closeTriggerChannel( instance );
+		throw error;
+	}
+
+	return channel.port1;
+};
+
+export const triggerAngieOnInstance = (
+	instance: AppState,
+	payload: AngieTriggerDelivery,
+): Promise<AngieTriggerResponse> => {
+	const port = triggerChannels.get( instance )?.port;
+
+	if ( ! port ) {
+		return Promise.resolve( {
+			success: false,
+			requestId: payload.requestId,
+			error: 'Iframe not found',
+		} );
+	}
+
+	const timeout = payload.options?.timeout ?? DEFAULT_TRIGGER_TIMEOUT_MS;
+
+	return new Promise( ( resolve, reject ) => {
+		const previous = port.onmessage;
+
+		const onResponse = ( event: MessageEvent ) => {
+			if ( event.data?.type !== MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE ||
+				event.data?.payload?.requestId !== payload.requestId ) {
+				previous?.call( port, event );
+				return;
+			}
+
+			clearTimeout( timeoutId );
+			if ( port.onmessage === onResponse ) {
+				port.onmessage = previous;
+			}
+			resolve( event.data.payload as AngieTriggerResponse );
+		};
+
+		const timeoutId = setTimeout( () => {
+			if ( port.onmessage === onResponse ) {
+				port.onmessage = previous;
+			}
+			reject( new Error( 'Angie trigger request timed out' ) );
+		}, timeout );
+
+		port.onmessage = onResponse;
+
+		try {
+			port.postMessage( {
+				type: MessageEventType.SDK_TRIGGER_ANGIE,
+				payload,
+				timestamp: Date.now(),
+			} );
+		} catch ( error ) {
+			clearTimeout( timeoutId );
+			if ( port.onmessage === onResponse ) {
+				port.onmessage = previous;
+			}
+			sdkLogger.error( 'Failed to trigger Angie:', error );
+
+			resolve( {
+				success: false,
+				requestId: payload.requestId,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			} );
+		}
+	} );
+};
+
 export const flushPendingSdkMessages = ( instance: AppState ): void => {
 	startSdkMessageRouting();
 
@@ -46,6 +179,7 @@ export const unregisterSdkInstance = ( instance: AppState ): void => {
 	}
 
 	pendingMessages.delete( instance );
+	closeTriggerChannel( instance );
 
 	if ( routingInstances.length === 0 && routingListener ) {
 		window.removeEventListener( 'message', routingListener );
