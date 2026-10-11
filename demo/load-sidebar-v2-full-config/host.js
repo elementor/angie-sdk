@@ -32,7 +32,7 @@ toggle?.addEventListener( 'click', async () => {
 	}
 
 	await sdk.waitForReady();
-	await sdk.triggerAngie( {
+	await sdk.triggerAngieSecure( {
 		prompt: 'Review this product listing before I publish it. Tell me what looks good and what I should fix.',
 	} );
 } );

@@ -34,7 +34,7 @@ const triggerWithPrompt = async ( { newChat = false, prompt = getPrompt() } = {}
 		setStatus( 'Waiting for Angie…' );
 		await sdk.waitForReady();
 
-		const response = await sdk.triggerAngie( {
+		const response = await sdk.triggerAngieSecure( {
 			prompt,
 			options: {
 				newChat,
@@ -59,7 +59,7 @@ const triggerWithContextAttachment = async () => {
 		await sdk.waitForReady();
 
 		const prompt = getPrompt();
-		const response = await sdk.triggerAngie( {
+		const response = await sdk.triggerAngieSecure( {
 			prompt,
 			contextAttachment: CONTEXT_ATTACHMENT,
 			options: {
@@ -116,7 +116,7 @@ const injectFieldContext = async () => {
 		await sdk.waitForReady();
 
 		const value = fieldInput?.value?.trim() || '';
-		const response = await sdk.triggerAngie( {
+		const response = await sdk.triggerAngieSecure( {
 			options: { newChat: true, timeout: 30000 },
 			context: {
 				source: 'demo-field-context',
@@ -154,7 +154,7 @@ const triggerWithStarters = async () => {
 		setStatus( 'Waiting for Angie…' );
 		await sdk.waitForReady();
 
-		const response = await sdk.triggerAngie( {
+		const response = await sdk.triggerAngieSecure( {
 			options: { newChat: true, timeout: 30000 },
 			suggestions: TEXT_EDITING_STARTERS,
 		} );

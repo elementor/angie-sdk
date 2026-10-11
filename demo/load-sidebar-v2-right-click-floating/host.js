@@ -176,7 +176,7 @@ const startNewConversation = () => {
 		return;
 	}
 
-	sdk.triggerAngie( {
+	sdk.triggerAngieSecure( {
 		prompt: '\u200b',
 		context: { source: 'demo-field-switch' },
 		options: { newChat: true },

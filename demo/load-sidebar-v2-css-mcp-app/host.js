@@ -254,7 +254,7 @@ const askAngieAboutCss = async () => {
 		await sdk.waitForReady();
 		window.toggleAngieSidebar?.( true );
 
-		await sdk.triggerAngie( {
+		await sdk.triggerAngieSecure( {
 			// Angie holds this until the user sends the message, then attaches it as a
 			// context-attachment part. Nothing renders in the composer before that.
 			contextAttachment: {
