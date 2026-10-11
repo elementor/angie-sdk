@@ -335,6 +335,24 @@ describe('AngieMcpSdk', () => {
     it('should send the trigger on the private port', async () => {
       const iframePostMessage = attachHostIframe();
       mockAngieDetector.isReady.mockReturnValue(true);
+      const results = ( global.MessageChannel as jest.Mock ).mock.results;
+      const port = ( results[ results.length - 1 ] as { value: { port1: {
+        postMessage: jest.Mock;
+        onmessage: ( ( event: MessageEvent ) => void ) | null;
+      } } } ).value.port1;
+      port.postMessage.mockImplementation( ( message: unknown ) => {
+        const requestId = ( message as { payload?: { requestId?: string } } ).payload?.requestId;
+        port.onmessage?.( {
+          data: {
+            type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+            payload: {
+              success: true,
+              requestId,
+              response: 'Angie triggered successfully',
+            },
+          },
+        } as MessageEvent );
+      } );
 
       const response = await sdk.triggerAngieSecure({ prompt: 'hello' });
 

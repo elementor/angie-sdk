@@ -32,6 +32,8 @@ type TriggerChannel = {
 
 const triggerChannels = new Map<AppState, TriggerChannel>();
 
+const DEFAULT_TRIGGER_TIMEOUT_MS = 30000;
+
 export type AngieTriggerDelivery = {
 	requestId: string;
 	instanceId: string;
@@ -95,38 +97,65 @@ export const bindAngieTriggerChannel = ( instance: AppState ): MessagePort | nul
 export const triggerAngieOnInstance = (
 	instance: AppState,
 	payload: AngieTriggerDelivery,
-): AngieTriggerResponse => {
+): Promise<AngieTriggerResponse> => {
 	const port = triggerChannels.get( instance )?.port;
 
 	if ( ! port ) {
-		return {
+		return Promise.resolve( {
 			success: false,
 			requestId: payload.requestId,
 			error: 'Iframe not found',
-		};
-	}
-
-	try {
-		port.postMessage( {
-			type: MessageEventType.SDK_TRIGGER_ANGIE,
-			payload,
-			timestamp: Date.now(),
 		} );
-
-		return {
-			success: true,
-			requestId: payload.requestId,
-			response: 'Angie triggered successfully',
-		};
-	} catch ( error ) {
-		sdkLogger.error( 'Failed to trigger Angie:', error );
-
-		return {
-			success: false,
-			requestId: payload.requestId,
-			error: error instanceof Error ? error.message : 'Unknown error',
-		};
 	}
+
+	const timeout = payload.options?.timeout ?? DEFAULT_TRIGGER_TIMEOUT_MS;
+
+	return new Promise( ( resolve, reject ) => {
+		const previous = port.onmessage;
+
+		const onResponse = ( event: MessageEvent ) => {
+			if ( event.data?.type !== MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE ||
+				event.data?.payload?.requestId !== payload.requestId ) {
+				previous?.call( port, event );
+				return;
+			}
+
+			clearTimeout( timeoutId );
+			if ( port.onmessage === onResponse ) {
+				port.onmessage = previous;
+			}
+			resolve( event.data.payload as AngieTriggerResponse );
+		};
+
+		const timeoutId = setTimeout( () => {
+			if ( port.onmessage === onResponse ) {
+				port.onmessage = previous;
+			}
+			reject( new Error( 'Angie trigger request timed out' ) );
+		}, timeout );
+
+		port.onmessage = onResponse;
+
+		try {
+			port.postMessage( {
+				type: MessageEventType.SDK_TRIGGER_ANGIE,
+				payload,
+				timestamp: Date.now(),
+			} );
+		} catch ( error ) {
+			clearTimeout( timeoutId );
+			if ( port.onmessage === onResponse ) {
+				port.onmessage = previous;
+			}
+			sdkLogger.error( 'Failed to trigger Angie:', error );
+
+			resolve( {
+				success: false,
+				requestId: payload.requestId,
+				error: error instanceof Error ? error.message : 'Unknown error',
+			} );
+		}
+	} );
 };
 
 export const flushPendingSdkMessages = ( instance: AppState ): void => {
