@@ -236,7 +236,7 @@ describe('AngieMcpSdk', () => {
     });
   });
 
-  describe('triggerAngieSecure', () => {
+  describe('triggerAngie', () => {
     const latestTriggerPayload = () => {
       const results = ( global.MessageChannel as jest.Mock ).mock.results;
       const created = results[ results.length - 1 ].value as { port1: { postMessage: jest.Mock } };
@@ -268,7 +268,7 @@ describe('AngieMcpSdk', () => {
         } as MessageEvent );
       } );
 
-      const response = await sdk.triggerAngieSecure({ prompt: 'hello' });
+      const response = await sdk.triggerAngie({ prompt: 'hello' });
 
       expect( response.success ).toBe( true );
       expect( iframePostMessage ).toHaveBeenCalledWith(
@@ -299,7 +299,7 @@ describe('AngieMcpSdk', () => {
       const suggestions = { items: [ { label: 'Fix it', value: 'Fix it', autoSend: true } ] };
       const options = { autoSend: true, newChat: true };
 
-      await sdk.triggerAngieSecure( {
+      await sdk.triggerAngie( {
         contextAttachment,
         suggestions,
         options,
@@ -876,7 +876,7 @@ describe('AngieMcpSdk', () => {
       } );
 
       const { port } = attachHostIframe( 'stable-id' );
-      const promise = sdk.triggerAngieSecure( { prompt: 'hi', context: {}, options: { timeout: 50 } } );
+      const promise = sdk.triggerAngie( { prompt: 'hi', context: {}, options: { timeout: 50 } } );
       const call = port.postMessage.mock.calls.find(
         ( item: unknown[] ) => ( item[ 0 ] as { type?: string } )?.type === 'sdk-trigger-angie',
       ) as [ { payload: { instanceId?: string } } ] | undefined;

@@ -356,7 +356,7 @@ export class AngieMcpSdk {
    * Triggers Angie through the private port opened by sdk-init-trigger-angie.
    * A page script that can only call window.postMessage cannot use this.
    */
-  public async triggerAngieSecure(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
+  public async triggerAngie(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
     if (!this.isAngieReady()) {
       throw new Error('Angie is not ready. Please wait for Angie to be available before triggering.');
     }
@@ -514,7 +514,7 @@ export class AngieMcpSdk {
 
       await this.waitForReady();
 
-      const response = await this.triggerAngieSecure({
+      const response = await this.triggerAngie({
         prompt,
         context: {
           source: HASH_SOURCE,

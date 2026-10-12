@@ -47,7 +47,7 @@ Local demos:
 - [`demo/load-sidebar-v2-floating-chat/`](../../demo/load-sidebar-v2-floating-chat/) — minimal floating chat
 - [`demo/load-sidebar-v2-full-config/`](../../demo/load-sidebar-v2-full-config/) — full example (`aiContext`, custom CSS)
 - [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/) — `widgetConfig` presets (help center, visitor widget, sandbox)
-- [`demo/trigger-angie-prompt/`](../../demo/trigger-angie-prompt/) — `triggerAngieSecure()` and `#angie-prompt=` deep links
+- [`demo/trigger-angie-prompt/`](../../demo/trigger-angie-prompt/) — `triggerAngie()` and `#angie-prompt=` deep links
 
 ## Layouts
 

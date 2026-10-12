@@ -224,7 +224,7 @@ sdk.registerServer({
 });
 
 // Trigger Angie with a prompt
-await sdk.triggerAngieSecure({
+await sdk.triggerAngie({
   prompt: 'Help me optimize this page for SEO',
   context: { pageType: 'product', source: 'my-plugin' },
   contextAttachment: {
@@ -244,7 +244,7 @@ await sdk.triggerAngieSecure({
 });
 
 // A prompt without context
-await sdk.triggerAngieSecure({
+await sdk.triggerAngie({
   prompt: 'Help me create a contact page'
 });
 
@@ -254,7 +254,7 @@ const contextAttachment: ContextAttachment = {
   content: 'Checkout failed with error code PAYMENT_DECLINED.',
 };
 
-await sdk.triggerAngieSecure({ contextAttachment });
+await sdk.triggerAngie({ contextAttachment });
 ```
 
 **Request fields:**
