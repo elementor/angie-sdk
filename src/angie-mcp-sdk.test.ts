@@ -35,6 +35,22 @@ describe('AngieMcpSdk', () => {
   let mockOpenIframe: any;
   let addEventListenerSpy: ReturnType<typeof jest.spyOn>;
 
+  const attachHostIframe = ( instanceId?: string ) => {
+    const iframePostMessage = jest.fn();
+    appState.iframe = { contentWindow: { postMessage: iframePostMessage } } as unknown as HTMLIFrameElement;
+    appState.iframeUrlObject = new URL( 'https://angie.elementor.com/angie/embedded' );
+    appState.instanceId = instanceId ?? ( sdk as any ).instanceId;
+    bindAngieTriggerChannel( appState );
+
+    const results = ( global.MessageChannel as jest.Mock ).mock.results;
+    const port = ( results[ results.length - 1 ] as { value: { port1: {
+      postMessage: jest.Mock;
+      onmessage: ( ( event: MessageEvent ) => void ) | null;
+    } } } ).value.port1;
+
+    return { iframePostMessage, port };
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     
@@ -221,103 +237,6 @@ describe('AngieMcpSdk', () => {
   });
 
   describe('triggerAngie', () => {
-    const replyToTrigger = (message: any) => {
-      if (message?.type === MessageEventType.SDK_TRIGGER_ANGIE) {
-        window.dispatchEvent(new MessageEvent('message', {
-          data: {
-            type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
-            payload: {
-              success: true,
-              requestId: message.payload.requestId,
-            },
-          },
-        }));
-      }
-    };
-
-    it('should send a context attachment unchanged without requiring a prompt', async () => {
-      const contextAttachment = {
-        label: 'Selected error',
-        content: 'Checkout failed with error code PAYMENT_DECLINED.',
-      };
-      const postMessageSpy = jest.spyOn(window, 'postMessage').mockImplementation(replyToTrigger);
-      mockAngieDetector.isReady.mockReturnValue(true);
-
-      await sdk.triggerAngie({
-        contextAttachment,
-        context: {
-          source: 'checkout-plugin',
-          pageUrl: 'https://example.com/checkout',
-          pageTitle: 'Checkout',
-        },
-      });
-
-      const triggerMessage = postMessageSpy.mock.calls.find(
-        ([message]) => (message as { type?: string }).type === MessageEventType.SDK_TRIGGER_ANGIE
-      )?.[0] as { payload: { prompt?: string; contextAttachment?: unknown; context?: unknown } };
-
-      expect(triggerMessage.payload.prompt).toBeUndefined();
-      expect(triggerMessage.payload.contextAttachment).toBe(contextAttachment);
-      expect(triggerMessage.payload.context).toEqual({
-        source: 'checkout-plugin',
-        pageUrl: 'https://example.com/checkout',
-        pageTitle: 'Checkout',
-      });
-
-      postMessageSpy.mockRestore();
-    });
-
-    it('should include conversation-starter suggestions in the trigger payload', async () => {
-      const suggestions = { items: [ { label: 'Make it longer', value: 'Make it longer' } ] };
-      const postMessageSpy = jest.spyOn(window, 'postMessage').mockImplementation(replyToTrigger);
-      mockAngieDetector.isReady.mockReturnValue(true);
-
-      await sdk.triggerAngie({
-        prompt: 'Rewrite this',
-        context: { source: 'demo-field-switch' },
-        suggestions,
-      });
-
-      const triggerMessage = postMessageSpy.mock.calls.find(
-        ([message]) => (message as { type?: string }).type === MessageEventType.SDK_TRIGGER_ANGIE
-      )?.[0] as { payload: { suggestions?: unknown } };
-
-      expect(triggerMessage.payload.suggestions).toBe(suggestions);
-
-      postMessageSpy.mockRestore();
-    });
-
-    it('should include autoSend in trigger options when requested', async () => {
-      const postMessageSpy = jest.spyOn(window, 'postMessage').mockImplementation(replyToTrigger);
-      mockAngieDetector.isReady.mockReturnValue(true);
-
-      await sdk.triggerAngie({
-        prompt: 'Send this now',
-        options: {
-          autoSend: true,
-        },
-      });
-
-      const triggerMessage = postMessageSpy.mock.calls.find(
-        ([message]) => (message as { type?: string }).type === MessageEventType.SDK_TRIGGER_ANGIE
-      )?.[0] as { payload: { options?: unknown } };
-
-      expect(triggerMessage.payload.options).toEqual({ autoSend: true });
-
-      postMessageSpy.mockRestore();
-    });
-  });
-
-  describe('triggerAngieSecure', () => {
-    const attachHostIframe = () => {
-      const postMessage = jest.fn();
-      appState.iframe = { contentWindow: { postMessage } } as unknown as HTMLIFrameElement;
-      appState.iframeUrlObject = new URL( 'https://angie.elementor.com/angie/embedded' );
-      appState.instanceId = ( sdk as any ).instanceId;
-      bindAngieTriggerChannel( appState );
-      return postMessage;
-    };
-
     const latestTriggerPayload = () => {
       const results = ( global.MessageChannel as jest.Mock ).mock.results;
       const created = results[ results.length - 1 ].value as { port1: { postMessage: jest.Mock } };
@@ -333,13 +252,8 @@ describe('AngieMcpSdk', () => {
     };
 
     it('should send the trigger on the private port', async () => {
-      const iframePostMessage = attachHostIframe();
+      const { iframePostMessage, port } = attachHostIframe();
       mockAngieDetector.isReady.mockReturnValue(true);
-      const results = ( global.MessageChannel as jest.Mock ).mock.results;
-      const port = ( results[ results.length - 1 ] as { value: { port1: {
-        postMessage: jest.Mock;
-        onmessage: ( ( event: MessageEvent ) => void ) | null;
-      } } } ).value.port1;
       port.postMessage.mockImplementation( ( message: unknown ) => {
         const requestId = ( message as { payload?: { requestId?: string } } ).payload?.requestId;
         port.onmessage?.( {
@@ -354,7 +268,7 @@ describe('AngieMcpSdk', () => {
         } as MessageEvent );
       } );
 
-      const response = await sdk.triggerAngieSecure({ prompt: 'hello' });
+      const response = await sdk.triggerAngie({ prompt: 'hello' });
 
       expect( response.success ).toBe( true );
       expect( iframePostMessage ).toHaveBeenCalledWith(
@@ -363,6 +277,49 @@ describe('AngieMcpSdk', () => {
         expect.any( Array ),
       );
       expect( latestTriggerPayload().payload.prompt ).toBe( 'hello' );
+    });
+
+    it('should send context, attachments, suggestions, and options unchanged', async () => {
+      const { port } = attachHostIframe();
+      mockAngieDetector.isReady.mockReturnValue(true);
+      port.postMessage.mockImplementation( ( message: unknown ) => {
+        const requestId = ( message as { payload?: { requestId?: string } } ).payload?.requestId;
+        port.onmessage?.( {
+          data: {
+            type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE,
+            payload: { success: true, requestId },
+          },
+        } as MessageEvent );
+      } );
+
+      const contextAttachment = {
+        label: 'Selected error',
+        content: 'Checkout failed with error code PAYMENT_DECLINED.',
+      };
+      const suggestions = { items: [ { label: 'Fix it', value: 'Fix it', autoSend: true } ] };
+      const options = { autoSend: true, newChat: true };
+
+      await sdk.triggerAngie( {
+        contextAttachment,
+        suggestions,
+        options,
+        context: {
+          source: 'checkout-plugin',
+          pageUrl: 'https://example.com/checkout',
+          pageTitle: 'Checkout',
+        },
+      } );
+
+      expect( latestTriggerPayload().payload ).toEqual( expect.objectContaining( {
+        contextAttachment,
+        suggestions,
+        options,
+        context: {
+          source: 'checkout-plugin',
+          pageUrl: 'https://example.com/checkout',
+          pageTitle: 'Checkout',
+        },
+      } ) );
     });
   });
 
@@ -918,10 +875,11 @@ describe('AngieMcpSdk', () => {
         sdkInstanceId: 'stable-id',
       } );
 
+      const { port } = attachHostIframe( 'stable-id' );
       const promise = sdk.triggerAngie( { prompt: 'hi', context: {}, options: { timeout: 50 } } );
-      const call = ( window.postMessage as jest.MockedFunction<any> ).mock.calls.find(
-        ( item: any[] ) => item[ 0 ]?.type === 'sdk-trigger-angie',
-      );
+      const call = port.postMessage.mock.calls.find(
+        ( item: unknown[] ) => ( item[ 0 ] as { type?: string } )?.type === 'sdk-trigger-angie',
+      ) as [ { payload: { instanceId?: string } } ] | undefined;
 
       expect( call?.[ 0 ].payload.instanceId ).toBe( 'stable-id' );
       await expect( promise ).rejects.toThrow( 'timed out' );
@@ -952,12 +910,16 @@ describe('AngieMcpSdk', () => {
   });
 
   describe('handlePromptHash', () => {
-    let postMessageSpy: ReturnType<typeof jest.spyOn>;
+    let triggerPort: {
+      postMessage: jest.Mock;
+      onmessage: ( ( event: MessageEvent ) => void ) | null;
+    };
 
     beforeEach(() => {
-      postMessageSpy = jest.spyOn(window, 'postMessage').mockImplementation((message: any) => {
-        if (message?.type === 'sdk-trigger-angie') {
-          const responseEvent = new MessageEvent('message', {
+      triggerPort = attachHostIframe().port;
+      triggerPort.postMessage.mockImplementation((message: any) => {
+        if ( message?.type === 'sdk-trigger-angie' ) {
+          triggerPort.onmessage?.( {
             data: {
               type: 'sdk-trigger-angie-response',
               payload: {
@@ -966,19 +928,16 @@ describe('AngieMcpSdk', () => {
                 response: 'Triggered',
               },
             },
-          });
-          window.dispatchEvent(responseEvent);
+          } as MessageEvent );
         }
       });
       mockAngieDetector.isReady.mockReturnValue(true);
       mockAngieDetector.waitForReady.mockResolvedValue({ isReady: true });
-      appState.iframe = document.createElement( 'iframe' );
       (sdk as any).isInitialized = true;
     });
 
     afterEach(() => {
       window.location.hash = '';
-      postMessageSpy.mockRestore();
     });
 
     it('should do nothing when hash has no angie-prompt', async () => {
@@ -986,7 +945,7 @@ describe('AngieMcpSdk', () => {
 
       await (sdk as any).handlePromptHash();
 
-      expect(postMessageSpy).not.toHaveBeenCalled();
+      expect(triggerPort.postMessage).not.toHaveBeenCalled();
     });
 
     it('should do nothing for empty prompt', async () => {
@@ -994,7 +953,7 @@ describe('AngieMcpSdk', () => {
 
       await (sdk as any).handlePromptHash();
 
-      expect(postMessageSpy).not.toHaveBeenCalled();
+      expect(triggerPort.postMessage).not.toHaveBeenCalled();
     });
 
     it('should trigger with newChat=true when param is set', async () => {
@@ -1002,7 +961,7 @@ describe('AngieMcpSdk', () => {
 
       await (sdk as any).handlePromptHash();
 
-      expect(postMessageSpy).toHaveBeenCalledWith(
+      expect(triggerPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'sdk-trigger-angie',
           payload: expect.objectContaining({
@@ -1011,8 +970,7 @@ describe('AngieMcpSdk', () => {
               newChat: true,
             }),
           }),
-        }),
-        expect.anything()
+        })
       );
     });
 
@@ -1021,7 +979,7 @@ describe('AngieMcpSdk', () => {
 
       await (sdk as any).handlePromptHash();
 
-      expect(postMessageSpy).toHaveBeenCalledWith(
+      expect(triggerPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'sdk-trigger-angie',
           payload: expect.objectContaining({
@@ -1030,8 +988,7 @@ describe('AngieMcpSdk', () => {
               newChat: false,
             }),
           }),
-        }),
-        expect.anything()
+        })
       );
     });
 
@@ -1041,12 +998,11 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebarV2( { host: { appId: 'editor-lite' } } );
       await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
 
-      expect(postMessageSpy).toHaveBeenCalledWith(
+      expect(triggerPort.postMessage).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'sdk-trigger-angie',
           payload: expect.objectContaining({ prompt: 'Fix error' }),
-        }),
-        expect.anything()
+        })
       );
     });
 
@@ -1064,7 +1020,7 @@ describe('AngieMcpSdk', () => {
       await sdk.loadSidebarV2( options );
       await sdk.loadSidebarV2( options );
 
-      const hashListeners = ( addEventListenerSpy.mock.calls as [ string, EventListener ][] ).filter(
+      const hashListeners = ( addEventListenerSpy.mock.calls as [ string, ( event: Event ) => void ][] ).filter(
         ( [ type ] ) => type === 'hashchange',
       );
 
@@ -1078,13 +1034,13 @@ describe('AngieMcpSdk', () => {
 
       await sdk.loadSidebarV2( { host: { appId: 'app-a', instanceId: 'first' } } );
       await sdk2.loadSidebarV2( { host: { appId: 'app-b', instanceId: 'second' } } );
-      postMessageSpy.mockClear();
+      triggerPort.postMessage.mockClear();
 
       window.location.hash = '#angie-prompt=Shared%20prompt';
       window.dispatchEvent( new HashChangeEvent( 'hashchange' ) );
       await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
 
-      const triggerCalls = ( postMessageSpy.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
+      const triggerCalls = ( triggerPort.postMessage.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
         ( [ message ] ) => message?.type === 'sdk-trigger-angie',
       );
 
@@ -1099,13 +1055,13 @@ describe('AngieMcpSdk', () => {
 
       await sdk.loadSidebarV2( { host: { appId: 'app-a', instanceId: 'first' } } );
       await sdk2.loadSidebarV2( { host: { appId: 'app-b', instanceId: 'second' } } );
-      postMessageSpy.mockClear();
+      triggerPort.postMessage.mockClear();
 
       window.location.hash = '#angie-prompt=Targeted%20prompt&angie-instance=second';
       window.dispatchEvent( new HashChangeEvent( 'hashchange' ) );
       await new Promise( ( resolve ) => setTimeout( resolve, 0 ) );
 
-      const triggerCalls = ( postMessageSpy.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
+      const triggerCalls = ( triggerPort.postMessage.mock.calls as [ { type?: string; payload?: { instanceId?: string } } ][] ).filter(
         ( [ message ] ) => message?.type === 'sdk-trigger-angie',
       );
 

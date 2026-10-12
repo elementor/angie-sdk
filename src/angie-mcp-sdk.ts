@@ -353,63 +353,10 @@ export class AngieMcpSdk {
   }
 
   /**
-   * Triggers Angie with a prompt, context attachment, or both
-   * @param request - The trigger request containing an optional prompt and context attachment
-   * @returns Promise resolving to Angie's response
-   */
-  public async triggerAngie(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
-    if (!this.isAngieReady()) {
-      throw new Error('Angie is not ready. Please wait for Angie to be available before triggering.');
-    }
-
-    const requestId = this.generateRequestId();
-    const timeout = request.options?.timeout || 30000;
-
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        reject(new Error('Angie trigger request timed out'));
-      }, timeout);
-
-      const responseHandler = (event: MessageEvent) => {
-        if (event.data?.type === MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE && 
-            event.data?.payload?.requestId === requestId) {
-          clearTimeout(timeoutId);
-          window.removeEventListener('message', responseHandler);
-          resolve(event.data.payload as AngieTriggerResponse);
-        }
-      };
-
-      window.addEventListener('message', responseHandler);
-
-      // Send the trigger request
-      const message = {
-        type: MessageEventType.SDK_TRIGGER_ANGIE,
-        payload: {
-          requestId,
-          instanceId: this.instanceId,
-          prompt: request.prompt,
-          options: request.options,
-          contextAttachment: request.contextAttachment,
-          suggestions: request.suggestions,
-          context: {
-            pageUrl: window.location.href,
-            pageTitle: document.title,
-            ...request.context
-          }
-        },
-        timestamp: Date.now()
-      };
-
-      this.logger.log(`Triggering Angie with prompt (Request ID: ${requestId})`);
-      window.postMessage(message, window.location.origin);
-    });
-  }
-
-  /**
    * Triggers Angie through the private port opened by sdk-init-trigger-angie.
    * A page script that can only call window.postMessage cannot use this.
    */
-  public async triggerAngieSecure(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
+  public async triggerAngie(request: AngieTriggerRequest): Promise<AngieTriggerResponse> {
     if (!this.isAngieReady()) {
       throw new Error('Angie is not ready. Please wait for Angie to be available before triggering.');
     }
