@@ -99,6 +99,30 @@ describe( 'load-sidebar-v2/boot-sidebar integration', () => {
 		expect( hostEl.getAttribute( 'role' ) ).toBe( 'complementary' );
 	} );
 
+	it( 'should keep the floating chat open when the toggle is clicked while the iframe loads', async () => {
+		const openSaaSPage = require( '../openSaaSPage' ).openSaaSPage as jest.Mock;
+		const defaultImpl = openSaaSPage.getMockImplementation() as ( props: any ) => Promise<unknown>;
+		openSaaSPage.mockImplementationOnce( async ( props: any ) => {
+			( document.querySelector( '#angie-widget-toggle' ) as HTMLElement ).click();
+			return defaultImpl( props );
+		} );
+
+		await bootSidebar( {
+			container: {
+				id: 'angie-chat',
+				layout: LAYOUT_FLOATING_CHAT,
+				chatToggleButton: { enabled: true, selector: '#angie-widget-toggle' },
+			},
+			host: { appId: 'app-chat', instanceId: 'chat' },
+		} );
+
+		const container = document.getElementById( 'angie-chat' ) as HTMLElement;
+		const toggle = document.querySelector( '#angie-widget-toggle' ) as HTMLElement;
+
+		expect( container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ) ).toBe( false );
+		expect( toggle.getAttribute( 'aria-expanded' ) ).toBe( 'true' );
+	} );
+
 	it( 'should run a sidebar and a floating chat side by side', async () => {
 		await bootSidebar( {
 			container: { layout: LAYOUT_SIDEBAR },

@@ -156,7 +156,9 @@ export const injectChatWidgetStyles = ( containerId: string ): void => {
 export const prepareChatWidgetContainer = ( containerId: string ): void => {
 	const container = document.getElementById( containerId );
 
-	if ( ! container ) {
+	// If the container is already prepared (for example, in initShell), do not hide it again.
+	// If you hide it again, you cancel a click that the user made while the iframe loaded.
+	if ( ! container || container.classList.contains( CHAT_WIDGET_CONTAINER_CLASS ) ) {
 		return;
 	}
 

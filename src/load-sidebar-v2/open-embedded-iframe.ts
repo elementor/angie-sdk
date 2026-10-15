@@ -3,6 +3,7 @@ import { openIframe } from '../iframe';
 import { toggleAngieSidebar } from '../utils';
 import { LAYOUT_FLOATING_CHAT, type HostEmbeddedConfigPayload, type ResolvedConfigV2 } from './config';
 import { setChatWidgetOpen } from './chat-toggle/chat-shell';
+import { CHAT_WIDGET_HIDDEN_CLASS } from './chat-toggle/constants';
 import { syncToggleButton } from './toggle-button';
 
 type OpenEmbeddedIframeArgs = {
@@ -32,10 +33,11 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 		args.container.layout === LAYOUT_FLOATING_CHAT &&
 		args.container.chatToggleButton.enabled
 	) {
+		const container = document.getElementById( args.container.id );
 		setChatWidgetOpen( {
 			containerId: args.container.id,
 			toggleButtonSelector: args.container.chatToggleButton.selector,
-			isOpen: false,
+			isOpen: !! container && ! container.classList.contains( CHAT_WIDGET_HIDDEN_CLASS ),
 			instance,
 		} );
 		return true;
