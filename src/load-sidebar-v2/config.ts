@@ -46,6 +46,8 @@ export type IframeConfig = {
 	path: string;
 	uiTheme: string;
 	isRTL: boolean;
+	/** Mount the iframe on narrow screens (`screen.availWidth` <= 768). Default `false`: skipped on mobile. */
+	allowMobile: boolean;
 };
 
 export type IframeOptions = Partial<IframeConfig>;

@@ -61,6 +61,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 			path: iframe.path?.trim() || DEFAULTS.iframe.path,
 			uiTheme: iframe.uiTheme ?? env.browserUiTheme,
 			isRTL: iframe.isRTL ?? env.isRTL,
+			allowMobile: iframe.allowMobile ?? DEFAULTS.iframe.allowMobile,
 		},
 		callbacks: {
 			onClose: callbacks.onClose,

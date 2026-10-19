@@ -122,6 +122,21 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.widgetConfig?.generationTypes ).toEqual( generationTypes );
 	} );
 
+	it( 'should not allow mobile by default', () => {
+		const config = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
+
+		expect( config.iframe.allowMobile ).toBe( false );
+	} );
+
+	it( 'should resolve iframe.allowMobile', () => {
+		const config = resolveConfig(
+			{ host: { appId: 'editor-lite' }, iframe: { allowMobile: true } },
+			DEFAULT_ENV,
+		);
+
+		expect( config.iframe.allowMobile ).toBe( true );
+	} );
+
 	it( 'should preserve callbacks.onClose', () => {
 		const onClose = jest.fn();
 		const config = resolveConfig(

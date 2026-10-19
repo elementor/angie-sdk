@@ -48,6 +48,7 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 		path: 'angie/embedded',
 		uiTheme: 'light',
 		isRTL: false,
+		allowMobile: false,
 	} as const;
 
 	const openFloatingChat = ( isHidden?: boolean ) => {
@@ -92,11 +93,26 @@ describe( 'load-sidebar-v2/open-embedded-iframe', () => {
 				path: 'angie/embedded',
 				uiTheme: 'light',
 				isRTL: false,
+				allowMobile: false,
 			},
 		} );
 
 		expect( toggleAngieSidebar ).toHaveBeenCalledWith( appState.iframe, false, appState.containerId );
 		expect( syncToggleButton ).toHaveBeenCalledWith( '#demo-sidebar-toggle', false );
+	} );
+
+	it( 'should forward allowMobile to openIframe', async () => {
+		const { openIframe } = require( '../iframe' );
+
+		await openEmbeddedIframe( {
+			container: sidebarContainer,
+			iframe: { ...iframeConfig, allowMobile: true },
+		} );
+
+		expect( openIframe ).toHaveBeenCalledWith(
+			expect.objectContaining( { allowMobile: true } ),
+			expect.anything(),
+		);
 	} );
 
 	it( 'should keep the floating chat open when the user opened it during load', async () => {
