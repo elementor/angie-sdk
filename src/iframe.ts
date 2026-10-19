@@ -13,6 +13,7 @@ type OpenIframeProps = {
 	origin?: string;
 	uiTheme: string;
 	isRTL: boolean;
+	allowMobile?: boolean;
 	path?: string;
 	embeddedConfig?: HostEmbeddedConfigPayload;
 }
@@ -165,7 +166,7 @@ export const openIframe = async (
 	props: OpenIframeProps,
 	instance: AppState = appState
 ): Promise<OpenIframeResult | undefined> => {
-	if ( isMobile() ) {
+	if ( ! props.allowMobile && isMobile() ) {
 		iframeLogger.log( 'Mobile detected, skipping iframe injection' );
 		return;
 	}

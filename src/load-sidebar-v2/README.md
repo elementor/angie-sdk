@@ -67,7 +67,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 | `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
-| `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL` |
+| `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL`, `allowMobile` — mount the iframe on narrow screens (`screen.availWidth` <= 768), which are skipped by default (default `false`) |
 | `callbacks` | `onClose`, `onToggle` (sidebar only), `getExternalHeaders`, `getWebsiteContext`, `getAnalyticsContext` (see [message ownership](#message-ownership)) |
 | `widgetConfig` | Embedded UI copy, feature toggles, MCP focus, close behavior — see [widgetConfig guide](./widget-config.md) |
 

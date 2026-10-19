@@ -24,6 +24,7 @@ export const DEFAULTS = {
 		origin: 'https://angie.elementor.com',
 		path: 'angie/embedded',
 		uiTheme: 'light',
+		allowMobile: false,
 	},
 } as const;
 

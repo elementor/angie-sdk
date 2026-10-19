@@ -262,6 +262,43 @@ describe( 'openIframe appId', () => {
 	} );
 } );
 
+describe( 'openIframe on mobile', () => {
+	let mockOpenSaaSPage: jest.Mock;
+
+	beforeEach( () => {
+		jest.clearAllMocks();
+		resetInstancesForTests();
+		resetIframeHostHandlersForTests();
+		Object.defineProperty( window.screen, 'availWidth', { value: 375, configurable: true } );
+		document.body.innerHTML = '<div id="angie-sidebar-container"></div>';
+		mockOpenSaaSPage = require( './openSaaSPage' ).openSaaSPage as jest.Mock;
+	} );
+
+	afterEach( () => {
+		document.body.innerHTML = '';
+		resetIframeHostHandlersForTests();
+	} );
+
+	const createInstance = () => createAngieInstance( {
+		containerId: 'angie-sidebar-container',
+		instanceId: 'mobile-test',
+		layout: 'sidebar',
+	} );
+
+	it( 'should skip the iframe on mobile by default', async () => {
+		const result = await openIframe( { uiTheme: 'light', isRTL: false }, createInstance() );
+
+		expect( result ).toBeUndefined();
+		expect( mockOpenSaaSPage ).not.toHaveBeenCalled();
+	} );
+
+	it( 'should open the iframe on mobile when allowMobile is set', async () => {
+		await openIframe( { uiTheme: 'light', isRTL: false, allowMobile: true }, createInstance() );
+
+		expect( mockOpenSaaSPage ).toHaveBeenCalled();
+	} );
+} );
+
 describe( 'openIframe trigger channel', () => {
 	let mockOpenSaaSPage: jest.Mock;
 	let mockBindAngieTriggerChannel: jest.Mock;

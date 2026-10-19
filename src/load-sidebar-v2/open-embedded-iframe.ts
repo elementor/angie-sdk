@@ -21,6 +21,7 @@ export const openEmbeddedIframe = async ( args: OpenEmbeddedIframeArgs ): Promis
 		origin: args.iframe.origin,
 		path: args.iframe.path,
 		uiTheme: args.iframe.uiTheme,
+		allowMobile: args.iframe.allowMobile,
 		embeddedConfig: args.embeddedConfig,
 	}, instance );
 
