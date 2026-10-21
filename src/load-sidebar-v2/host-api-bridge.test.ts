@@ -312,6 +312,54 @@ describe( 'load-sidebar-v2/host-api-bridge', () => {
 		} );
 	} );
 
+	it( 'should include host metadata in the analytics context fallback', async () => {
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: { appId: 'test-app', analytics: { siteKey: 'k', metadata: { plan: 'pro' } } },
+			instance: appState,
+		} );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_ANALYTICS_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: { payload: expect.objectContaining( { siteKey: 'k', metadata: { plan: 'pro' } } ) },
+		} );
+	} );
+
+	it.each( [
+		[ 'adds host metadata when the provider result has none', { siteKey: 'p' }, { siteKey: 'p', metadata: { plan: 'pro' } } ],
+		[ 'keeps the provider metadata when it has its own', { metadata: { plan: 'free' } }, { metadata: { plan: 'free' } } ],
+	] )( 'should merge host metadata into getAnalyticsContext: %s', async ( _label, fromProvider, expected ) => {
+		initHostApiBridge( {
+			iframeOrigin: IFRAME_ORIGIN,
+			host: { appId: 'test-app', analytics: { metadata: { plan: 'pro' } } },
+			getAnalyticsContext: async () => fromProvider,
+			instance: appState,
+		} );
+
+		const port = createMockPort();
+		window.dispatchEvent( new MessageEvent( 'message', {
+			data: { type: GET_ANALYTICS_CONTEXT_MESSAGE_TYPE },
+			origin: IFRAME_ORIGIN,
+			ports: [ port as unknown as MessagePort ],
+		} ) );
+
+		await flushAsync();
+
+		expect( port.postMessage ).toHaveBeenCalledWith( {
+			status: 'success',
+			payload: { payload: expected },
+		} );
+	} );
+
 	it( 'should handle localStorage GET', async () => {
 		window.localStorage.setItem( 'angie-test-key', 'stored-value' );
 

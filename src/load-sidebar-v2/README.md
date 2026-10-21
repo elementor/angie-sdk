@@ -64,7 +64,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 | Section | Purpose |
 |---------|---------|
-| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
+| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext) and [analytics.metadata](#hostanalyticsmetadata)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL`, `allowMobile` — mount the iframe on narrow screens (`screen.availWidth` <= 768), which are skipped by default (default `false`) |
@@ -87,6 +87,37 @@ Keep it focused on what helps the agent answer screen-level questions:
 Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js) reads `#demo-host-app` into `whatUserSees` and lists allowed actions in `whatUserCanDo`.
 
 Full `widgetConfig` reference: [widget-config.md](./widget-config.md).
+
+### host.analytics.metadata
+
+Optional flat object the host passes so Angie can tag its analytics with host-specific values, such as your plan, product area or experiment variant:
+
+```typescript
+await sdk.loadSidebarV2({
+  host: {
+    appId: 'my-app',
+    analytics: {
+      metadata: { plan: 'pro', area: 'checkout', experiment: 'b' },
+    },
+  },
+});
+```
+
+The SDK sends it to the embedded Angie app as `metadata` in the `angie/context/get-analytics-context` reply, which Angie requests for every chat request.
+
+| Rule | Limit |
+|------|-------|
+| Shape | Plain object, one level deep (no nested objects or arrays) |
+| Values | `string`, finite `number`, `boolean` or `null` |
+| Keys | At most 20, each 1 to 64 characters |
+| String values | At most 256 characters |
+| Total size | At most 2048 characters as JSON |
+
+The SDK checks the object once, when `loadSidebarV2()` runs. It drops invalid entries, and entries past a limit, with a `console.warn`, and keeps the rest. It never throws, and a missing, empty or invalid object never blocks boot. Limits are defined as `HOST_METADATA_LIMITS` in [`host-metadata.ts`](./host-metadata.ts).
+
+If you set `callbacks.getAnalyticsContext`, its result is used as is. If that result has no `metadata` key, the SDK adds the checked `host.analytics.metadata` to it. If it has its own `metadata`, the SDK sends that unchanged, so keep it within the same limits.
+
+**Privacy:** metadata is stored in Angie's analytics and tracing tools. Do not put personal data (names, emails, phone numbers, IP addresses) or secrets (tokens, API keys, passwords) in it. Use stable, non-identifying values only.
 
 ## Multiple instances on one page
 
@@ -246,6 +277,7 @@ Providers may be async. A throw becomes an error reply.
 |---------------|------|
 | `boot-sidebar.ts` | Orchestration |
 | `resolve-config.ts` | Merge options, env, presets |
+| `host-metadata.ts` | Check `host.analytics.metadata` |
 | `open-embedded-iframe.ts` | Open iframe via shared `iframe.ts` |
 | `embedded-handshake.ts` | Post-open config messages |
 | `shell.ts`, `sidebar-toggle.ts` | Sidebar layout DOM/state |
@@ -259,4 +291,4 @@ Jest specs live next to modules (`*.test.ts`). Run the package test script from 
 
 ## Exports
 
-From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`.
+From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`, `HostMetadata`.

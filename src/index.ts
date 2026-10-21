@@ -4,6 +4,7 @@ export {
 	LAYOUT_SIDEBAR,
 	type ExternalHeadersCallback,
 	type HostContextProvider,
+	type HostMetadata,
 	type LoadSidebarV2Options,
 } from './load-sidebar-v2/config';
 export { AngieDetector } from './angie-detector';

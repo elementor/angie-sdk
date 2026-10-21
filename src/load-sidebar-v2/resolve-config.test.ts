@@ -47,6 +47,17 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.callbacks.onToggle ).toBe( onToggle );
 	} );
 
+	it( 'should sanitize host.analytics.metadata', () => {
+		const config = resolveConfig( {
+			host: {
+				appId: 'wordpress',
+				analytics: { siteKey: 'abc', metadata: { plan: 'pro', nested: { a: 1 } as never } },
+			},
+		}, DEFAULT_ENV );
+
+		expect( config.host.analytics ).toEqual( { siteKey: 'abc', metadata: { plan: 'pro' } } );
+	} );
+
 	it( 'should resolve floating-chat defaults', () => {
 		const config = resolveConfig(
 			{ container: { layout: LAYOUT_FLOATING_CHAT }, host: { appId: 'editor-lite' } },
