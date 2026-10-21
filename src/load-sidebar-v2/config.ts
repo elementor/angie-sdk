@@ -10,12 +10,21 @@ export type LoadSidebarV2Layout = typeof LAYOUT_SIDEBAR | typeof LAYOUT_FLOATING
 
 export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 
+export type HostMetadataValue = string | number | boolean | null;
+
+/** Flat host metadata for analytics. Limits: see `HOST_METADATA_LIMITS` in `host-metadata.ts`. */
+export type HostMetadata = Record<string, HostMetadataValue>;
+
+export type HostAnalyticsConfig = Record<string, unknown> & {
+	metadata?: HostMetadata;
+};
+
 export type HostConfig = {
 	appId: string;
 	instanceId?: string;
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
-	analytics?: Record<string, unknown>;
+	analytics?: HostAnalyticsConfig;
 };
 
 export type BootConfig = {

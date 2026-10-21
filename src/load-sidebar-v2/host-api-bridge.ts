@@ -68,11 +68,25 @@ export const buildAnalyticsContextResponse = ( host?: HostConfig ) => ( {
 	},
 } );
 
+// A `getAnalyticsContext` result without `metadata` still gets `host.analytics.metadata`.
+const mergeHostMetadata = ( host?: HostConfig ) => (
+	payload: Record<string, unknown>,
+): Record<string, unknown> => {
+	const metadata = host?.analytics?.metadata;
+
+	if ( ! metadata || ! payload || typeof payload !== 'object' || 'metadata' in payload ) {
+		return payload;
+	}
+
+	return { ...payload, metadata };
+};
+
 // First reply on the port wins. Do not add a host listener for these types.
 const respondWithContext = async (
 	port: MessagePort,
 	provider: HostContextProvider | undefined,
 	buildFallback: () => { payload: Record<string, unknown> },
+	withHostMetadata?: ( payload: Record<string, unknown> ) => Record<string, unknown>,
 ): Promise<void> => {
 	if ( ! provider ) {
 		sendSuccessMessage( port, buildFallback() );
@@ -80,7 +94,8 @@ const respondWithContext = async (
 	}
 
 	try {
-		sendSuccessMessage( port, { payload: await provider() } );
+		const payload = await provider();
+		sendSuccessMessage( port, { payload: withHostMetadata ? withHostMetadata( payload ) : payload } );
 	} catch ( error ) {
 		sendErrorMessage( port, {
 			message: error instanceof Error ? error.message : String( error ),
@@ -180,6 +195,7 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 				port,
 				bridgeConfig.getAnalyticsContext,
 				() => buildAnalyticsContextResponse( bridgeConfig.host ),
+				mergeHostMetadata( bridgeConfig.host ),
 			);
 			break;
 		}
