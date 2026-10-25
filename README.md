@@ -240,7 +240,8 @@ await sdk.triggerAngie({
   options: {
     timeout: 30000, // Optional: 30 seconds timeout (default: 30000)
     newChat: true,
-  }
+  },
+  metadata: { plan: 'pro', area: 'seo' }, // Optional: stored on chats created from now on
 });
 
 // A prompt without context
@@ -265,6 +266,19 @@ await sdk.triggerAngie({ contextAttachment });
 - `options.timeout`: How long to wait for Angie response in milliseconds (default: `30000`).
 - `options.newChat`: When `true`, clears the current conversation and opens a fresh chat.
 - `options.autoSend`: When `true`, submits `prompt` immediately instead of only pre-filling the composer.
+- `metadata`: Optional flat attribution data (plan, product area, experiment variant, ...). It is sent only over the private trigger channel and replaces the value stored by an earlier trigger; Angie stores it on each **new** conversation created afterwards (never on an existing one) and does not send it to the agent. Omit it to keep the stored value; pass `{}` to clear it (an object with no valid entries also clears it). Types: `Metadata`, `MetadataValue`.
+
+**`metadata` rules** (invalid entries are dropped with a `console.warn`; the SDK never throws):
+
+| Rule | Limit |
+|------|-------|
+| Shape | Plain object, one level (no nested objects or arrays) |
+| Values | `string`, finite `number`, `boolean`, `null` |
+| Keys | Max 20; 1–64 chars; `__proto__`, `constructor`, `prototype` rejected |
+| String value | Max 256 chars |
+| Total | Max 2048 chars of `JSON.stringify( metadata )` |
+
+Metadata is not verified: do not use it for permissions or billing, and do not put personal data (emails, names) or secrets in it.
 
 ### Hash Parameter Method
 

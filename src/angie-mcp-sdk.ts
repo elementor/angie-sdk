@@ -13,6 +13,7 @@ import { getInstanceById, getInstanceCount } from './instance-registry';
 import { generateInstanceId } from './utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
 import { triggerAngieOnInstance } from './sdk';
+import { sanitizeMetadata } from './metadata';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
 import { AngieLocalServerConfig, AngieLocalServerTransport, AngieRemoteServerConfig, AngieServerConfig, AngieServerType, MessageEventType, ServerRegistration, AngieTriggerRequest, AngieTriggerResponse, PromptSuggestion } from './types';
 
@@ -373,6 +374,7 @@ export class AngieMcpSdk {
       options: request.options,
       contextAttachment: request.contextAttachment,
       suggestions: request.suggestions,
+      ...( request.metadata !== undefined && { metadata: sanitizeMetadata( request.metadata ) ?? {} } ),
       context: {
         pageUrl: window.location.href,
         pageTitle: document.title,

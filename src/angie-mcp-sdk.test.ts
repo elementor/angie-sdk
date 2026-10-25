@@ -247,6 +247,7 @@ describe('AngieMcpSdk', () => {
           context?: unknown;
           suggestions?: unknown;
           options?: unknown;
+          metadata?: unknown;
         };
       };
     };
@@ -320,6 +321,30 @@ describe('AngieMcpSdk', () => {
           pageTitle: 'Checkout',
         },
       } ) );
+    });
+
+    it('should send sanitized metadata on the private port', async () => {
+      const { port } = attachHostIframe();
+      mockAngieDetector.isReady.mockReturnValue(true);
+      const warn = jest.spyOn( console, 'warn' ).mockImplementation( () => undefined );
+      port.postMessage.mockImplementation( ( message: unknown ) => {
+        const requestId = ( message as { payload?: { requestId?: string } } ).payload?.requestId;
+        port.onmessage?.( {
+          data: { type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE, payload: { success: true, requestId } },
+        } as MessageEvent );
+      } );
+
+      await sdk.triggerAngie( { metadata: { plan: 'pro', bad: { nested: true } as never } } );
+      await sdk.triggerAngie( { prompt: 'no metadata' } );
+      await sdk.triggerAngie( { metadata: {} } );
+      await sdk.triggerAngie( { metadata: { bad: { nested: true } as never } } );
+
+      const payloads = port.postMessage.mock.calls.map( ( [ message ] ) => ( message as { payload: { metadata?: unknown } } ).payload );
+      expect( payloads[ 0 ].metadata ).toEqual( { plan: 'pro' } );
+      expect( payloads[ 1 ] ).not.toHaveProperty( 'metadata' );
+      expect( payloads[ 2 ].metadata ).toEqual( {} );
+      expect( payloads[ 3 ].metadata ).toEqual( {} );
+      warn.mockRestore();
     });
   });
 

@@ -42,6 +42,7 @@ export type AngieTriggerDelivery = {
 	contextAttachment?: AngieTriggerRequest[ 'contextAttachment' ];
 	suggestions?: AngieTriggerRequest[ 'suggestions' ];
 	options?: AngieTriggerRequest[ 'options' ];
+	metadata?: AngieTriggerRequest[ 'metadata' ];
 };
 
 const closeTriggerChannel = ( instance: AppState ): void => {

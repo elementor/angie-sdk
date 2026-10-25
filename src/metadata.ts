@@ -13,7 +13,7 @@ const RESERVED_KEYS = new Set( [ '__proto__', 'constructor', 'prototype' ] );
 
 const warn = ( message: string ): void => {
 	// eslint-disable-next-line no-console
-	console.warn( `[angie-sdk] host.metadata: ${ message }` );
+	console.warn( `[angie-sdk] triggerAngie metadata: ${ message }` );
 };
 
 const isPlainObject = ( value: unknown ): value is Record<string, unknown> => {

@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { buildHostEmbeddedConfigPayload } from './config';
+import { buildHostEmbeddedConfigPayload } from './load-sidebar-v2/config';
 import { METADATA_LIMITS, sanitizeMetadata } from './metadata';
 
-describe( 'load-sidebar-v2/metadata', () => {
+describe( 'metadata', () => {
 	let warn: jest.SpiedFunction<typeof console.warn>;
 
 	beforeEach( () => {
@@ -76,8 +76,7 @@ describe( 'load-sidebar-v2/metadata', () => {
 		expect( Object.keys( result ?? {} ).length ).toBe( 7 );
 	} );
 
-	it( 'should add metadata to the embedded payload only when present', () => {
-		expect( buildHostEmbeddedConfigPayload( { appId: 'a', metadata: { plan: 'pro' } } ).metadata ).toEqual( { plan: 'pro' } );
-		expect( buildHostEmbeddedConfigPayload( { appId: 'a' } ) ).not.toHaveProperty( 'metadata' );
+	it( 'should not send metadata in the HOST_READY embedded payload', () => {
+		expect( buildHostEmbeddedConfigPayload( { appId: 'a', metadata: { plan: 'pro' } } as never ) ).not.toHaveProperty( 'metadata' );
 	} );
 } );
