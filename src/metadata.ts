@@ -2,7 +2,7 @@ export type MetadataValue = string | number | boolean | null;
 
 export type Metadata = Record<string, MetadataValue>;
 
-export const METADATA_LIMITS = {
+const METADATA_LIMITS = {
 	maxKeys: 20,
 	maxKeyLength: 64,
 	maxStringLength: 256,
@@ -37,10 +37,6 @@ const isValidValue = ( value: unknown ): value is MetadataValue => {
 	return false;
 };
 
-/**
- * Keeps only flat primitive entries within the limits. Invalid entries are dropped with a warning.
- * Never throws. Returns undefined when nothing valid is left.
- */
 export const sanitizeMetadata = ( raw: unknown ): Metadata | undefined => {
 	if ( raw === undefined || raw === null ) {
 		return undefined;
@@ -52,7 +48,7 @@ export const sanitizeMetadata = ( raw: unknown ): Metadata | undefined => {
 
 	const result: Metadata = {};
 	let keyCount = 0;
-	let totalLength = 2; // "{}"
+	let totalLength = 2;
 
 	for ( const [ key, value ] of Object.entries( raw ) ) {
 		if ( key.length < 1 || key.length > METADATA_LIMITS.maxKeyLength || RESERVED_KEYS.has( key ) ) {

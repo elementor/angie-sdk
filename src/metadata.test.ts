@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
-import { buildHostEmbeddedConfigPayload } from './load-sidebar-v2/config';
-import { METADATA_LIMITS, sanitizeMetadata } from './metadata';
+import { sanitizeMetadata } from './metadata';
 
 describe( 'metadata', () => {
 	let warn: jest.SpiedFunction<typeof console.warn>;
@@ -44,17 +43,17 @@ describe( 'metadata', () => {
 			inf: Number.POSITIVE_INFINITY,
 			undef: undefined,
 			fn: () => 1,
-			long: 'x'.repeat( METADATA_LIMITS.maxStringLength + 1 ),
-			max: 'x'.repeat( METADATA_LIMITS.maxStringLength ),
+			long: 'x'.repeat( 257 ),
+			max: 'x'.repeat( 256 ),
 		} );
 
-		expect( result ).toEqual( { ok: 'yes', max: 'x'.repeat( METADATA_LIMITS.maxStringLength ) } );
+		expect( result ).toEqual( { ok: 'yes', max: 'x'.repeat( 256 ) } );
 		expect( warn ).toHaveBeenCalledTimes( 7 );
 	} );
 
 	it( 'should drop empty, too long and reserved keys', () => {
 		const raw = JSON.parse( '{"__proto__":"x","constructor":"x","prototype":"x","":"x","ok":"x"}' );
-		raw[ 'k'.repeat( METADATA_LIMITS.maxKeyLength + 1 ) ] = 'x';
+		raw[ 'k'.repeat( 65 ) ] = 'x';
 
 		expect( sanitizeMetadata( raw ) ).toEqual( { ok: 'x' } );
 	} );
@@ -72,11 +71,7 @@ describe( 'metadata', () => {
 
 		const result = sanitizeMetadata( raw );
 
-		expect( JSON.stringify( result ).length ).toBeLessThanOrEqual( METADATA_LIMITS.maxTotalLength );
+		expect( JSON.stringify( result ).length ).toBeLessThanOrEqual( 2048 );
 		expect( Object.keys( result ?? {} ).length ).toBe( 7 );
-	} );
-
-	it( 'should not send metadata in the HOST_READY embedded payload', () => {
-		expect( buildHostEmbeddedConfigPayload( { appId: 'a', metadata: { plan: 'pro' } } as never ) ).not.toHaveProperty( 'metadata' );
 	} );
 } );

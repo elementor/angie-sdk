@@ -241,7 +241,7 @@ await sdk.triggerAngie({
     timeout: 30000, // Optional: 30 seconds timeout (default: 30000)
     newChat: true,
   },
-  metadata: { plan: 'pro', area: 'seo' }, // Optional: stored on chats created from now on
+  metadata: { plan: 'pro', area: 'seo' },
 });
 
 // A prompt without context
@@ -266,7 +266,7 @@ await sdk.triggerAngie({ contextAttachment });
 - `options.timeout`: How long to wait for Angie response in milliseconds (default: `30000`).
 - `options.newChat`: When `true`, clears the current conversation and opens a fresh chat.
 - `options.autoSend`: When `true`, submits `prompt` immediately instead of only pre-filling the composer.
-- `metadata`: Optional flat attribution data (plan, product area, experiment variant, ...). It is sent only over the private trigger channel and replaces the value stored by an earlier trigger; Angie stores it on each **new** conversation created afterwards (never on an existing one) and does not send it to the agent. Omit it to keep the stored value; pass `{}` to clear it (an object with no valid entries also clears it). Types: `Metadata`, `MetadataValue`.
+- `metadata`: Optional flat metadata stored on new chats. Omit to keep, `{}` to clear.
 
 **`metadata` rules** (invalid entries are dropped with a `console.warn`; the SDK never throws):
 
