@@ -1,4 +1,5 @@
 import type { WidgetConfig } from '../angie-mcp-sdk';
+import type { Metadata } from './metadata';
 
 export const LOAD_SIDEBAR_V2_CONFIG_VERSION = 2 as const;
 
@@ -16,6 +17,8 @@ export type HostConfig = {
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
 	analytics?: Record<string, unknown>;
+	/** Flat host-defined attribution data, sent once at load and stored on new conversations. */
+	metadata?: Metadata;
 };
 
 export type BootConfig = {
@@ -94,6 +97,7 @@ export type HostEmbeddedConfigPayload = {
 	aiContext?: Record<string, unknown>;
 	appId?: string;
 	configVersion: typeof LOAD_SIDEBAR_V2_CONFIG_VERSION;
+	metadata?: Metadata;
 	telemetry?: Record<string, unknown>;
 	website?: Record<string, unknown>;
 };
@@ -104,6 +108,7 @@ export const buildHostEmbeddedConfigPayload = (
 	aiContext: host.aiContext,
 	appId: host.appId,
 	configVersion: LOAD_SIDEBAR_V2_CONFIG_VERSION,
+	...( host.metadata && { metadata: host.metadata } ),
 	telemetry: {
 		screenPath: window.location.pathname,
 	},

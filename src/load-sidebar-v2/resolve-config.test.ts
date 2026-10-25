@@ -174,4 +174,18 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( shouldBoot( config, DEFAULT_ENV ) ).toBe( true );
 	} );
 
+	it( 'should sanitize host.metadata and leave it undefined when absent', () => {
+		const warn = jest.spyOn( console, 'warn' ).mockImplementation( () => undefined );
+
+		const withMetadata = resolveConfig(
+			{ host: { appId: 'editor-lite', metadata: { plan: 'pro', bad: { nested: true } as never } } },
+			DEFAULT_ENV,
+		);
+		const withoutMetadata = resolveConfig( { host: { appId: 'editor-lite' } }, DEFAULT_ENV );
+
+		expect( withMetadata.host.metadata ).toEqual( { plan: 'pro' } );
+		expect( withoutMetadata.host.metadata ).toBeUndefined();
+		warn.mockRestore();
+	} );
+
 } );

@@ -6,6 +6,7 @@ export {
 	type HostContextProvider,
 	type LoadSidebarV2Options,
 } from './load-sidebar-v2/config';
+export type { Metadata, MetadataValue } from './load-sidebar-v2/metadata';
 export { AngieDetector } from './angie-detector';
 export { RegistrationQueue } from './registration-queue';
 export { ClientManager } from './client-manager';

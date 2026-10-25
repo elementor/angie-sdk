@@ -64,7 +64,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 | Section | Purpose |
 |---------|---------|
-| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
+| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics`, `metadata` sent to the embedded Angie app (see [aiContext](#hostaicontext), [metadata](#hostmetadata)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL`, `allowMobile` — mount the iframe on narrow screens (`screen.availWidth` <= 768), which are skipped by default (default `false`) |
@@ -85,6 +85,29 @@ Keep it focused on what helps the agent answer screen-level questions:
 | `whatUserCanDo` | Actions the user can take on this screen |
 
 Example: [`demo/load-sidebar-v2-full-config/host.js`](../../demo/load-sidebar-v2-full-config/host.js) reads `#demo-host-app` into `whatUserSees` and lists allowed actions in `whatUserCanDo`.
+
+### host.metadata
+
+Optional flat object with your own attribution data (plan, product area, experiment variant, ...). It is sent once per load in `embedded.metadata` on `HOST_READY`, and Angie stores it on each **new** conversation created in that load. It is never updated on an existing conversation and is not sent to the agent.
+
+```ts
+await sdk.loadSidebarV2( {
+	host: {
+		appId: 'my-app',
+		metadata: { plan: 'pro', area: 'checkout', experiment: 'b' },
+	},
+} );
+```
+
+| Rule | Limit |
+|------|-------|
+| Shape | Plain object, one level (no nested objects or arrays) |
+| Values | `string`, finite `number`, `boolean`, `null` |
+| Keys | Max 20; 1–64 chars; `__proto__`, `constructor`, `prototype` rejected |
+| String value | Max 256 chars |
+| Total | Max 2048 chars of `JSON.stringify( metadata )` |
+
+Optional: missing or empty metadata is fine. Invalid entries are dropped with a `console.warn` (`[angie-sdk] host.metadata: ...`); the SDK never throws. Do not put personal data (emails, names) or secrets in it. `loadSidebarV2` only; V1 `loadSidebar()` does not send it. Types: `Metadata`, `MetadataValue`.
 
 Full `widgetConfig` reference: [widget-config.md](./widget-config.md).
 
@@ -259,4 +282,4 @@ Jest specs live next to modules (`*.test.ts`). Run the package test script from 
 
 ## Exports
 
-From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`.
+From `@elementor/angie-sdk`: `loadSidebarV2` on `AngieMcpSdk`, plus `LAYOUT_SIDEBAR`, `LAYOUT_FLOATING_CHAT`, `LoadSidebarV2Options`, `WidgetConfig`, `ExternalHeadersCallback`, `Metadata`, `MetadataValue`.

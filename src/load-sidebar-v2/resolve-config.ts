@@ -6,6 +6,7 @@ import {
 	type LoadSidebarV2Options,
 	type ResolvedConfigV2,
 } from './config';
+import { sanitizeMetadata } from './metadata';
 import { FLOATING_CHAT_PRESET_DEFAULTS } from './presets/floating-chat';
 import { SIDEBAR_PRESET_DEFAULTS } from './presets/sidebar';
 import { resolveWidgetConfig } from './widget-config';
@@ -39,6 +40,7 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 			aiContext: options.host.aiContext,
 			website: options.host.website,
 			analytics: options.host.analytics,
+			metadata: sanitizeMetadata( options.host.metadata ),
 		},
 		boot: {
 			allowInIframe: boot.allowInIframe ?? DEFAULTS.boot.allowInIframe,
