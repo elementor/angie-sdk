@@ -3,7 +3,6 @@ name: Videoproof-CI
 on:
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -62,7 +61,6 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           BRANCH_NAME: ${{ github.head_ref }}
           VIDEO_PROOF_URL: http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/
-          VIDEO_PROOF_TASK_FILE: ${{ github.workspace }}/.github/videoproof-task.txt
           VIDEO_PROOF_NOTE: Clicked **Ask Angie** to open the loadSidebarV2 sidebar on the product editor POC.
           VIDEO_PROOF_POST_COMMENT: ${{ github.event_name == 'pull_request' }}
         run: bash "$RUNNER_TEMP/angie-dev-tools/videoproof/run.sh"
