@@ -240,7 +240,8 @@ await sdk.triggerAngie({
   options: {
     timeout: 30000, // Optional: 30 seconds timeout (default: 30000)
     newChat: true,
-  }
+  },
+  metadata: { plan: 'pro', area: 'seo' },
 });
 
 // A prompt without context
@@ -265,6 +266,19 @@ await sdk.triggerAngie({ contextAttachment });
 - `options.timeout`: How long to wait for Angie response in milliseconds (default: `30000`).
 - `options.newChat`: When `true`, clears the current conversation and opens a fresh chat.
 - `options.autoSend`: When `true`, submits `prompt` immediately instead of only pre-filling the composer.
+- `metadata`: Optional flat metadata stored on new chats. Omit to keep, `{}` to clear.
+
+**`metadata` rules** (the server enforces these limits and drops invalid entries):
+
+| Rule | Limit |
+|------|-------|
+| Shape | Plain object, one level (no nested objects or arrays) |
+| Values | `string`, finite `number`, `boolean`, `null` |
+| Keys | Max 20; 1–64 chars; `__proto__`, `constructor`, `prototype` rejected |
+| String value | Max 256 chars |
+| Total | Max 2048 chars of `JSON.stringify( metadata )` |
+
+Metadata is not verified: do not use it for permissions or billing, and do not put personal data (emails, names) or secrets in it.
 
 ### Hash Parameter Method
 

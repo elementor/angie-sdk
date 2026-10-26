@@ -1,6 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ServerCapabilities } from '@modelcontextprotocol/sdk/types.js';
+import type { AngieChatMetadata } from './metadata';
 export { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 
 // Backward compatibility
@@ -124,6 +125,8 @@ export interface AngieTriggerRequest {
     newChat?: boolean;
     autoSend?: boolean;
   };
+  /** Flat attribution data stored on chats created after this trigger. Replaces the previous value. */
+  metadata?: AngieChatMetadata;
 }
 
 export interface AngieTriggerResponse {

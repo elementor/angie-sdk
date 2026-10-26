@@ -373,6 +373,7 @@ export class AngieMcpSdk {
       options: request.options,
       contextAttachment: request.contextAttachment,
       suggestions: request.suggestions,
+      metadata: request.metadata,
       context: {
         pageUrl: window.location.href,
         pageTitle: document.title,

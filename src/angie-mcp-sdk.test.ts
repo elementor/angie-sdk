@@ -247,6 +247,7 @@ describe('AngieMcpSdk', () => {
           context?: unknown;
           suggestions?: unknown;
           options?: unknown;
+          metadata?: unknown;
         };
       };
     };
@@ -320,6 +321,27 @@ describe('AngieMcpSdk', () => {
           pageTitle: 'Checkout',
         },
       } ) );
+    });
+
+    it('should send metadata unchanged on the private port', async () => {
+      const { port } = attachHostIframe();
+      mockAngieDetector.isReady.mockReturnValue(true);
+      port.postMessage.mockImplementation( ( message: unknown ) => {
+        const requestId = ( message as { payload?: { requestId?: string } } ).payload?.requestId;
+        port.onmessage?.( {
+          data: { type: MessageEventType.SDK_TRIGGER_ANGIE_RESPONSE, payload: { success: true, requestId } },
+        } as MessageEvent );
+      } );
+
+      const metadata = { plan: 'pro', seats: 3, trial: false, variant: null };
+      await sdk.triggerAngie( { metadata } );
+      await sdk.triggerAngie( { prompt: 'no metadata' } );
+      await sdk.triggerAngie( { metadata: {} } );
+
+      const payloads = port.postMessage.mock.calls.map( ( [ message ] ) => ( message as { payload: { metadata?: unknown } } ).payload );
+      expect( payloads[ 0 ].metadata ).toEqual( metadata );
+      expect( payloads[ 1 ].metadata ).toBeUndefined();
+      expect( payloads[ 2 ].metadata ).toEqual( {} );
     });
   });
 
