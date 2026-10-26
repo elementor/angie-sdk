@@ -323,10 +323,9 @@ describe('AngieMcpSdk', () => {
       } ) );
     });
 
-    it('should send sanitized metadata on the private port', async () => {
+    it('should send metadata unchanged on the private port', async () => {
       const { port } = attachHostIframe();
       mockAngieDetector.isReady.mockReturnValue(true);
-      const warn = jest.spyOn( console, 'warn' ).mockImplementation( () => undefined );
       port.postMessage.mockImplementation( ( message: unknown ) => {
         const requestId = ( message as { payload?: { requestId?: string } } ).payload?.requestId;
         port.onmessage?.( {
@@ -334,17 +333,15 @@ describe('AngieMcpSdk', () => {
         } as MessageEvent );
       } );
 
-      await sdk.triggerAngie( { metadata: { plan: 'pro', bad: { nested: true } as never } } );
+      const metadata = { plan: 'pro', seats: 3, trial: false, variant: null };
+      await sdk.triggerAngie( { metadata } );
       await sdk.triggerAngie( { prompt: 'no metadata' } );
       await sdk.triggerAngie( { metadata: {} } );
-      await sdk.triggerAngie( { metadata: { bad: { nested: true } as never } } );
 
       const payloads = port.postMessage.mock.calls.map( ( [ message ] ) => ( message as { payload: { metadata?: unknown } } ).payload );
-      expect( payloads[ 0 ].metadata ).toEqual( { plan: 'pro' } );
-      expect( payloads[ 1 ] ).not.toHaveProperty( 'metadata' );
+      expect( payloads[ 0 ].metadata ).toEqual( metadata );
+      expect( payloads[ 1 ].metadata ).toBeUndefined();
       expect( payloads[ 2 ].metadata ).toEqual( {} );
-      expect( payloads[ 3 ].metadata ).toEqual( {} );
-      warn.mockRestore();
     });
   });
 

@@ -268,7 +268,7 @@ await sdk.triggerAngie({ contextAttachment });
 - `options.autoSend`: When `true`, submits `prompt` immediately instead of only pre-filling the composer.
 - `metadata`: Optional flat metadata stored on new chats. Omit to keep, `{}` to clear.
 
-**`metadata` rules** (invalid entries are dropped with a `console.warn`; the SDK never throws):
+**`metadata` rules** (the server enforces these limits and drops invalid entries):
 
 | Rule | Limit |
 |------|-------|
