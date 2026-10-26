@@ -1,6 +1,6 @@
-export type MetadataValue = string | number | boolean | null;
+export type AngieChatMetadataValue = string | number | boolean | null;
 
-export type Metadata = Record<string, MetadataValue>;
+export type AngieChatMetadata = Record<string, AngieChatMetadataValue>;
 
 const METADATA_LIMITS = {
 	maxKeys: 20,
@@ -24,7 +24,7 @@ const isPlainObject = ( value: unknown ): value is Record<string, unknown> => {
 	return proto === Object.prototype || proto === null;
 };
 
-const isValidValue = ( value: unknown ): value is MetadataValue => {
+const isValidValue = ( value: unknown ): value is AngieChatMetadataValue => {
 	if ( value === null || typeof value === 'boolean' ) {
 		return true;
 	}
@@ -37,7 +37,7 @@ const isValidValue = ( value: unknown ): value is MetadataValue => {
 	return false;
 };
 
-export const sanitizeMetadata = ( raw: unknown ): Metadata | undefined => {
+export const sanitizeMetadata = ( raw: unknown ): AngieChatMetadata | undefined => {
 	if ( raw === undefined || raw === null ) {
 		return undefined;
 	}
@@ -46,7 +46,7 @@ export const sanitizeMetadata = ( raw: unknown ): Metadata | undefined => {
 		return undefined;
 	}
 
-	const result: Metadata = {};
+	const result: AngieChatMetadata = {};
 	let keyCount = 0;
 	let totalLength = 2;
 
