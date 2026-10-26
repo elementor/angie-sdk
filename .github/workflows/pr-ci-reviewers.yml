@@ -33,4 +33,3 @@ jobs:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
         with:
           workflow: pr-ci-reviewers.yml
-          extra-fields: pr_draft=${{ github.event.pull_request.draft == true }}
