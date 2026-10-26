@@ -20,7 +20,7 @@ jobs:
         with:
           persist-credentials: false
           ref: ${{ github.event.pull_request.base.sha }}
-      - uses: ./.github/actions/dispatch-angie-dev-tools
+      - uses: elementor/angie-dev-tools/.github/actions/dispatch-angie-dev-tools@feat/AI-9936-videoproof-pr-body-only
         env:
           GH_TOKEN: ${{ secrets.ANGIE_DEV_TOOLS_BOT_TOKEN }}
         with:
