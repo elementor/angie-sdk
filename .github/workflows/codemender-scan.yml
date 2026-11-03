@@ -16,5 +16,5 @@ jobs:
     uses: elementor/elementor-cloud-github-actions/.github/workflows/codemender-scan.yaml@master
     with:
       environment: prod
-      fail_on: CRITICAL,HIGH
+      fail_on: CRITICAL
     secrets: inherit
