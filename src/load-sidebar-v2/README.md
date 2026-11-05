@@ -29,15 +29,19 @@ await sdk.loadSidebarV2({
 });
 ```
 
-**App id** (pass it on every host). It tells Angie which application a chat belongs to: either the
-`my-app` id of a registered Angie App, or a built-in host id such as `wordpress`.
+> The quick start above sets no app id, so Angie runs with its **default settings**: the general
+> assistant, with no app-specific prompt or agents. Pass an app id (below) to use your app's setup.
+
+**App id** (optional). It tells Angie which application a chat belongs to: either the
+`my-app` id of a registered Angie App, or a built-in host id such as `wordpress`. Without it, Angie
+uses its default settings.
 
 ```typescript
 const sdk = new AngieMcpSdk( { appId: 'NG-ab35bf57' } );
 ```
 
 `host.appId` is deprecated and optional. It is not what identifies the app, so setting only
-`host.appId` leaves the chat without an app id.
+`host.appId` leaves the chat without an app id, and Angie uses its default settings.
 
 It belongs to the `AngieMcpSdk` object, so each instance on a page carries its own.
 

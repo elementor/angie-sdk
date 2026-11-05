@@ -164,7 +164,7 @@ sdk.registerServer({
 });
 ```
 
-> **Always pass an `appId`.** It identifies which application the chat belongs to. The SDK adds it to the Angie iframe URL, and Angie sends it with every chat request.
+> **Pass an `appId` to use your app's setup.** It identifies which application the chat belongs to. The SDK adds it to the Angie iframe URL, and Angie sends it with every chat request. Without an `appId`, Angie uses its **default settings** (the general assistant, with no app-specific prompt or agents).
 
 ### Async Registration
 

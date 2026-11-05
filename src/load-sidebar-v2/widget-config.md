@@ -33,6 +33,8 @@ await sdk.loadSidebarV2({
 });
 ```
 
+This example sets no app id, so Angie runs with its **default settings** (the general assistant, with no app-specific prompt or agents). To use your app's setup, pass `new AngieMcpSdk( { appId: 'my-app' } )`.
+
 Live demo: [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/).
 
 ## Layout defaults
