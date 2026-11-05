@@ -175,9 +175,6 @@ document.getElementById( 'demo-trigger-starters' )?.addEventListener( 'click', (
 } );
 
 sdk.loadSidebarV2( {
-	host: {
-		appId: 'demo-trigger-angie-prompt',
-	},
 	container: {
 		layout: LAYOUT_SIDEBAR,
 		styleTheme: 'wordpress',

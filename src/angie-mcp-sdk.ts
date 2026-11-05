@@ -153,7 +153,7 @@ export class AngieMcpSdk {
   }
 
   public loadSidebarV2( options: LoadSidebarV2Options ): Promise<void> {
-    if ( options.host.instanceId ) {
+    if ( options.host?.instanceId ) {
       this.instanceId = options.host.instanceId;
     }
 

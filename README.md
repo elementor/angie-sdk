@@ -152,7 +152,7 @@ function createSeoMcpServer() {
 
 // Register the server with Angie
 const server = createSeoMcpServer();
-const sdk = new AngieMcpSdk();
+const sdk = new AngieMcpSdk( { appId: 'my-app' } );
 
 await sdk.waitForReady();
 
@@ -163,6 +163,8 @@ sdk.registerServer({
   server,
 });
 ```
+
+> **Pass an `appId` to use your app's setup.** It identifies which application the chat belongs to. The SDK adds it to the Angie iframe URL, and Angie sends it with every chat request. Without an `appId`, Angie uses its **default settings** (the general assistant, with no app-specific prompt or agents).
 
 ### Async Registration
 
@@ -212,7 +214,7 @@ import { AngieMcpSdk, type ContextAttachment } from '@elementor/angie-sdk';
 
 // Register your MCP server and trigger Angie
 const server = createSeoMcpServer();
-const sdk = new AngieMcpSdk();
+const sdk = new AngieMcpSdk( { appId: 'my-app' } );
 
 await sdk.waitForReady();
 

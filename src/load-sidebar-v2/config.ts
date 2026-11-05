@@ -11,7 +11,12 @@ export type LoadSidebarV2Layout = typeof LAYOUT_SIDEBAR | typeof LAYOUT_FLOATING
 export type LoadSidebarV2ContainerStyleTheme = 'wordpress' | '';
 
 export type HostConfig = {
-	appId: string;
+	/**
+	 * @deprecated Not used to identify the app. Pass `appId` to `new AngieMcpSdk( { appId } )` instead:
+	 * that value reaches the iframe URL and every chat request. This field is only forwarded in the
+	 * embedded config payload as a host label.
+	 */
+	appId?: string;
 	instanceId?: string;
 	aiContext?: Record<string, unknown>;
 	website?: Record<string, unknown>;
@@ -71,7 +76,7 @@ export type CallbacksConfig = {
 };
 
 export type LoadSidebarV2Options = {
-	host: HostConfig;
+	host?: HostConfig;
 	boot?: BootOptions;
 	container?: ContainerOptions;
 	iframe?: IframeOptions;

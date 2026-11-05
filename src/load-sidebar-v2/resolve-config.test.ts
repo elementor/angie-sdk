@@ -22,6 +22,19 @@ describe( 'load-sidebar-v2/resolve-config', () => {
 		expect( config.widgetConfig ).toEqual( { closeButton: 'collapse' } );
 	} );
 
+	it( 'should resolve with no host at all', () => {
+		const config = resolveConfig( {}, DEFAULT_ENV );
+
+		expect( config.host ).toEqual( {
+			appId: undefined,
+			instanceId: undefined,
+			aiContext: undefined,
+			website: undefined,
+			analytics: undefined,
+		} );
+		expect( config.container.layout ).toBe( LAYOUT_SIDEBAR );
+	} );
+
 	it( 'should let the host own the container element and its styling', () => {
 		const config = resolveConfig( {
 			container: { create: false, skipDefaultCss: true },
