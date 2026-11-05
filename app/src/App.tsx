@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   EMBED_SNIPPET,
   FEATURE_MATRIX,
@@ -13,22 +13,33 @@ import {
 
 type Section = 'overview' | 'features' | 'start' | 'demos';
 
-const REPO_RAW = LINKS.github.replace('github.com', 'raw.githubusercontent.com') + '/master';
-
 function statusLabel(status: FeatureStatus): string {
   if (status === 'supported') return 'Supported';
   if (status === 'partial') return 'Partial';
   return 'Not yet';
 }
 
-function CodeBlock({ code, label }: { code: string; label: string }) {
+export function CodeBlock({ code, label }: { code: string; label: string }) {
   const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<number | undefined>(undefined);
+
+  useEffect(
+    () => () => {
+      if (timeoutRef.current !== undefined) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    },
+    [],
+  );
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
+      if (timeoutRef.current !== undefined) {
+        window.clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setCopied(false);
     }
@@ -280,7 +291,7 @@ export default function App() {
                     <li key={demo.path}>
                       <a
                         className={demo.featured ? 'demo-card demo-card--featured' : 'demo-card'}
-                        href={`${REPO_RAW}/${demo.path}index.html`}
+                        href={`${LINKS.repoRawBase}/${demo.path}index.html`}
                         target="_blank"
                         rel="noreferrer"
                       >

@@ -437,3 +437,23 @@ th {
 .footer a {
   color: var(--accent);
 }
+
+.error-fallback {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  text-align: center;
+}
+
+.error-fallback h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.error-fallback p {
+  margin: 0;
+  color: var(--muted);
+}

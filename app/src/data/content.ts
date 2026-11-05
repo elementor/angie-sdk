@@ -6,7 +6,7 @@ export type FeatureRow = {
   notes: string;
 };
 
-export const PACKAGE_VERSION = '1.9.0';
+export const PACKAGE_VERSION = __SDK_VERSION__;
 
 export const FEATURE_MATRIX: FeatureRow[] = [
   { name: 'Tools', status: 'supported', notes: 'Primary integration method for plugin capabilities.' },
@@ -139,6 +139,7 @@ export const RESOURCE_SCHEMES = [
 
 export const LINKS = {
   github: 'https://github.com/elementor/angie-sdk',
+  repoRawBase: 'https://raw.githubusercontent.com/elementor/angie-sdk/master',
   npm: 'https://www.npmjs.com/package/@elementor/angie-sdk',
   mcpSpec: 'https://modelcontextprotocol.io/',
   loadSidebarDocs:
