@@ -19,7 +19,6 @@ import { AngieMcpSdk, LAYOUT_SIDEBAR } from '@elementor/angie-sdk';
 const sdk = new AngieMcpSdk();
 
 await sdk.loadSidebarV2({
-  host: { appId: 'my-app' },
   container: { layout: LAYOUT_SIDEBAR },
   widgetConfig: {
     title: 'Need help?',
@@ -175,7 +174,6 @@ const widgetConfig: WidgetConfig = {
 };
 
 await sdk.loadSidebarV2({
-  host: { appId: 'my-elementor' },
   container: { layout: 'sidebar' /* ... */ },
   widgetConfig,
 });
@@ -209,7 +207,6 @@ const widgetConfig: WidgetConfig = {
 };
 
 await sdk.loadSidebarV2({
-  host: { appId: 'visitor-widget' },
   container: { layout: LAYOUT_FLOATING_CHAT },
   widgetConfig,
 });

@@ -152,7 +152,7 @@ function createSeoMcpServer() {
 
 // Register the server with Angie
 const server = createSeoMcpServer();
-const sdk = new AngieMcpSdk();
+const sdk = new AngieMcpSdk( { appId: 'my-app' } );
 
 await sdk.waitForReady();
 
@@ -163,6 +163,8 @@ sdk.registerServer({
   server,
 });
 ```
+
+> **Always pass an `appId`.** It identifies which application the chat belongs to. The SDK adds it to the Angie iframe URL, and Angie sends it with every chat request.
 
 ### Async Registration
 
@@ -212,7 +214,7 @@ import { AngieMcpSdk, type ContextAttachment } from '@elementor/angie-sdk';
 
 // Register your MCP server and trigger Angie
 const server = createSeoMcpServer();
-const sdk = new AngieMcpSdk();
+const sdk = new AngieMcpSdk( { appId: 'my-app' } );
 
 await sdk.waitForReady();
 

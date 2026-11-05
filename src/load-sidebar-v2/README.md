@@ -10,7 +10,6 @@ import { AngieMcpSdk, LAYOUT_FLOATING_CHAT } from '@elementor/angie-sdk';
 const sdk = new AngieMcpSdk();
 
 await sdk.loadSidebarV2({
-  host: { appId: 'my-app' },
   container: { layout: LAYOUT_FLOATING_CHAT },
 });
 ```
@@ -19,7 +18,6 @@ await sdk.loadSidebarV2({
 
 ```typescript
 await sdk.loadSidebarV2({
-  host: { appId: 'my-app' },
   container: {
     layout: 'sidebar',
     styleTheme: 'wordpress',
@@ -31,13 +29,15 @@ await sdk.loadSidebarV2({
 });
 ```
 
-**Angie App registry id** (optional). Not the same thing as `host.appId`: this is the `NG-...`
-id of a registered Angie App. Declare it on the constructor and it reaches the embedded app as
-the `appId` query parameter on the iframe URL.
+**App id** (pass it on every host). It tells Angie which application a chat belongs to: either the
+`my-app` id of a registered Angie App, or a built-in host id such as `wordpress`.
 
 ```typescript
 const sdk = new AngieMcpSdk( { appId: 'NG-ab35bf57' } );
 ```
+
+`host.appId` is deprecated and optional. It is not what identifies the app, so setting only
+`host.appId` leaves the chat without an app id.
 
 It belongs to the `AngieMcpSdk` object, so each instance on a page carries its own.
 
@@ -64,7 +64,7 @@ Each layout applies [presets](./presets/) (defaults for `persistOpenState`, `res
 
 | Section | Purpose |
 |---------|---------|
-| `host` | **Required.** `appId`, optional `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
+| `host` | Optional. `instanceId` (see [multiple instances](#multiple-instances-on-one-page)), `aiContext`, `website`, `analytics` sent to the embedded Angie app (see [aiContext](#hostaicontext)) |
 | `boot` | `allowInIframe` — skip boot when the host page is itself in an iframe (default `false`) |
 | `container` | DOM container id, `layout`, `styleTheme` (`'wordpress'` injects WP admin-bar CSS), `create`, `skipDefaultCss` (sidebar only), resize/persist flags, chat toggle button |
 | `iframe` | Angie origin, path (`angie/embedded`), `uiTheme`, `isRTL`, `allowMobile` — mount the iframe on narrow screens (`screen.availWidth` <= 768), which are skipped by default (default `false`) |
@@ -106,13 +106,13 @@ Two rules:
 ```js
 const sidebarSdk = new AngieMcpSdk();
 await sidebarSdk.loadSidebarV2( {
-	host: { appId: 'my-app', instanceId: 'my-app-sidebar' },
+	host: { instanceId: 'my-app-sidebar' },
 	container: { layout: LAYOUT_SIDEBAR },
 } );
 
 const chatSdk = new AngieMcpSdk();
 await chatSdk.loadSidebarV2( {
-	host: { appId: 'my-app-help', instanceId: 'my-app-help' },
+	host: { instanceId: 'my-app-help' },
 	container: { id: 'angie-help-container', layout: LAYOUT_FLOATING_CHAT },
 } );
 ```
@@ -127,11 +127,11 @@ instance is ready:
 ```js
 await Promise.all( [
 	sidebarSdk.loadSidebarV2( {
-		host: { appId: 'my-app', instanceId: 'my-app-sidebar' },
+		host: { instanceId: 'my-app-sidebar' },
 		container: { layout: LAYOUT_SIDEBAR },
 	} ),
 	chatSdk.loadSidebarV2( {
-		host: { appId: 'my-app-help', instanceId: 'my-app-help' },
+		host: { instanceId: 'my-app-help' },
 		container: { id: 'angie-help-container', layout: LAYOUT_FLOATING_CHAT },
 	} ),
 ] );
@@ -229,7 +229,7 @@ types — it races the bridge and usually loses the payload the host meant to se
 | Static website/analytics fields | `host.website` / `host.analytics` |
 | Per-request context | `callbacks.getWebsiteContext` / `getAnalyticsContext` |
 | Auth headers | `callbacks.getExternalHeaders` |
-| Angie App registry id (`NG-...`) | `new AngieMcpSdk({ appId })` → iframe URL `?appId=` → in-memory in iframe (not `host.appId`) |
+| App id (`NG-...` or a host id like `wordpress`) | `new AngieMcpSdk({ appId })` → iframe URL `?appId=` → every chat request (not `host.appId`, which is deprecated) |
 | Host localStorage | Bridge (do not add a get/set listener) |
 
 Providers may be async. A throw becomes an error reply.

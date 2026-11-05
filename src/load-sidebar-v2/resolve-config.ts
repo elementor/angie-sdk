@@ -23,6 +23,7 @@ export const shouldBoot = ( config: ResolvedConfigV2, env: Env ): boolean => {
 };
 
 export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): ResolvedConfigV2 => {
+	const host = options.host ?? {};
 	const boot = options.boot ?? {};
 	const container = options.container ?? {};
 	const iframe = options.iframe ?? {};
@@ -34,11 +35,11 @@ export const resolveConfig = ( options: LoadSidebarV2Options, env: Env ): Resolv
 
 	return {
 		host: {
-			appId: options.host.appId,
-			instanceId: options.host.instanceId,
-			aiContext: options.host.aiContext,
-			website: options.host.website,
-			analytics: options.host.analytics,
+			appId: host.appId,
+			instanceId: host.instanceId,
+			aiContext: host.aiContext,
+			website: host.website,
+			analytics: host.analytics,
 		},
 		boot: {
 			allowInIframe: boot.allowInIframe ?? DEFAULTS.boot.allowInIframe,

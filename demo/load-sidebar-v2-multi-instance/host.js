@@ -49,7 +49,7 @@ const bootAndRegister = ( sdk, instanceId, loadOptions, serverMeta, tools ) => {
 
 	return sdk.loadSidebarV2( {
 		...loadOptions,
-		host: { appId: instanceId, instanceId },
+		host: { instanceId },
 		widgetConfig: {
 			...loadOptions.widgetConfig,
 			featuredMcpServer: serverMeta.name,

@@ -277,7 +277,6 @@ codeEl.textContent = getAppliedCss();
 
 await sdk.loadSidebarV2( {
 	host: {
-		appId: 'demo-css-mcp-app',
 		aiContext: buildAiContext(),
 	},
 	container: {

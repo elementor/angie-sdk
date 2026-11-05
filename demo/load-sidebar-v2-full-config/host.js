@@ -39,7 +39,6 @@ toggle?.addEventListener( 'click', async () => {
 
 sdk.loadSidebarV2( {
 	host: {
-		appId: 'demo-full-config',
 		aiContext,
 	},
 	boot: {
