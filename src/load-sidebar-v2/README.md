@@ -33,7 +33,7 @@ await sdk.loadSidebarV2({
 > assistant, with no app-specific prompt or agents. Pass an app id (below) to use your app's setup.
 
 **App id** (optional). It tells Angie which application a chat belongs to: either the
-`my-app` id of a registered Angie App, or a built-in host id such as `wordpress`. Without it, Angie
+`NG-...` id of a registered Angie App, or a built-in host id such as `wordpress`. Without it, Angie
 uses its default settings.
 
 ```typescript
