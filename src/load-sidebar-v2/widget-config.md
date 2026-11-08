@@ -19,7 +19,6 @@ import { AngieMcpSdk, LAYOUT_SIDEBAR } from '@elementor/angie-sdk';
 const sdk = new AngieMcpSdk();
 
 await sdk.loadSidebarV2({
-  host: { appId: 'my-app' },
   container: { layout: LAYOUT_SIDEBAR },
   widgetConfig: {
     title: 'Need help?',
@@ -33,6 +32,8 @@ await sdk.loadSidebarV2({
   },
 });
 ```
+
+This example sets no app id, so Angie runs with its **default settings** (the general assistant, with no app-specific prompt or agents). To use your app's setup, pass `new AngieMcpSdk( { appId: 'my-app' } )`.
 
 Live demo: [`demo/load-sidebar-v2-widget-config/`](../../demo/load-sidebar-v2-widget-config/).
 
@@ -175,7 +176,6 @@ const widgetConfig: WidgetConfig = {
 };
 
 await sdk.loadSidebarV2({
-  host: { appId: 'my-elementor' },
   container: { layout: 'sidebar' /* ... */ },
   widgetConfig,
 });
@@ -209,7 +209,6 @@ const widgetConfig: WidgetConfig = {
 };
 
 await sdk.loadSidebarV2({
-  host: { appId: 'visitor-widget' },
   container: { layout: LAYOUT_FLOATING_CHAT },
   widgetConfig,
 });

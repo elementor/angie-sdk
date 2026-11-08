@@ -195,7 +195,6 @@ toggle?.addEventListener( 'click', async () => {
 
 sdk.loadSidebarV2( {
 	host: {
-		appId: `demo-widget-config-${ PRESET_PARAM }`,
 		aiContext: {
 			whatUserSees: {
 				screen: 'Widget config demo',

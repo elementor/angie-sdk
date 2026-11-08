@@ -197,7 +197,6 @@ const openChatForTextarea = ( textarea, clientX, clientY ) => {
 
 await sdk.loadSidebarV2( {
 	host: {
-		appId: 'demo-right-click-floating',
 		aiContext: buildAiContext( document.querySelector( 'textarea' ) ),
 	},
 	container: {
