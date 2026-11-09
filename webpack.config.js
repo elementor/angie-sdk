@@ -37,6 +37,7 @@ const baseConfig = {
 
 const esmConfig = {
   ...baseConfig,
+  name: 'esm',
   output: {
     filename: 'index.js',
     path: path.resolve(__dirname, 'dist'),
@@ -53,8 +54,12 @@ const esmConfig = {
   },
 };
 
+// Runs after the ESM build: its `clean: true` would otherwise delete index.cjs
+// when both builds run in parallel.
 const cjsConfig = {
   ...baseConfig,
+  name: 'cjs',
+  dependencies: ['esm'],
   output: {
     filename: 'index.cjs',
     path: path.resolve(__dirname, 'dist'),

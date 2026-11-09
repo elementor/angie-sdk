@@ -1,6 +1,6 @@
 {
   "name": "@elementor/angie-sdk",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "description": "TypeScript SDK for Angie AI assistant",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -14,7 +14,8 @@
     }
   },
   "scripts": {
-    "build": "npm run build:types && npm run build:bundle",
+    "build": "npm run build:types && npm run build:bundle && npm run build:verify",
+    "build:verify": "test -f dist/index.js && test -f dist/index.cjs && test -f dist/index.d.ts",
     "build:types": "tsc",
     "build:bundle": "webpack --mode=production",
     "build:watch": "npm run build:types && webpack --mode=development --watch",
