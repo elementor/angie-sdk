@@ -2,12 +2,15 @@ import { sendErrorMessage, sendSuccessMessage } from '../utils';
 import { HostLocalStorageEventType } from '../types';
 import type { AppState } from '../config';
 import type { ExternalHeadersCallback, HostConfig, HostContextProvider } from './config';
+import { handleInitContextServer } from './context-server';
 
 export const GET_EXTERNAL_HEADERS_MESSAGE_TYPE = 'GET_EXTERNAL_HEADERS';
 
 export const GET_WEBSITE_CONTEXT_MESSAGE_TYPE = 'angie/context/get-website-context';
 
 export const GET_ANALYTICS_CONTEXT_MESSAGE_TYPE = 'angie/context/get-analytics-context';
+
+export const INIT_CONTEXT_SERVER_MESSAGE_TYPE = 'init-context-server';
 
 type InitHostApiBridgeArgs = {
 	iframeOrigin: string;
@@ -181,6 +184,14 @@ const handleHostApiMessage = async ( event: MessageEvent ): Promise<void> => {
 				bridgeConfig.getAnalyticsContext,
 				() => buildAnalyticsContextResponse( bridgeConfig.host ),
 			);
+			break;
+		}
+
+		case INIT_CONTEXT_SERVER_MESSAGE_TYPE: {
+			if ( ! port ) {
+				return;
+			}
+			await handleInitContextServer( port, bridgeConfig.host );
 			break;
 		}
 
