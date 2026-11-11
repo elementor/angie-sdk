@@ -108,7 +108,7 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|---------|
 | `modeSwitcher` | `{ enabled?: boolean; default?: 'agent' \| 'plan' \| 'ask' }` | Show or hide Agent / Plan / Ask switcher; set the initial mode |
 | `featuredMcpServer` | `string` | Name of a **host-registered** local MCP server Angie should surface first (must match `registerServer({ name })`) |
-| `localServers` | `{ skipLoading?: boolean }` | When `skipLoading: true`, Angie does not auto-load host local servers — use when you register servers yourself after `waitForReady()` |
+| `localServers` | `{ skipLoading?: boolean }` | Controls whether Angie auto-loads its **built-in iframe** MCP servers (images, knowledge, general, artifacts, core). Defaults to skipped (`true`, or omitted). Pass `{ skipLoading: false }` to load all of them. Does not affect host-registered servers. |
 
 ### Close behavior
 
@@ -184,7 +184,7 @@ await sdk.waitForReady();
 sdk.registerServer({ name: HELP_CENTER_SERVER, /* ... */ });
 ```
 
-`localServers.skipLoading: true` avoids a race: register your MCP servers after `waitForReady()`, then Angie uses `featuredMcpServer` to prioritize the right one.
+`localServers.skipLoading` defaults to `true`, so Angie skips its built-in iframe MCP servers. Being explicit still avoids a race when you register your own MCP servers after `waitForReady()` — then Angie uses `featuredMcpServer` to prioritize the right one. Pass `{ skipLoading: false }` only when the embed needs the built-in servers.
 
 ### Visitor floating search widget
 
