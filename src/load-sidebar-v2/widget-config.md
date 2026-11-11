@@ -108,7 +108,7 @@ Each toggle uses `{ enabled: boolean }`.
 |-------|------|---------|
 | `modeSwitcher` | `{ enabled?: boolean; default?: 'agent' \| 'plan' \| 'ask' }` | Show or hide Agent / Plan / Ask switcher; set the initial mode |
 | `featuredMcpServer` | `string` | Name of a **host-registered** local MCP server Angie should surface first (must match `registerServer({ name })`) |
-| `localServers` | `{ skipLoading?: boolean }` | When `skipLoading: true`, Angie does not auto-load host local servers — use when you register servers yourself after `waitForReady()` |
+| `localServers` | `{ skipLoading?: boolean }` | `skipLoading` defaults to `true` (the iframe's built-in servers are skipped). Pass `false` to load them. |
 
 ### Close behavior
 
