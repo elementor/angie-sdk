@@ -37,11 +37,6 @@ export type ModeSwitcherConfig = {
 };
 
 export type LocalServersConfig = {
-  /**
-   * When true (the default), skip loading Angie's built-in iframe MCP servers
-   * (images, knowledge, general, artifacts, and core). Pass `false` to load
-   * all of them. Host-registered servers are not affected.
-   */
   skipLoading?: boolean;
 };
 
