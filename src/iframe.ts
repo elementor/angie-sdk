@@ -263,6 +263,9 @@ export const openIframe = async (
 		outline: 'none',
 	};
 
+	// Before the iframe loads: it asks for GET_TOP_URL / CHECK_PENDING before angie/ready.
+	listenToOAuthFromIframe( instance, new URL( props.origin || 'https://angie.elementor.com' ).origin );
+
 	const { iframe, iframeUrlObject } = await openSaaSPage( {
 		origin: props.origin || 'https://angie.elementor.com',
 		path: props.path && isValidPath( props.path ) ? props.path : DEFAULT_PATH,
@@ -287,7 +290,6 @@ export const openIframe = async (
 	registerSdkInstance( instance );
 	startSdkMessageRouting();
 
-	listenToOAuthFromIframe( instance );
 	setupOidcLoginFlowHandler( instance );
 
 	registerIframeHostHandler( {

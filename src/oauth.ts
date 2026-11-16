@@ -82,7 +82,10 @@ const forwardOidcLoginFlowToInstances = (): void => {
 	}
 };
 
-export const listenToOAuthFromIframe = ( instance: AppState = appState ): void => {
+export const listenToOAuthFromIframe = (
+	instance: AppState = appState,
+	trustedOrigin: string = instance.iframeUrlObject?.origin ?? '',
+): void => {
 	trackOAuthInstance( instance );
 
 	if ( oidcParentListenerRegistered ) {
@@ -92,7 +95,7 @@ export const listenToOAuthFromIframe = ( instance: AppState = appState ): void =
 	oidcParentListenerRegistered = true;
 
 	setupOidcAuthParentListener( {
-		trustedOrigin: instance.iframeUrlObject?.origin ?? '',
+		trustedOrigin,
 		onOAuthParamsCleared: onAuthenticationComplete,
 	} );
 };

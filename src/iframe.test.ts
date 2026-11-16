@@ -322,6 +322,22 @@ describe( 'openIframe trigger channel', () => {
 		resetIframeHostHandlersForTests();
 	} );
 
+	it( 'should register the OAuth host listener before angie/ready', async () => {
+		const listen = require( './oauth' ).listenToOAuthFromIframe as jest.Mock;
+		const instance = createAngieInstance( { containerId: 'angie-sidebar-container', instanceId: 'bbbbbb', layout: 'sidebar' } );
+		let resolveOpen: ( value: unknown ) => void = () => {};
+		mockOpenSaaSPage.mockImplementation( () => new Promise( ( resolve ) => {
+			resolveOpen = resolve;
+		} ) );
+
+		const pending = openIframe( { uiTheme: 'light', isRTL: false }, instance );
+
+		expect( listen ).toHaveBeenCalledWith( instance, 'https://angie.elementor.com' );
+		resolveOpen( { iframe: document.createElement( 'iframe' ), iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ) } );
+		await pending;
+		expect( listen ).toHaveBeenCalledTimes( 1 );
+	} );
+
 	it( 'should open the trigger port when angie/ready resolves', async () => {
 		const instance = createAngieInstance( {
 			containerId: 'angie-sidebar-container',
