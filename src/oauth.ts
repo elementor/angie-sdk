@@ -83,8 +83,8 @@ const forwardOidcLoginFlowToInstances = (): void => {
 };
 
 export const listenToOAuthFromIframe = (
-	instance: AppState = appState,
-	trustedOrigin: string = instance.iframeUrlObject?.origin ?? '',
+	instance: AppState,
+	trustedOrigin: string,
 ): void => {
 	trackOAuthInstance( instance );
 
