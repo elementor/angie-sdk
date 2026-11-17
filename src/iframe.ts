@@ -263,8 +263,13 @@ export const openIframe = async (
 		outline: 'none',
 	};
 
+	const origin = props.origin || 'https://angie.elementor.com';
+
+	// Before the iframe loads: it asks for GET_TOP_URL / CHECK_PENDING before angie/ready.
+	listenToOAuthFromIframe( instance, new URL( origin ).origin );
+
 	const { iframe, iframeUrlObject } = await openSaaSPage( {
-		origin: props.origin || 'https://angie.elementor.com',
+		origin,
 		path: props.path && isValidPath( props.path ) ? props.path : DEFAULT_PATH,
 		insertCallback,
 		embeddedConfig: props.embeddedConfig,
@@ -287,12 +292,11 @@ export const openIframe = async (
 	registerSdkInstance( instance );
 	startSdkMessageRouting();
 
-	listenToOAuthFromIframe( instance );
 	setupOidcLoginFlowHandler( instance );
 
 	registerIframeHostHandler( {
 		instance,
-		trustedOrigins: [ window.location.origin, props.origin || 'https://angie.elementor.com' ],
+		trustedOrigins: [ window.location.origin, origin ],
 	} );
 
 	return {

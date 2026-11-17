@@ -40,6 +40,7 @@ import {
 	setupOidcLoginFlowHandler,
 	shouldExecutePostConsentRedirect,
 } from './oauth';
+import { appState } from './config';
 
 describe( 'oauth', () => {
 	beforeEach( () => {
@@ -59,7 +60,7 @@ describe( 'oauth', () => {
 	} );
 
 	function getOidcParentCallback(): () => void {
-		listenToOAuthFromIframe();
+		listenToOAuthFromIframe( appState, 'https://angie.test.com' );
 		return ( mockSetupOidcAuthParentListener.mock.calls[ 0 ][ 0 ] as any ).onOAuthParamsCleared;
 	}
 
@@ -98,7 +99,7 @@ describe( 'oauth', () => {
 	describe( 'listenToOAuthFromIframe', () => {
 		it( 'should setup OIDC auth parent listener', () => {
 			// Act
-			listenToOAuthFromIframe();
+			listenToOAuthFromIframe( appState, 'https://angie.test.com' );
 
 			// Assert
 			expect( mockSetupOidcAuthParentListener ).toHaveBeenCalledWith( {
@@ -181,11 +182,11 @@ describe( 'oauth', () => {
 		it( 'should register OIDC parent listener only once for multiple instances', () => {
 			const secondIframe = document.createElement( 'iframe' );
 
-			listenToOAuthFromIframe();
+			listenToOAuthFromIframe( appState, 'https://angie.test.com' );
 			listenToOAuthFromIframe( {
 				iframeUrlObject: { origin: 'https://angie.test.com' },
 				iframe: secondIframe,
-			} as any );
+			} as any, 'https://angie.test.com' );
 
 			expect( mockSetupOidcAuthParentListener ).toHaveBeenCalledTimes( 1 );
 		} );
