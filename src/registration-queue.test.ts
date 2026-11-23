@@ -65,7 +65,7 @@ describe('RegistrationQueue', () => {
         expect(reg1.id).not.toBe(reg2.id);
       });
 
-      it('should use getRandomValues when randomUUID is unavailable (non-secure context)', () => {
+      it('should use getRandomValues when randomUUID is unavailable (plain-http page)', () => {
         Object.defineProperty(global, 'crypto', {
           value: { getRandomValues: <T extends ArrayBufferView>(array: T) => nodeCrypto.getRandomValues(array) },
           writable: true,

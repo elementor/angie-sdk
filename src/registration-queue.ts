@@ -4,7 +4,7 @@ import { ServerRegistration, AngieServerConfig } from './types';
 const queueLogger = createChildLogger( 'registration-queue' );
 
 // Unguessable: the id is all a page needs to ask for a registered server.
-// randomUUID is missing on plain-http pages (not a secure context); getRandomValues is not.
+// randomUUID is missing on plain-http pages; getRandomValues is not.
 const generateRandomId = (): string => {
   if ( typeof crypto.randomUUID === 'function' ) {
     return crypto.randomUUID();
