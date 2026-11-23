@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, jest } from '@jest/globals';
+import { describe, expect, it, beforeEach, afterEach, jest } from '@jest/globals';
 import { RegistrationQueue } from './registration-queue';
 import type { AngieServerConfig, ServerRegistration } from './types';
 
@@ -45,6 +45,38 @@ describe('RegistrationQueue', () => {
       // Assert
       expect(reg1.id).not.toBe(reg2.id);
       expect(queue.getAll()).toHaveLength(2);
+    });
+
+    describe('unguessable IDs', () => {
+      const originalCrypto = global.crypto;
+      const nodeCrypto = jest.requireActual<typeof import('crypto')>('crypto');
+
+      afterEach(() => {
+        Object.defineProperty(global, 'crypto', { value: originalCrypto, writable: true });
+      });
+
+      it('should end each ID with a random UUID, even for the same server', () => {
+        Object.defineProperty(global, 'crypto', { value: { randomUUID: () => nodeCrypto.randomUUID() }, writable: true });
+
+        const reg1 = queue.add({ ...mockConfig });
+        const reg2 = queue.add({ ...mockConfig });
+
+        expect(reg1.id).toMatch(/^reg_test-server_1\.0\.0_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+        expect(reg1.id).not.toBe(reg2.id);
+      });
+
+      it('should use getRandomValues when randomUUID is unavailable (non-secure context)', () => {
+        Object.defineProperty(global, 'crypto', {
+          value: { getRandomValues: <T extends ArrayBufferView>(array: T) => nodeCrypto.getRandomValues(array) },
+          writable: true,
+        });
+
+        const reg1 = queue.add({ ...mockConfig });
+        const reg2 = queue.add({ ...mockConfig });
+
+        expect(reg1.id).toMatch(/^reg_test-server_1\.0\.0_[0-9a-f]{32}$/);
+        expect(reg1.id).not.toBe(reg2.id);
+      });
     });
   });
 
