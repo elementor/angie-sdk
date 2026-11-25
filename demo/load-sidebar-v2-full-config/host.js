@@ -1,4 +1,7 @@
 import { AngieMcpSdk, LAYOUT_SIDEBAR } from '../../dist/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+
+const DEMO_SERVER_NAME = 'demo-product-editor';
 
 const root = document.getElementById( 'demo-host-app' );
 
@@ -20,7 +23,10 @@ const aiContext = {
 	],
 };
 
-const sdk = new AngieMcpSdk();
+// Optional `?appId=` lets CI open Angie as a specific Angie App.
+const appId = new URLSearchParams( window.location.search ).get( 'appId' ) || undefined;
+
+const sdk = new AngieMcpSdk( { appId } );
 
 const toggle = document.getElementById( 'demo-toggle' );
 
@@ -86,4 +92,49 @@ sdk.loadSidebarV2( {
 	},
 } ).catch( ( error ) => {
 	console.error( 'loadSidebarV2 failed:', error );
+} );
+
+const createProductServer = () => {
+	const server = new McpServer(
+		{
+			name: DEMO_SERVER_NAME,
+			version: '1.0.0',
+			title: 'Product editor',
+		},
+		{
+			capabilities: {
+				tools: {},
+			},
+			instructions: 'Call get-product-listing to read the product shown in the editor.',
+		}
+	);
+
+	server.registerTool(
+		'get-product-listing',
+		{
+			description: 'Read the product listing shown in the editor: name, status, price, SKU, and description.',
+			annotations: {
+				readOnlyHint: true,
+			},
+		},
+		async () => ( {
+			content: [ {
+				type: 'text',
+				text: JSON.stringify( aiContext.whatUserSees ),
+			} ],
+		} )
+	);
+
+	return server;
+};
+
+await sdk.waitForReady();
+await sdk.registerServer( {
+	name: DEMO_SERVER_NAME,
+	version: '1.0.0',
+	description: 'Read the product listing shown in the editor',
+	server: createProductServer(),
+	capabilities: {
+		tools: {},
+	},
 } );
