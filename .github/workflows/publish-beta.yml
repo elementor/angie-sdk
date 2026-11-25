@@ -53,3 +53,22 @@ jobs:
           npm publish --tag ${{ github.event.inputs.preid }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Only succeeds when dispatched from master — public-repos-pool's attribute_condition
+      # requires assertion.ref == 'refs/heads/master' for this repo's non-release runs.
+      - name: Authenticate to Google Artifact Registry
+        id: gcp-auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: 'projects/165476505383/locations/global/workloadIdentityPools/public-repos-pool/providers/github-provider'
+          service_account: 'github-actions-public-sa@elementor-infra.iam.gserviceaccount.com'
+          token_format: access_token
+
+      - name: Publish beta to Artifact Registry
+        env:
+          GAR_REGISTRY: https://us-npm.pkg.dev/elementor-infra/npm-packages/
+        run: |
+          rm -f .npmrc
+          npm config set --location user "@elementor:registry" "$GAR_REGISTRY"
+          npm config set --location user "${GAR_REGISTRY#https:}:_authToken" "${{ steps.gcp-auth.outputs.access_token }}"
+          npm publish --tag ${{ github.event.inputs.preid }} --registry="$GAR_REGISTRY" --access public
