@@ -389,6 +389,15 @@ describe('AngieMcpSdk', () => {
   describe('message handling', () => {
     let messageHandler: (event: MessageEvent<any>) => void;
     let refreshPingHandler: (event: MessageEvent<any>) => void;
+    const ANGIE_ORIGIN = 'https://angie.elementor.com';
+    const angieWindow = {} as Window;
+
+    const trustAngieIframe = () => {
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframe: { contentWindow: angieWindow } as HTMLIFrameElement,
+        iframeUrlObject: new URL( `${ ANGIE_ORIGIN }/angie/embedded` ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+    };
 
     beforeEach(() => {
       // Extract the message handler that was registered
@@ -428,14 +437,18 @@ describe('AngieMcpSdk', () => {
       };
 
       mockRegistrationQueue.getAll.mockReturnValue([mockRegistration]);
+      trustAngieIframe();
 
       // Act
       const event = {
+        origin: ANGIE_ORIGIN,
+        source: angieWindow,
         data: {
           type: 'sdk-request-init-server',
           payload: {
             clientId: 'client_123',
             serverId: 'server_123',
+            instanceId: (sdk as any).instanceId,
           },
         },
         ports: [mockPort],
@@ -451,14 +464,18 @@ describe('AngieMcpSdk', () => {
     it('should handle server init request with non-existent server', () => {
       // Arrange
       mockRegistrationQueue.getAll.mockReturnValue([]);
+      trustAngieIframe();
 
       // Act
       const event = {
+        origin: ANGIE_ORIGIN,
+        source: angieWindow,
         data: {
           type: 'sdk-request-init-server',
           payload: {
             clientId: 'client_123',
             serverId: 'non_existent_server',
+            instanceId: (sdk as any).instanceId,
           },
         },
         ports: [],
@@ -495,14 +512,18 @@ describe('AngieMcpSdk', () => {
       };
 
       mockRegistrationQueue.getAll.mockReturnValue([mockRegistration]);
+      trustAngieIframe();
 
       // Act
       const event = {
+        origin: ANGIE_ORIGIN,
+        source: angieWindow,
         data: {
           type: 'sdk-request-init-server',
           payload: {
             clientId: 'client_123',
             serverId: 'server_123',
+            instanceId: (sdk as any).instanceId,
           },
         },
         ports: [mockPort],
@@ -513,6 +534,89 @@ describe('AngieMcpSdk', () => {
       // Assert
       expect(mockBrowserContextTransport).toHaveBeenCalledWith(mockPort);
       expect(mockServer.connect).toHaveBeenCalled();
+    });
+
+    describe('server init request sender checks', () => {
+      let mockServer: { connect: jest.Mock };
+
+      const initEvent = ( overrides: Record<string, unknown> = {}, payload: Record<string, unknown> = {} ) => ( {
+        origin: ANGIE_ORIGIN,
+        source: angieWindow,
+        data: {
+          type: 'sdk-request-init-server',
+          payload: { clientId: 'client_123', serverId: 'server_123', instanceId: ( sdk as any ).instanceId, ...payload },
+        },
+        ports: [ { postMessage: jest.fn() } ],
+        ...overrides,
+      } as unknown as MessageEvent<any> );
+
+      beforeEach(() => {
+        mockServer = { connect: jest.fn() };
+        mockRegistrationQueue.getAll.mockReturnValue( [ {
+          id: 'server_123',
+          config: { name: 'test-server', version: '1.0.0', description: 'Test server', server: mockServer as any },
+          timestamp: Date.now(),
+          status: 'registered',
+        } ] );
+      });
+
+      it('should connect the server for a request from the Angie iframe', () => {
+        trustAngieIframe();
+
+        messageHandler( initEvent() );
+
+        expect(mockServer.connect).toHaveBeenCalled();
+      });
+
+      it('should ignore a request from the Angie origin from a different window', () => {
+        trustAngieIframe();
+
+        messageHandler( initEvent( { source: {} as Window } ) );
+
+        expect(mockServer.connect).not.toHaveBeenCalled();
+      });
+
+      it('should ignore a request from the Angie window with a wrong origin', () => {
+        trustAngieIframe();
+
+        messageHandler( initEvent( { origin: 'https://other.example' } ) );
+
+        expect(mockServer.connect).not.toHaveBeenCalled();
+      });
+
+      it('should ignore a request with no source window', () => {
+        trustAngieIframe();
+
+        messageHandler( initEvent( { source: null } ) );
+
+        expect(mockServer.connect).not.toHaveBeenCalled();
+      });
+
+      it('should ignore a request that omits instanceId', () => {
+        trustAngieIframe();
+
+        messageHandler( initEvent( {}, { instanceId: undefined } ) );
+
+        expect(mockServer.connect).not.toHaveBeenCalled();
+      });
+
+      it('should ignore a request when no Angie iframe is known', () => {
+        messageHandler( initEvent() );
+
+        expect(mockServer.connect).not.toHaveBeenCalled();
+      });
+
+      it('should accept the page Angie iframe when another SDK copy owns it', () => {
+        const iframe = document.createElement( 'iframe' );
+        iframe.src = `${ ANGIE_ORIGIN }/angie/wp-admin`;
+        document.body.appendChild( iframe );
+
+        messageHandler( initEvent( { source: iframe.contentWindow } ) );
+        messageHandler( initEvent( { source: iframe.contentWindow, origin: 'https://other.example' } ) );
+
+        iframe.remove();
+        expect(mockServer.connect).toHaveBeenCalledTimes( 1 );
+      });
     });
 
     it('should ignore non-server-init messages', () => {
@@ -532,7 +636,10 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should not reset queue on refresh ping for a different instance', () => {
+      trustAngieIframe();
       const event = {
+        origin: ANGIE_ORIGIN,
+        source: angieWindow,
         data: {
           type: 'sdk-angie-refresh-ping',
           payload: {
@@ -547,7 +654,10 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should reset queue on refresh ping for its own instanceId', () => {
+      trustAngieIframe();
       const event = {
+        origin: ANGIE_ORIGIN,
+        source: angieWindow,
         data: {
           type: 'sdk-angie-refresh-ping',
           payload: {
@@ -609,7 +719,27 @@ describe('AngieMcpSdk', () => {
       expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
     });
 
-    it('should still accept an unverifiable id-less refresh ping as the only instance', () => {
+    it('should still accept an id-less refresh ping from the page Angie iframe as the only instance', () => {
+      jest.spyOn( instanceRegistry, 'getInstanceCount' ).mockReturnValue( 1 );
+      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
+        iframe: null,
+        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
+      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+      const iframe = document.createElement( 'iframe' );
+      iframe.src = 'https://angie.elementor.com/angie/embedded';
+      document.body.appendChild( iframe );
+
+      refreshPingHandler( {
+        origin: 'https://angie.elementor.com',
+        source: iframe.contentWindow,
+        data: { type: 'sdk-angie-refresh-ping', payload: { timestamp: 1 } },
+      } as unknown as MessageEvent<any> );
+
+      iframe.remove();
+      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
+    });
+
+    it('should ignore an unverifiable id-less refresh ping with no Angie iframe on the page', () => {
       jest.spyOn( instanceRegistry, 'getInstanceCount' ).mockReturnValue( 1 );
       jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
         iframe: null,
@@ -621,7 +751,31 @@ describe('AngieMcpSdk', () => {
         data: { type: 'sdk-angie-refresh-ping', payload: { timestamp: 1 } },
       } as unknown as MessageEvent<any> );
 
-      expect(mockRegistrationQueue.resetAllToPending).toHaveBeenCalled();
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should ignore a refresh ping from the right origin but a different window', () => {
+      trustAngieIframe();
+
+      refreshPingHandler( {
+        origin: ANGIE_ORIGIN,
+        source: {} as Window,
+        data: { type: 'sdk-angie-refresh-ping', payload: { instanceId: ( sdk as any ).instanceId } },
+      } as unknown as MessageEvent<any> );
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
+    });
+
+    it('should ignore a refresh ping from the Angie window but a wrong origin', () => {
+      trustAngieIframe();
+
+      refreshPingHandler( {
+        origin: 'https://other.example',
+        source: angieWindow,
+        data: { type: 'sdk-angie-refresh-ping', payload: { instanceId: ( sdk as any ).instanceId } },
+      } as unknown as MessageEvent<any> );
+
+      expect(mockRegistrationQueue.resetAllToPending).not.toHaveBeenCalled();
     });
 
     it('should ignore refresh ping from host origin when iframe origin is known', () => {
@@ -645,12 +799,11 @@ describe('AngieMcpSdk', () => {
     });
 
     it('should accept refresh ping from iframe origin', () => {
-      jest.spyOn( instanceRegistry, 'getInstanceById' ).mockReturnValue( {
-        iframeUrlObject: new URL( 'https://angie.elementor.com/angie/embedded' ),
-      } as ReturnType<typeof instanceRegistry.getInstanceById> );
+      trustAngieIframe();
 
       const event = {
         origin: 'https://angie.elementor.com',
+        source: angieWindow,
         data: {
           type: 'sdk-angie-refresh-ping',
           payload: {

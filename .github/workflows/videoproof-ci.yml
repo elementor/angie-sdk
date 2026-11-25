@@ -63,6 +63,7 @@ jobs:
           VIDEO_PROOF_URL: http://127.0.0.1:8080/demo/load-sidebar-v2-full-config/?appId=${{ secrets.ANGIE_APP_ID }}
           VIDEO_PROOF_NOTE: Clicked **Ask Angie** to open the loadSidebarV2 sidebar on the product editor POC.
           VIDEO_PROOF_POST_COMMENT: ${{ github.event_name == 'pull_request' }}
+          VIDEO_PROOF_TIMEOUT_MS: 600000
         run: bash "$RUNNER_TEMP/angie-dev-tools/videoproof/run.sh"
 
       - name: Upload videoproof

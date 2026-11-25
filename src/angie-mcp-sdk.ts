@@ -11,6 +11,7 @@ import { initAngieSidebar } from './sidebar';
 import { RegistrationQueue } from './registration-queue';
 import { getInstanceById, getInstanceCount } from './instance-registry';
 import { generateInstanceId } from './utils';
+import { getAngieIframe, getAngieIframeOrigin } from './angie-iframe-utils';
 import { bootSidebar } from './load-sidebar-v2/boot-sidebar';
 import { triggerAngieOnInstance } from './sdk';
 import type { LoadSidebarV2Options } from './load-sidebar-v2/config';
@@ -180,13 +181,22 @@ export class AngieMcpSdk {
     return getInstanceCount() < 2;
   }
 
+  // Only an Angie iframe may drive local servers: both its window and its origin must match.
+  // Falls back to the page's Angie iframe while ours is booting or owned by another SDK copy.
+  private isFromAngieIframe( event: MessageEvent ): boolean {
+    const instance = getInstanceById( this.instanceId );
+    const iframe = instance?.iframe ?? getAngieIframe();
+    const iframeOrigin = instance?.iframe ? instance.iframeUrlObject?.origin : getAngieIframeOrigin();
+
+    return !! iframe?.contentWindow && event.source === iframe.contentWindow && event.origin === iframeOrigin;
+  }
+
   private setupReRegistrationHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_ANGIE_REFRESH_PING) {
         const instance = getInstanceById( this.instanceId );
-        const iframeOrigin = instance?.iframeUrlObject?.origin;
-        if ( iframeOrigin && event.origin !== iframeOrigin ) {
-          this.logger.log(`Ignoring refresh ping from unexpected origin. Event origin: ${event.origin}, iframe origin: ${iframeOrigin}`);
+        if ( ! this.isFromAngieIframe( event ) ) {
+          this.logger.log(`Ignoring refresh ping not sent by the Angie iframe. Event origin: ${event.origin}`);
           return;
         }
 
@@ -391,6 +401,11 @@ export class AngieMcpSdk {
   private setupServerInitHandler(): void {
     window.addEventListener('message', (event) => {
       if (event.data?.type === MessageEventType.SDK_REQUEST_INIT_SERVER) {
+        if ( ! this.isFromAngieIframe( event ) ) {
+          this.logger.log(`Ignoring server init request not sent by the Angie iframe. Event origin: ${event.origin}`);
+          return;
+        }
+
         this.logger.log('Server init request received');
         this.handleServerInitRequest(event);
       }
@@ -408,7 +423,7 @@ export class AngieMcpSdk {
     this.logger.log(`Server init request received - Request instanceId: ${instanceId}, This instanceId: ${this.instanceId}`);
 
     // Check if this request is for this instance
-    if (instanceId && instanceId !== this.instanceId) {
+    if (instanceId !== this.instanceId) {
       this.logger.log(`Ignoring server init request for different instance. Request instanceId: ${instanceId}, this instanceId: ${this.instanceId}`);
       return;
     }
